@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Government Services Nearby - UNIORA</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../../../common/css/global.css">
+  <link rel="stylesheet" href="../../../common/components/navbar.css">
+  <link rel="stylesheet" href="../../../common/css/responsive.css">
+  <link rel="stylesheet" href="./style.css">
+
+  <!-- INSTANT 0MS SYNCHRONOUS AUTH HYDRATION -->
+  <script>
+    (function () {
+      try {
+        var name = localStorage.getItem('uniora_cached_user_name');
+        var hasUser = false;
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+            var raw = localStorage.getItem(k);
+            if (raw) {
+              var p = JSON.parse(raw);
+              if (p && p.user) {
+                hasUser = true;
+                if (!name) {
+                  name = p.user.user_metadata?.full_name || p.user.user_metadata?.name || p.user.email?.split('@')[0] || 'User';
+                }
+                break;
+              }
+            }
+          }
+        }
+        if (hasUser) {
+          document.write('<style>#navbarUser{display:flex !important;} #navbarLogin{display:none !important;} #navbarAuth.is-loading > *{visibility:visible !important;} #navbarAuth.is-loading::after{display:none !important;}</style>');
+        } else {
+          document.write('<style>#navbarLogin{display:inline-flex !important;} #navbarUser{display:none !important;} #navbarAuth.is-loading > *{visibility:visible !important;} #navbarAuth.is-loading::after{display:none !important;}</style>');
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+
+<body class="dashboard-page services-page">
+  <div class="app-layout">
+
+    <!-- ================================================================
+         COMMON NAVBAR
+         ================================================================ -->
+    <div id="navbar-container">
+      <header class="navbar" id="appNavbar">
+        <div class="navbar-container">
+
+          <a href="../../../dashboard/index.html" class="navbar-brand" aria-label="UNIORA Dashboard">
+            <img src="../../../common/assets/uniora_logo_navbar.png" alt="UNIORA" class="navbar-logo" />
+          </a>
+
+          <nav class="navbar-menu" id="navbarMenu" aria-label="Main navigation">
+            <a href="../../../dashboard/index.html" class="navbar-link" data-page="dashboard">
+              <span class="navbar-link-text">Dashboard</span>
+            </a>
+            <a href="../../../features/01_scheme_recommendation/frontend/index.html" class="navbar-link" data-page="schemes">
+              <span class="navbar-link-text">Schemes</span>
+            </a>
+            <a href="../../../features/03_documents_verification/frontend/index.html" class="navbar-link" data-page="documents">
+              <span class="navbar-link-text">Documents</span>
+            </a>
+            <a href="../../../features/04_eligible_schemes/frontend/index.html" class="navbar-link" data-page="eligible">
+              <span class="navbar-link-text">Eligible</span>
+            </a>
+            <a href="../../../features/05_my_readiness/frontend/index.html" class="navbar-link" data-page="readiness">
+              <span class="navbar-link-text">Readiness</span>
+            </a>
+            <a href="../../../features/06_government_services/frontend/index.html" class="navbar-link navbar-link--active" data-page="services">
+              <span class="navbar-link-text">Services</span>
+            </a>
+            <a href="../../../features/02_ask_uniora/frontend/index.html" class="navbar-link navbar-link-ask" data-page="ask">
+              <span class="navbar-link-text">Ask Uniora</span>
+            </a>
+          </nav>
+
+          <div class="navbar-right">
+            <button type="button" class="navbar-toggle" id="navbarToggle"
+              aria-label="Open navigation menu" aria-expanded="false" aria-controls="navbarMenu">
+              <span class="navbar-toggle-bar"></span>
+              <span class="navbar-toggle-bar"></span>
+              <span class="navbar-toggle-bar"></span>
+            </button>
+
+            <div class="navbar-auth is-loading" id="navbarAuth">
+              <div class="navbar-user" id="navbarUser" hidden>
+                <a href="../../../features/10_profile/frontend/index.html"
+                  class="navbar-profile" id="navbarProfileLink" aria-label="View Profile">
+                  <div class="navbar-avatar" id="navbarAvatar" aria-hidden="true">U</div>
+                  <span class="navbar-user-name" id="navbarUserName">User</span>
+                </a>
+              </div>
+              <a href="../../../auth/login/index.html" class="navbar-login" id="navbarLogin" hidden>
+                LOGIN
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </header>
+      <div class="navbar-overlay" id="navbarOverlay"></div>
+    </div>
+
+    <!-- ================================================================
+         MAIN CONTENT
+         ================================================================ -->
+    <main class="services-main" id="mainContent">
+
+      <!-- PAGE HEADING -->
+      <section class="page-heading">
+        <div class="page-heading__text">
+          <h1 class="page-heading__title">Government Services Nearby</h1>
+          <p class="page-heading__subtitle">
+            Find e-Sevai centres and Tamil Nadu government offices near your location.
+          </p>
+        </div>
+        <div class="info-note" role="note">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
+            <path d="M12 11v5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            <circle cx="12" cy="8" r="1" fill="currentColor" />
+          </svg>
+          <span>
+            Clicking "Open in Google Maps" will open Google Maps in a new tab with the office location pre-searched.
+          </span>
+        </div>
+      </section>
+
+      <!-- QUICK ACCESS CARDS -->
+      <section class="quick-access-section" aria-label="Quick access">
+
+        <!-- e-Sevai Quick Card -->
+        <div class="quick-card quick-card--esevai">
+          <div class="quick-card__icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+          </div>
+          <div class="quick-card__body">
+            <h3 class="quick-card__title">e-Sevai Centre</h3>
+            <p class="quick-card__desc">Find the nearest Arasu e-Sevai centre for certificates &amp; government services</p>
+          </div>
+          <a id="esevaiLink"
+            href="https://www.google.com/maps/search/?api=1&query=Arasu+e-Sevai+centre+Tamil+Nadu"
+            target="_blank" rel="noopener noreferrer"
+            class="quick-card__btn" aria-label="Find e-Sevai centre on Google Maps">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            Open in Maps
+          </a>
+        </div>
+
+        <!-- Near Me Quick Card -->
+        <div class="quick-card quick-card--nearby">
+          <div class="quick-card__icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="3 11 22 2 13 21 11 13 3 11" />
+            </svg>
+          </div>
+          <div class="quick-card__body">
+            <h3 class="quick-card__title">Offices Near Me</h3>
+            <p class="quick-card__desc">View all government offices near your current location on Google Maps</p>
+          </div>
+          <a id="nearMeLink"
+            href="https://www.google.com/maps/search/?api=1&query=government+offices+near+me"
+            target="_blank" rel="noopener noreferrer"
+            class="quick-card__btn quick-card__btn--amber" aria-label="Find government offices near me on Google Maps">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            Open in Maps
+          </a>
+        </div>
+
+      </section>
+
+      <!-- LOCATION SELECTOR -->
+      <section class="location-section" aria-label="Select your location">
+        <div class="location-panel">
+
+          <div class="location-panel__header">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            <h2 class="location-panel__title">Select Your Location</h2>
+          </div>
+
+          <div class="location-form">
+
+            <!-- DISTRICT FIELD — populated by JS (locked or input) -->
+            <div class="location-field" id="districtFieldWrap">
+
+              <!-- Shown when logged in with district in profile -->
+              <div id="districtLocked" hidden>
+                <label class="location-field__label">
+                  District
+                  <span class="location-field__badge">Auto-detected</span>
+                </label>
+                <div class="district-locked-display">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                  <span id="districtLockedName"></span>
+                </div>
+              </div>
+
+              <!-- Shown when not logged in or no district in profile -->
+              <div id="districtInputWrap" hidden>
+                <label class="location-field__label" for="districtInput">District</label>
+                <div class="location-input-wrapper">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="location-input-icon" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <input
+                    type="text"
+                    id="districtInput"
+                    list="districtDatalist"
+                    class="location-input"
+                    placeholder="Type or search district…"
+                    autocomplete="off"
+                    aria-label="Enter your district"
+                  />
+                  <datalist id="districtDatalist">
+                    <!-- Populated by JS from taluks.json -->
+                  </datalist>
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- TALUK FIELD -->
+            <div class="location-field">
+              <label class="location-field__label" for="talukSelect">Taluk</label>
+              <div class="location-select-wrapper">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="location-select-icon" aria-hidden="true">
+                  <rect x="2" y="7" width="20" height="14" rx="1" />
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                </svg>
+                <select id="talukSelect" class="location-select" disabled aria-label="Select your taluk">
+                  <option value="">Select district first</option>
+                </select>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Auth prompt for guests -->
+          <div id="loginPromptText" class="location-panel__login-prompt" hidden>
+            <a href="../../../auth/login/index.html">Log in</a>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- PROMPT STATE — before taluk is selected -->
+      <div id="promptState" class="state-panel" role="status">
+        <div class="state-panel__icon" aria-hidden="true">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+        </div>
+        <p class="state-panel__title">Select your district and taluk</p>
+        <p class="state-panel__text">The top 10 government offices in your area will appear here.</p>
+      </div>
+
+      <!-- OFFICES SECTION -->
+      <section id="officesSection" class="offices-section" hidden aria-label="Government offices list">
+
+        <div class="results-header">
+          <div>
+            <h2 class="results-header__title">
+              Government Offices in
+              <span class="results-header__location" id="locationLabel">—</span>
+            </h2>
+            <p class="results-header__sub">Showing top 10 offices · Click any card to open in Google Maps</p>
+          </div>
+          <span class="results-header__count">10 offices</span>
+        </div>
+
+        <div class="offices-grid" id="officesGrid" role="list">
+          <!-- Office cards injected by JS -->
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module" src="./script.js"></script>
+</body>
+
+</html>

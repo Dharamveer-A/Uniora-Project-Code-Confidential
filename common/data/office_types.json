@@ -1,0 +1,92 @@
+[
+  {
+    "id": "collectorate",
+    "name": "District Collectorate",
+    "description": "Main district administrative headquarters",
+    "queryTemplate": "District Collectorate {district} Tamil Nadu",
+    "iconBg": "#eff6ff",
+    "iconColor": "#2563eb",
+    "iconPath": "<rect x='3' y='9' width='18' height='12' rx='1'/><path d='M3 9l9-6 9 6'/><line x1='9' y1='21' x2='9' y2='12'/><line x1='15' y1='21' x2='15' y2='12'/>"
+  },
+  {
+    "id": "taluk_office",
+    "name": "Taluk Office",
+    "description": "Taluk-level revenue and administrative office",
+    "queryTemplate": "Taluk Office {taluk} {district} Tamil Nadu",
+    "iconBg": "#f0fdf4",
+    "iconColor": "#16a34a",
+    "iconPath": "<rect x='2' y='7' width='20' height='14' rx='1'/><path d='M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16'/>"
+  },
+  {
+    "id": "esevai",
+    "name": "Arasu e-Sevai Centre",
+    "description": "Government e-services — certificates, applications",
+    "queryTemplate": "Arasu e-Sevai centre {taluk} {district} Tamil Nadu",
+    "iconBg": "#f5f3ff",
+    "iconColor": "#7c3aed",
+    "iconPath": "<rect x='2' y='3' width='20' height='14' rx='2'/><line x1='8' y1='21' x2='16' y2='21'/><line x1='12' y1='17' x2='12' y2='21'/>"
+  },
+  {
+    "id": "revenue",
+    "name": "Revenue Division Office",
+    "description": "Land records, Patta, Chitta, Adangal services",
+    "queryTemplate": "Revenue Divisional Office {district} Tamil Nadu",
+    "iconBg": "#fff7ed",
+    "iconColor": "#c2410c",
+    "iconPath": "<path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/><polyline points='14 2 14 8 20 8'/><line x1='16' y1='13' x2='8' y2='13'/><line x1='16' y1='17' x2='8' y2='17'/>"
+  },
+  {
+    "id": "rto",
+    "name": "Regional Transport Office",
+    "description": "Driving licences, vehicle registration, permits",
+    "queryTemplate": "Regional Transport Office RTO {district} Tamil Nadu",
+    "iconBg": "#fff1f2",
+    "iconColor": "#e11d48",
+    "iconPath": "<rect x='1' y='3' width='15' height='13' rx='2'/><path d='m16 8 4 2 2 4v3h-6V8Z'/><circle cx='5.5' cy='18.5' r='2.5'/><circle cx='18.5' cy='18.5' r='2.5'/>"
+  },
+  {
+    "id": "employment",
+    "name": "District Employment Office",
+    "description": "Job registration, employment exchange services",
+    "queryTemplate": "District Employment Office {district} Tamil Nadu",
+    "iconBg": "#ecfeff",
+    "iconColor": "#0891b2",
+    "iconPath": "<rect x='2' y='7' width='20' height='14' rx='2'/><path d='M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2'/><line x1='12' y1='12' x2='12' y2='16'/><line x1='10' y1='14' x2='14' y2='14'/>"
+  },
+  {
+    "id": "civil_supplies",
+    "name": "Civil Supplies Office",
+    "description": "Ration cards, public distribution system services",
+    "queryTemplate": "Civil Supplies Office {taluk} {district} Tamil Nadu",
+    "iconBg": "#fdf4ff",
+    "iconColor": "#a21caf",
+    "iconPath": "<path d='M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z'/><line x1='3' y1='6' x2='21' y2='6'/><path d='M16 10a4 4 0 0 1-8 0'/>"
+  },
+  {
+    "id": "social_welfare",
+    "name": "Social Welfare Office",
+    "description": "Welfare schemes, pensions, disability benefits",
+    "queryTemplate": "Social Welfare Office {district} Tamil Nadu",
+    "iconBg": "#fdf2f8",
+    "iconColor": "#db2777",
+    "iconPath": "<path d='M20.8 6.6a5 5 0 0 0-7.1 0L12 8.3l-1.7-1.7a5 5 0 1 0-7.1 7.1l8.1 8.1a1 1 0 0 0 1.4 0l8.1-8.1a5 5 0 0 0 0-7.1z'/>"
+  },
+  {
+    "id": "adi_dravidar",
+    "name": "Adi Dravidar Welfare Office",
+    "description": "Welfare schemes for SC/ST communities",
+    "queryTemplate": "Adi Dravidar Tribal Welfare Office {district} Tamil Nadu",
+    "iconBg": "#f0fdf4",
+    "iconColor": "#15803d",
+    "iconPath": "<path d='M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M23 21v-2a4 4 0 0 0-3-3.87'/><path d='M16 3.13a4 4 0 0 1 0 7.75'/>"
+  },
+  {
+    "id": "municipality",
+    "name": "Municipality / Panchayat Office",
+    "description": "Local body services, birth/death certificates",
+    "queryTemplate": "Municipality Panchayat Office {taluk} {district} Tamil Nadu",
+    "iconBg": "#fff7ed",
+    "iconColor": "#ea580c",
+    "iconPath": "<path d='m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/>"
+  }
+]

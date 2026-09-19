@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - UNIORA Welfare Platform</title>
+
+  <!-- Google Font Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet"
+  >
+
+  <!-- Common Stylesheets -->
+  <link rel="stylesheet" href="../common/css/global.css">
+  <link rel="stylesheet" href="../common/components/navbar.css">
+  <link rel="stylesheet" href="../common/css/responsive.css">
+
+  <!-- Dashboard Specific Styles -->
+  <link rel="stylesheet" href="./style.css">
+</head>
+
+<body class="dashboard-page">
+
+  <div class="app-layout">
+
+    <!-- ==========================================================================
+         COMMON NAVBAR
+         ========================================================================== -->
+    <div id="navbar-container">
+
+      <header class="navbar" id="appNavbar">
+        <div class="navbar-container">
+
+          <!-- UNIORA LOGO -->
+          <a
+            href="/dashboard/index.html"
+            class="navbar-brand"
+            aria-label="UNIORA Dashboard"
+          >
+            <img
+              src="../common/assets/uniora_logo_navbar.png"
+              alt="UNIORA"
+              class="navbar-logo"
+            />
+          </a>
+
+          <!-- MAIN NAVIGATION -->
+          <nav
+            class="navbar-menu"
+            id="navbarMenu"
+            aria-label="Main navigation"
+          >
+            <a
+              href="/dashboard/index.html"
+              class="navbar-link"
+              data-page="dashboard"
+            >
+              <span class="navbar-link-text">Dashboard</span>
+            </a>
+
+            <a
+              href="/features/01_scheme_recommendation/frontend/index.html"
+              class="navbar-link"
+              data-page="schemes"
+            >
+              <span class="navbar-link-text">Schemes</span>
+            </a>
+
+            <a
+              href="/features/03_documents_verification/frontend/index.html"
+              class="navbar-link"
+              data-page="documents"
+            >
+              <span class="navbar-link-text">Documents</span>
+            </a>
+
+            <a
+              href="/features/04_eligible_schemes/frontend/index.html"
+              class="navbar-link"
+              data-page="eligible"
+            >
+              <span class="navbar-link-text">Eligible</span>
+            </a>
+
+            <a
+              href="/features/05_my_readiness/frontend/index.html"
+              class="navbar-link"
+              data-page="readiness"
+            >
+              <span class="navbar-link-text">Readiness</span>
+            </a>
+
+            <a
+              href="/features/06_government_services/frontend/index.html"
+              class="navbar-link"
+              data-page="services"
+            >
+              <span class="navbar-link-text">Services</span>
+            </a>
+
+            <a
+              href="/features/02_ask_uniora/frontend/index.html"
+              class="navbar-link navbar-link-ask"
+              data-page="ask"
+            >
+              <span class="navbar-link-text">Ask Uniora</span>
+            </a>
+          </nav>
+
+          <!-- RIGHT NAVIGATION CLUSTER -->
+          <div class="navbar-right">
+
+            <!-- HAMBURGER TOGGLE -->
+            <button
+              type="button"
+              class="navbar-toggle"
+              id="navbarToggle"
+              aria-label="Open navigation menu"
+              aria-expanded="false"
+              aria-controls="navbarMenu"
+            >
+              <span class="navbar-toggle-bar"></span>
+              <span class="navbar-toggle-bar"></span>
+              <span class="navbar-toggle-bar"></span>
+            </button>
+
+            <!-- AUTHENTICATION AREA -->
+            <div
+              class="navbar-auth is-loading"
+              id="navbarAuth"
+              aria-live="polite"
+            >
+              <!-- AUTHENTICATED USER -->
+              <div
+                class="navbar-user"
+                id="navbarUser"
+                hidden
+              >
+                <a
+                  href="/features/10_profile/frontend/index.html"
+                  class="navbar-profile"
+                  id="navbarProfileLink"
+                  aria-label="View profile"
+                >
+                  <div
+                    class="navbar-avatar"
+                    id="navbarAvatar"
+                    aria-hidden="true"
+                  >
+                    U
+                  </div>
+
+                  <span
+                    class="navbar-user-name"
+                    id="navbarUserName"
+                  >
+                    User
+                  </span>
+                </a>
+              </div>
+
+              <!-- GUEST USER -->
+              <a
+                href="/auth/login/index.html"
+                class="navbar-login"
+                id="navbarLogin"
+                hidden
+              >
+                LOGIN
+              </a>
+            </div>
+
+          </div>
+
+        </div>
+      </header>
+
+      <!-- MOBILE DRAWER OVERLAY -->
+      <div
+        class="navbar-overlay"
+        id="navbarOverlay"
+        aria-hidden="true"
+      ></div>
+
+    </div>
+
+    <!-- ==========================================================================
+         DASHBOARD HERO BANNER
+         ========================================================================== -->
+    <div
+      class="dashboard-hero-banner-container"
+      id="dashboardHeroBanner"
+    >
+      <img
+        src="../common/assets/uniora_dashboard.png"
+        alt="UNIORA Welfare Dashboard Banner"
+        class="dashboard-hero-banner"
+        loading="eager"
+        onerror="this.onerror=null; this.src='../common/assets/uniora_dashboard.png';"
+      />
+    </div>
+
+    <!-- ==========================================================================
+         MAIN DASHBOARD CONTENT
+         ========================================================================== -->
+    <main
+      class="dashboard-main"
+      id="dashboardMain"
+    >
+
+      <div
+        class="dashboard-message"
+        id="dashboardMessage"
+        aria-live="polite"
+      ></div>
+
+      <!-- ==========================================================================
+           WELCOME & LIVE IST TIME SECTION
+           ========================================================================== -->
+      <section
+        class="welcome-card-section"
+        aria-label="Citizen Greeting and Live Time"
+      >
+        <div class="welcome-split-container">
+
+          <div class="welcome-left-half">
+            <h1
+              class="welcome-heading"
+              id="welcomeHeading"
+            >
+              Welcome to UNIORA
+            </h1>
+
+            <p class="welcome-subtext">
+              Unified access to Central and Tamil Nadu State Schemes &amp; Citizen Welfare Services.
+            </p>
+          </div>
+
+          <div
+            class="welcome-right-half"
+            aria-label="Live Indian Standard Time"
+          >
+            <div
+              class="clock-time-display"
+              id="istDigitalClock"
+            >
+              --:--:-- IST
+            </div>
+
+            <div
+              class="clock-date-display"
+              id="istDigitalDate"
+            >
+              -- --- ----
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           STATISTICS KPI COUNTER
+           ========================================================================== -->
+      <section
+        class="stats-section"
+        aria-label="Platform Statistics"
+      >
+        <div class="stats-grid">
+
+          <div class="stat-card">
+            <div class="stat-icon-wrap stat-red">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+            </div>
+
+            <div class="stat-info">
+              <span class="stat-number">577+</span>
+              <span class="stat-label">
+                Central &amp; Tamil Nadu State Schemes
+              </span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-wrap stat-navy">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <path d="M3 21h18M3 7v14M21 7v14M6 21V11M10 21V11M14 21V11M18 21V11M12 3L2 7h20L12 3z"/>
+              </svg>
+            </div>
+
+            <div class="stat-info">
+              <span class="stat-number">28+</span>
+              <span class="stat-label">Government Departments</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-wrap stat-green">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
+
+            <div class="stat-info">
+              <span class="stat-number">100%</span>
+              <span class="stat-label">Verified Official Portals</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-wrap stat-purple">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+            </div>
+
+            <div class="stat-info">
+              <span class="stat-number">Direct</span>
+              <span class="stat-label">
+                Welfare &amp; Financial Support
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           SEARCH BAR
+           ========================================================================== -->
+      <section
+        class="search-section"
+        aria-label="Search Schemes"
+      >
+        <div class="compact-search-card">
+
+          <div class="search-input-wrapper">
+            <svg
+              class="search-icon"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+
+            <input
+              type="text"
+              id="schemeSearchInput"
+              class="scheme-search-input"
+              placeholder="Search by Scheme Name"
+              autocomplete="off"
+            />
+
+            <button
+              type="button"
+              class="search-clear-btn"
+              id="searchClearBtn"
+              hidden
+              aria-label="Clear search"
+            >
+              ×
+            </button>
+          </div>
+
+          <div
+            class="search-results-container"
+            id="searchResultsContainer"
+            hidden
+          >
+            <div class="search-results-header">
+              <span id="searchResultsCount">
+                Found 0 matching schemes
+              </span>
+            </div>
+
+            <div
+              class="search-results-grid"
+              id="searchResultsGrid"
+            ></div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           SECTION TITLE CARD
+           ========================================================================== -->
+      <section
+        class="features-section"
+        aria-label="UNIORA Welfare Modules"
+      >
+        <div class="section-title-card">
+
+          <div class="section-title-left">
+            <span
+              class="section-title-pill-bar"
+              aria-hidden="true"
+            ></span>
+
+            <div>
+              <h2 class="section-title">
+                Central and Tamil Nadu State Services
+              </h2>
+            </div>
+          </div>
+
+          <span class="section-title-badge">
+            6 Active Modules
+          </span>
+
+        </div>
+
+        <!-- FEATURE CARDS -->
+        <div class="dashboard-features-grid">
+
+          <!-- 01 — Scheme Discovery -->
+          <a
+            href="/features/01_scheme_recommendation/frontend/index.html"
+            class="feature-card card-blue"
+            data-feature-id="01_scheme_recommendation"
+          >
+            <div class="feature-card-top">
+
+              <div
+                class="feature-icon-circle icon-blue"
+                aria-hidden="true"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <circle cx="11.5" cy="14.5" r="2.5"/>
+                  <path d="M13.25 16.25L15 18"/>
+                </svg>
+              </div>
+
+              <div
+                class="feature-arrow-btn"
+                aria-hidden="true"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
+
+            </div>
+
+            <div class="feature-card-content">
+              <h3 class="feature-card-title">
+                Scheme Discovery
+              </h3>
+
+              <p class="feature-card-description">
+                Explore Central and Tamil Nadu State Schemes matching your needs.
+              </p>
+            </div>
+          </a>
+
+          <!-- 03 — Document & Verification -->
+          <a
+            href="/features/03_documents_verification/frontend/index.html"
+            class="feature-card card-green"
+            data-feature-id="03_documents_verification"
+          >
+            <div class="feature-card-top">
+
+              <div
+                class="feature-icon-circle icon-green"
+                aria-hidden="true"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <path d="M9 15l2 2 4-4"/>
+                </svg>
+              </div>
+
+              <div
+                class="feature-arrow-btn"
+                aria-hidden="true"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
+
+            </div>
+
+            <div class="feature-card-content">
+              <h3 class="feature-card-title">
+                Document &amp; Verification
+              </h3>
+
+              <p class="feature-card-description">
+                Upload and verify your certificates using AI automated checks.
+              </p>
+            </div>
+          </a>
+
+          <!-- 04 — Eligible Schemes -->
+          <a
+            href="/features/04_eligible_schemes/frontend/index.html"
+            class="feature-card card-purple"
+            data-feature-id="04_eligible_schemes"
+          >
+            <div class="feature-card-top">
+
+              <div
+                class="feature-icon-circle icon-purple"
+                aria-hidden="true"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <line x1="8" y1="6" x2="21" y2="6"/>
+                  <line x1="8" y1="12" x2="21" y2="12"/>
+                  <line x1="8" y1="18" x2="21" y2="18"/>
+                  <polyline points="3 6 4 7 6 5"/>
+                  <polyline points="3 12 4 13 6 11"/>
+                  <polyline points="3 18 4 19 6 17"/>
+                </svg>
+              </div>
+
+              <div
+                class="feature-arrow-btn"
+                aria-hidden="true"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
+
+            </div>
+
+            <div class="feature-card-content">
+              <h3 class="feature-card-title">
+                Eligible Schemes
+              </h3>
+
+              <p class="feature-card-description">
+                Personalized recommendations for Central and Tamil Nadu State Schemes.
+              </p>
+            </div>
+          </a>
+
+          <!-- 05 — My Readiness -->
+          <a
+            href="/features/05_my_readiness/frontend/index.html"
+            class="feature-card card-yellow"
+            data-feature-id="05_my_readiness"
+          >
+            <div class="feature-card-top">
+
+              <div
+                class="feature-icon-circle icon-yellow"
+                aria-hidden="true"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <line x1="18" y1="20" x2="18" y2="10"/>
+                  <line x1="12" y1="20" x2="12" y2="4"/>
+                  <line x1="6" y1="20" x2="6" y2="14"/>
+                </svg>
+              </div>
+
+              <div
+                class="feature-arrow-btn"
+                aria-hidden="true"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
+
+            </div>
+
+            <div class="feature-card-content">
+              <h3 class="feature-card-title">
+                My Readiness
+              </h3>
+
+              <p class="feature-card-description">
+                Check readiness score and complete missing requirements.
+              </p>
+            </div>
+          </a>
+
+          <!-- 06 — Government Services Nearby -->
+          <a
+            href="/features/06_government_services/frontend/index.html"
+            class="feature-card card-pink"
+            data-feature-id="06_government_services"
+          >
+            <div class="feature-card-top">
+
+              <div
+                class="feature-icon-circle icon-pink"
+                aria-hidden="true"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+              </div>
+
+              <div
+                class="feature-arrow-btn"
+                aria-hidden="true"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
+
+            </div>
+
+            <div class="feature-card-content">
+              <h3 class="feature-card-title">
+                Government Services Nearby
+              </h3>
+
+              <p class="feature-card-description">
+                Locate nearby e-Sevai centers and Tamil Nadu government offices.
+              </p>
+            </div>
+          </a>
+
+          <!-- 02 — Ask Uniora -->
+          <a
+            href="/features/02_ask_uniora/frontend/index.html"
+            class="feature-card card-teal"
+            data-feature-id="02_ask_uniora"
+          >
+            <div class="feature-card-top">
+
+              <div
+                class="feature-icon-circle icon-teal"
+                aria-hidden="true"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  <circle cx="9" cy="10" r="1" fill="currentColor"/>
+                  <circle cx="12" cy="10" r="1" fill="currentColor"/>
+                  <circle cx="15" cy="10" r="1" fill="currentColor"/>
+                </svg>
+              </div>
+
+              <div
+                class="feature-arrow-btn"
+                aria-hidden="true"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
+
+            </div>
+
+            <div class="feature-card-content">
+              <h3 class="feature-card-title">
+                Ask Uniora AI Assistant
+              </h3>
+
+              <p class="feature-card-description">
+                Get instant answers for Central and Tamil Nadu State Schemes.
+              </p>
+            </div>
+          </a>
+
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           ESSENTIAL GOVERNMENT PORTALS DIRECTORY
+           ========================================================================== -->
+      <section
+        class="portals-section"
+        aria-label="Official Government Portals Directory"
+      >
+        <div class="portals-card-container">
+
+          <div class="portals-header">
+            <div>
+              <h2 class="portals-title">
+                Essential Government &amp; Citizen Portals
+              </h2>
+
+              <p class="portals-subtext">
+                Direct links to official state and central portal services for seamless citizen access, verification, and online government applications.
+              </p>
+            </div>
+          </div>
+
+          <div class="portals-grid">
+
+            <a
+              href="https://myaadhaar.uidai.gov.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="portal-item"
+            >
+              <div class="portal-info">
+                <span class="portal-name">myAadhaar Portal</span>
+                <span class="portal-domain">
+                  myaadhaar.uidai.gov.in
+                </span>
+              </div>
+              <span class="portal-arrow">↗</span>
+            </a>
+
+            <a
+              href="https://voters.eci.gov.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="portal-item"
+            >
+              <div class="portal-info">
+                <span class="portal-name">Voters Service Portal</span>
+                <span class="portal-domain">
+                  voters.eci.gov.in
+                </span>
+              </div>
+              <span class="portal-arrow">↗</span>
+            </a>
+
+            <a
+              href="https://www.onlineservices.nsdl.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="portal-item"
+            >
+              <div class="portal-info">
+                <span class="portal-name">PAN Card Services</span>
+                <span class="portal-domain">
+                  onlineservices.nsdl.com
+                </span>
+              </div>
+              <span class="portal-arrow">↗</span>
+            </a>
+
+            <a
+              href="https://passportindia.gov.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="portal-item"
+            >
+              <div class="portal-info">
+                <span class="portal-name">Passport Seva</span>
+                <span class="portal-domain">
+                  passportindia.gov.in
+                </span>
+              </div>
+              <span class="portal-arrow">↗</span>
+            </a>
+
+            <a
+              href="https://sarathi.parivahan.gov.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="portal-item"
+            >
+              <div class="portal-info">
+                <span class="portal-name">Sarathi DL &amp; RTO</span>
+                <span class="portal-domain">
+                  sarathi.parivahan.gov.in
+                </span>
+              </div>
+              <span class="portal-arrow">↗</span>
+            </a>
+
+            <a
+              href="https://www.tnpds.gov.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="portal-item"
+            >
+              <div class="portal-info">
+                <span class="portal-name">TN Smart Ration Card</span>
+                <span class="portal-domain">
+                  tnpds.gov.in
+                </span>
+              </div>
+              <span class="portal-arrow">↗</span>
+            </a>
+
+            <a
+              href="https://tnesevai.tn.gov.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="portal-item"
+            >
+              <div class="portal-info">
+                <span class="portal-name">TNeSevai e-Governance</span>
+                <span class="portal-domain">
+                  tnesevai.tn.gov.in
+                </span>
+              </div>
+              <span class="portal-arrow">↗</span>
+            </a>
+
+            <a
+              href="https://digilocker.gov.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="portal-item"
+            >
+              <div class="portal-info">
+                <span class="portal-name">DigiLocker Wallet</span>
+                <span class="portal-domain">
+                  digilocker.gov.in
+                </span>
+              </div>
+              <span class="portal-arrow">↗</span>
+            </a>
+
+            <a
+              href="https://eservices.tn.gov.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="portal-item"
+            >
+              <div class="portal-info">
+                <span class="portal-name">Patta &amp; Chitta Services</span>
+                <span class="portal-domain">
+                  eservices.tn.gov.in
+                </span>
+              </div>
+              <span class="portal-arrow">↗</span>
+            </a>
+
+            <a
+              href="https://www.udid.gov.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="portal-item"
+            >
+              <div class="portal-info">
+                <span class="portal-name">
+                  Swavlamban Disability Card
+                </span>
+                <span class="portal-domain">
+                  udid.gov.in
+                </span>
+              </div>
+              <span class="portal-arrow">↗</span>
+            </a>
+
+            <a
+              href="https://udyamregistration.gov.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="portal-item"
+            >
+              <div class="portal-info">
+                <span class="portal-name">
+                  MSME Udyam Registration
+                </span>
+                <span class="portal-domain">
+                  udyamregistration.gov.in
+                </span>
+              </div>
+              <span class="portal-arrow">↗</span>
+            </a>
+
+            <a
+              href="https://tafcop.sancharsaathi.gov.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="portal-item"
+            >
+              <div class="portal-info">
+                <span class="portal-name">
+                  Sanchar Saathi TAFCOP
+                </span>
+                <span class="portal-domain">
+                  tafcop.sancharsaathi.gov.in
+                </span>
+              </div>
+              <span class="portal-arrow">↗</span>
+            </a>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           FAQ & MISSION QUOTE SECTION
+           ========================================================================== -->
+      <section
+        class="faq-and-quote-section"
+        aria-label="Frequently Asked Questions and Mission"
+      >
+
+        <a
+          href="../features/07_faq/frontend/index.html"
+          class="faq-action-card"
+        >
+          <div class="faq-card-left">
+
+            <div
+              class="faq-icon-box"
+              aria-hidden="true"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+
+            <div class="faq-text-block">
+              <span class="faq-heading">
+                Frequently Asked Questions (FAQ)
+              </span>
+
+              <span class="faq-subtext">
+                Common answers on Central and Tamil Nadu State Schemes eligibility &amp; documents.
+              </span>
+            </div>
+
+          </div>
+
+          <div
+            class="faq-arrow-circle"
+            aria-hidden="true"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </div>
+        </a>
+
+        <div class="quote-banner">
+
+          <div
+            class="quote-icon"
+            aria-hidden="true"
+          >
+            <svg
+              width="20"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+            </svg>
+          </div>
+
+          <span class="quote-text">
+            "Empowering citizens with direct access to Central and Tamil Nadu State Schemes."
+          </span>
+
+          <span class="quote-author">
+            — UNIORA Platform
+          </span>
+
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- ==========================================================================
+         FOOTER
+         ========================================================================== -->
+    <footer
+      class="dashboard-footer"
+      id="appFooter"
+    >
+      <div class="dashboard-footer-container">
+        <p class="dashboard-footer-text">
+          © 2026 UNIORA Platform. All Rights Reserved.
+        </p>
+
+        <p class="dashboard-footer-subtext">
+          An Initiative for Citizen Welfare &amp; Digital Empowerment
+        </p>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Supabase JS Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Dashboard Script -->
+  <script
+    type="module"
+    src="./script.js"
+  ></script>
+
+</body>
+</html>

@@ -1,0 +1,1216 @@
+/* ==========================================================================
+   UNIORA PLATFORM — COMMON NAVBAR STYLES
+   File: common/components/navbar.css
+   ========================================================================== */
+
+:root {
+  --navbar-height: 72px;
+  --navbar-mobile-height: 64px;
+
+  --c-navy: #0B2545;
+  --c-navy-light: #133E87;
+
+  --c-red: #DC2626;
+  --c-red-dark: #B91C1C;
+  --c-red-light: #FEF2F2;
+  --c-red-border: #FECACA;
+
+  --c-white: #FFFFFF;
+  --c-surface: #F8FAFC;
+  --c-border: #E2E8F0;
+  --c-border-dark: #CBD5E1;
+  --c-text-dark: #1E293B;
+  --c-text-muted: #64748B;
+
+  --navbar-shadow: 0 8px 28px rgba(11, 37, 69, 0.10);
+  --navbar-shadow-scrolled: 0 12px 32px rgba(11, 37, 69, 0.16);
+  --navbar-drawer-shadow: -12px 0 32px rgba(11, 37, 69, 0.16);
+
+  --drawer-width: min(340px, 88vw);
+
+  /* Easing curves — used deliberately per interaction type, not interchangeably.
+     - smooth:   general hover/focus state changes
+     - out-expo: things entering/leaving the viewport (drawer, overlay, page load)
+     - spring:   small playful accents (toggle, avatar) */
+  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --dur-fast: 0.18s;
+  --dur-base: 0.24s;
+  --dur-drawer: 0.38s;
+}
+
+/* ==========================================================================
+   1. NAVBAR CONTAINER & RESET
+   ========================================================================== */
+
+#navbar-container {
+  position: relative;
+  z-index: 1200;
+  min-height: var(--navbar-height);
+}
+
+#appNavbar,
+#appNavbar *,
+#navbarOverlay,
+#navbarOverlay * {
+  box-sizing: border-box;
+}
+
+#appNavbar button,
+#appNavbar a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+#appNavbar [hidden],
+.navbar [hidden],
+.navbar-user[hidden],
+.navbar-login[hidden] {
+  display: none !important;
+}
+
+.navbar a,
+.navbar button,
+.navbar a:hover,
+.navbar a:focus,
+.navbar a:active {
+  text-decoration: none !important;
+}
+
+/* ==========================================================================
+   2. FIXED NAVBAR
+   ========================================================================== */
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1200;
+
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  height: var(--navbar-height);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.98) 0%,
+      rgba(255, 255, 255, 0.94) 100%
+    );
+
+  border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+  box-shadow: var(--navbar-shadow);
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+
+  -webkit-font-smoothing: antialiased;
+  isolation: isolate;
+
+  /* One orchestrated entrance on load — not repeated, not scattered. */
+  animation: navbarSlideIn 0.5s var(--ease-out-expo) both;
+
+  transition:
+    height 0.3s var(--ease-smooth),
+    box-shadow 0.3s var(--ease-smooth);
+}
+
+@keyframes navbarSlideIn {
+  from {
+    box-shadow: none;
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+
+  to {
+    box-shadow: var(--navbar-shadow);
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Optional: toggle this class from JS on scroll (e.g. window.scrollY > 8)
+   for a subtle, deliberate compression + deeper shadow. Safe no-op if unused. */
+.navbar.is-scrolled {
+  height: calc(var(--navbar-height) - 10px);
+  box-shadow: var(--navbar-shadow-scrolled);
+}
+
+.navbar::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+
+  height: 3px;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--c-navy) 0%,
+      var(--c-navy-light) 35%,
+      var(--c-red) 70%,
+      var(--c-red-dark) 100%
+    );
+
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   3. INNER LAYOUT
+   ========================================================================== */
+
+.navbar-container {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  width: 100%;
+  max-width: 1440px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+/* ==========================================================================
+   4. BRAND
+   ========================================================================== */
+
+.navbar-brand {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+
+  min-width: 172px;
+  height: 100%;
+
+  color: var(--c-navy);
+  outline: none;
+
+  transition:
+    transform var(--dur-base) var(--ease-spring),
+    opacity var(--dur-base) ease;
+}
+
+.navbar-brand:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.navbar-brand:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.navbar-brand:focus-visible {
+  border-radius: 8px;
+  outline: 3px solid rgba(220, 38, 38, 0.22);
+  outline-offset: 4px;
+  transition: outline-color var(--dur-fast) ease;
+}
+
+.navbar-logo {
+  display: block;
+
+  width: auto;
+  max-width: 200px;
+  height: 46px;
+  max-height: 50px;
+
+  object-fit: contain;
+
+  padding: 4px 8px;
+
+  background: var(--c-white);
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+
+  transition:
+    border-color var(--dur-base) var(--ease-smooth),
+    box-shadow var(--dur-base) var(--ease-smooth);
+}
+
+.navbar-brand:hover .navbar-logo {
+  border-color: var(--c-red-border);
+  box-shadow: 0 4px 10px rgba(220, 38, 38, 0.08);
+}
+
+/* ==========================================================================
+   5. MAIN NAVIGATION
+   ========================================================================== */
+
+.navbar-menu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  min-width: 0;
+  margin: 0;
+  padding: 6px 10px;
+
+  list-style: none;
+
+  background: rgba(248, 250, 252, 0.92);
+  border: 1px solid var(--c-border);
+  border-radius: 14px;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 8px rgba(11, 37, 69, 0.04);
+
+  flex: 0 0 auto;
+}
+
+.navbar-link {
+  position: relative;
+  overflow: hidden;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 36px;
+  padding: 0 16px;
+
+  color: var(--c-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+
+  cursor: pointer;
+  outline: none;
+  white-space: nowrap;
+
+  font-size: 11.5px;
+  font-weight: 750;
+  letter-spacing: 0.035em;
+  line-height: 1;
+  text-transform: uppercase;
+
+  transition:
+    color var(--dur-base) var(--ease-smooth),
+    background-color var(--dur-base) var(--ease-smooth),
+    border-color var(--dur-base) var(--ease-smooth),
+    box-shadow var(--dur-base) var(--ease-smooth),
+    transform var(--dur-base) var(--ease-spring);
+}
+
+/* Bottom accent bar — grows in from center, gives hover a clear direction
+   instead of relying on color change alone. */
+.navbar-link::before {
+  content: '';
+  position: absolute;
+  right: 8px;
+  bottom: 4px;
+  left: 8px;
+
+  height: 2px;
+
+  background: var(--c-red);
+  border-radius: 999px;
+
+  transform: scaleX(0);
+  transform-origin: center;
+  opacity: 0;
+
+  transition:
+    transform var(--dur-base) var(--ease-out-expo),
+    opacity var(--dur-fast) ease;
+}
+
+.navbar-link:not(.active):hover::before {
+  transform: scaleX(1);
+  opacity: 1;
+}
+
+/* Diagonal shine sweep — a single quick pass on hover so the state change
+   reads as an event, not just a static color swap. */
+.navbar-link::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -75%;
+
+  width: 45%;
+  height: 100%;
+
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    rgba(220, 38, 38, 0.16) 50%,
+    transparent 100%
+  );
+  transform: skewX(-18deg);
+  pointer-events: none;
+}
+
+.navbar-link:hover::after {
+  animation: navbarLinkShine 0.65s var(--ease-out-expo);
+}
+
+.navbar-link.active::after {
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 100%
+  );
+}
+
+@keyframes navbarLinkShine {
+  from {
+    left: -75%;
+  }
+
+  to {
+    left: 130%;
+  }
+}
+
+.navbar-link-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.navbar-link,
+.navbar-link:hover,
+.navbar-link:focus,
+.navbar-link:focus-visible,
+.navbar-link:active,
+.navbar-link.active {
+  text-decoration: none !important;
+  border-bottom: none !important;
+}
+
+.navbar-link:hover {
+  color: var(--c-red);
+  background: var(--c-white);
+  border-color: var(--c-red-border);
+  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.16);
+  transform: translateY(-2px) scale(1.02);
+}
+
+.navbar-link.active:hover {
+  box-shadow:
+    0 8px 20px rgba(220, 38, 38, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.navbar-link:active {
+  box-shadow: 0 3px 8px rgba(220, 38, 38, 0.18);
+  transform: translateY(0) scale(0.97);
+  transition-duration: 0.08s;
+}
+
+.navbar-link:focus-visible {
+  color: var(--c-red);
+  border-color: var(--c-red);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.16);
+}
+
+.navbar-link.active {
+  color: var(--c-white) !important;
+  background:
+    linear-gradient(
+      135deg,
+      var(--c-red) 0%,
+      var(--c-red-dark) 100%
+    );
+  border-color: var(--c-red);
+  box-shadow:
+    0 5px 14px rgba(220, 38, 38, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  font-weight: 800;
+}
+
+.navbar-link.active .navbar-link-text::before {
+  content: '';
+
+  width: 5px;
+  height: 5px;
+
+  background: var(--c-white);
+  border-radius: 50%;
+  box-shadow: 0 0 7px rgba(255, 255, 255, 0.95);
+
+  animation: navbarDotIn var(--dur-base) var(--ease-spring) both;
+}
+
+@keyframes navbarDotIn {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ==========================================================================
+   6. RIGHT NAVIGATION CLUSTER
+   ========================================================================== */
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+
+  min-width: 0;
+  margin-left: auto;
+}
+
+/* ==========================================================================
+   7. AUTHENTICATION AREA
+   ========================================================================== */
+
+.navbar-auth {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  min-width: 126px;
+  min-height: 40px;
+}
+
+.navbar-auth.is-loading > * {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.navbar-auth.is-loading::after {
+  content: '';
+
+  display: block;
+
+  width: 98px;
+  height: 36px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #F1F5F9 20%,
+      #E2E8F0 40%,
+      #F8FAFC 60%,
+      #F1F5F9 80%
+    );
+
+  background-size: 220% 100%;
+  border: 1px solid #E2E8F0;
+  border-radius: 999px;
+
+  animation: navbarAuthShimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes navbarAuthShimmer {
+  0% {
+    background-position: 220% 0;
+  }
+
+  100% {
+    background-position: -220% 0;
+  }
+}
+
+/* Resolving from the loading skeleton into the real auth state is itself a
+   transition worth marking — these run once whenever [hidden] is removed. */
+.navbar-user:not([hidden]) {
+  display: flex !important;
+  align-items: center;
+
+  animation: navbarAuthReveal var(--dur-drawer) var(--ease-out-expo) both;
+}
+
+.navbar-login:not([hidden]) {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+
+  animation: navbarAuthReveal var(--dur-drawer) var(--ease-out-expo) both;
+}
+
+@keyframes navbarAuthReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.navbar-profile {
+  position: relative;
+  overflow: hidden;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+
+  min-height: 40px;
+  padding: 4px 14px 4px 4px;
+
+  color: var(--c-navy);
+  background: var(--c-white);
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+
+  box-shadow: 0 2px 7px rgba(11, 37, 69, 0.05);
+  outline: none;
+
+  transition:
+    color var(--dur-base) var(--ease-smooth),
+    background-color var(--dur-base) var(--ease-smooth),
+    border-color var(--dur-base) var(--ease-smooth),
+    box-shadow var(--dur-base) var(--ease-smooth),
+    transform var(--dur-base) var(--ease-spring);
+}
+
+.navbar-profile::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -75%;
+
+  width: 45%;
+  height: 100%;
+
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    rgba(220, 38, 38, 0.14) 50%,
+    transparent 100%
+  );
+  transform: skewX(-18deg);
+  pointer-events: none;
+}
+
+.navbar-profile:hover::after {
+  animation: navbarLinkShine 0.65s var(--ease-out-expo);
+}
+
+.navbar-profile:hover {
+  color: var(--c-red);
+  background: var(--c-red-light);
+  border-color: var(--c-red-border);
+  box-shadow: 0 8px 18px rgba(220, 38, 38, 0.20);
+  transform: translateY(-2px) scale(1.02);
+}
+
+.navbar-profile:hover .navbar-avatar {
+  transform: scale(1.06) rotate(-4deg);
+}
+
+.navbar-profile:active {
+  transform: translateY(0) scale(0.97);
+  transition-duration: 0.08s;
+}
+
+.navbar-profile:focus-visible {
+  border-color: var(--c-red);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.14);
+}
+
+.navbar-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 32px;
+  height: 32px;
+
+  color: var(--c-white);
+  background:
+    linear-gradient(
+      135deg,
+      var(--c-red) 0%,
+      var(--c-red-dark) 100%
+    );
+  border-radius: 50%;
+
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.28),
+    0 2px 5px rgba(220, 38, 38, 0.22);
+
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+
+  transition: transform var(--dur-base) var(--ease-spring);
+}
+
+.navbar-user-name {
+  max-width: 126px;
+  overflow: hidden;
+
+  color: var(--c-navy);
+  font-size: 12.5px;
+  font-weight: 750;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navbar-login {
+  position: relative;
+  overflow: hidden;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 38px;
+  padding: 0 19px;
+
+  color: var(--c-white) !important;
+  background:
+    linear-gradient(
+      135deg,
+      var(--c-red) 0%,
+      var(--c-red-dark) 100%
+    );
+  border: 1px solid var(--c-red);
+  border-radius: 999px;
+
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.24);
+  outline: none;
+
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  transition:
+    background var(--dur-base) var(--ease-smooth),
+    box-shadow var(--dur-base) var(--ease-smooth),
+    transform var(--dur-base) var(--ease-spring);
+}
+
+.navbar-login::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -75%;
+
+  width: 45%;
+  height: 100%;
+
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  transform: skewX(-18deg);
+  pointer-events: none;
+}
+
+.navbar-login:hover::after {
+  animation: navbarLinkShine 0.65s var(--ease-out-expo);
+}
+
+.navbar-login:hover {
+  background:
+    linear-gradient(
+      135deg,
+      var(--c-red-dark) 0%,
+      #991B1B 100%
+    );
+  box-shadow: 0 10px 22px rgba(220, 38, 38, 0.4);
+  transform: translateY(-2px) scale(1.03);
+}
+
+.navbar-login:active {
+  box-shadow: 0 3px 8px rgba(220, 38, 38, 0.3);
+  transform: translateY(0) scale(0.97);
+  transition-duration: 0.08s;
+}
+
+.navbar-login:focus-visible {
+  box-shadow:
+    0 0 0 3px rgba(220, 38, 38, 0.16),
+    0 4px 12px rgba(220, 38, 38, 0.24);
+}
+
+/* ==========================================================================
+   8. MOBILE MENU TOGGLE
+   ========================================================================== */
+
+.navbar-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+
+  width: 40px;
+  height: 40px;
+  padding: 0;
+
+  background: var(--c-red-light);
+  border: 1px solid var(--c-red-border);
+  border-radius: 10px;
+
+  cursor: pointer;
+  outline: none;
+
+  transition:
+    background-color var(--dur-base) var(--ease-smooth),
+    border-color var(--dur-base) var(--ease-smooth),
+    transform var(--dur-fast) var(--ease-spring);
+}
+
+.navbar-toggle:hover {
+  background: #FEE2E2;
+  border-color: #FCA5A5;
+  box-shadow: 0 0 0 5px rgba(220, 38, 38, 0.10);
+  transform: translateY(-2px) scale(1.04);
+}
+
+.navbar-toggle:active {
+  transform: translateY(0) scale(0.92);
+}
+
+.navbar-toggle:focus-visible {
+  border-color: var(--c-red);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.14);
+}
+
+.navbar-toggle-bar {
+  display: block;
+
+  width: 19px;
+  height: 2px;
+
+  background: var(--c-red);
+  border-radius: 999px;
+
+  transition:
+    opacity var(--dur-fast) var(--ease-smooth),
+    transform 0.3s var(--ease-spring);
+}
+
+.navbar-toggle.is-open {
+  transform: rotate(90deg);
+}
+
+.navbar-toggle.is-open:hover {
+  transform: rotate(90deg) translateY(-1px);
+}
+
+.navbar-toggle.is-open .navbar-toggle-bar:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.navbar-toggle.is-open .navbar-toggle-bar:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.navbar-toggle.is-open .navbar-toggle-bar:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* ==========================================================================
+   9. MOBILE OVERLAY
+   ========================================================================== */
+
+.navbar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1190;
+
+  background: rgba(11, 37, 69, 0.46);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+
+  transition:
+    opacity var(--dur-drawer) var(--ease-out-expo),
+    visibility var(--dur-drawer) var(--ease-out-expo),
+    backdrop-filter var(--dur-drawer) var(--ease-out-expo);
+}
+
+.navbar-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+}
+
+/* ==========================================================================
+   10. RESPONSIVE DESKTOP
+   ========================================================================== */
+
+@media (max-width: 1240px) {
+  .navbar-container {
+    gap: 12px;
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+
+  .navbar-brand {
+    min-width: 154px;
+  }
+
+  .navbar-menu {
+    gap: 6px;
+    padding: 5px 8px;
+  }
+
+  .navbar-link {
+    padding-right: 11px;
+    padding-left: 11px;
+    font-size: 10.5px;
+  }
+
+  .navbar-auth {
+    min-width: 108px;
+  }
+
+  .navbar-user-name {
+    max-width: 92px;
+  }
+}
+
+@media (max-width: 1040px) {
+  .navbar-container {
+    gap: 9px;
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .navbar-brand {
+    min-width: 138px;
+  }
+
+  .navbar-logo {
+    max-width: 170px;
+    height: 40px;
+    padding: 3px 7px;
+  }
+
+  .navbar-menu {
+    gap: 4px;
+    padding: 4px 6px;
+  }
+
+  .navbar-link {
+    min-height: 34px;
+    padding-right: 9px;
+    padding-left: 9px;
+    font-size: 9.5px;
+    letter-spacing: 0.02em;
+  }
+
+  .navbar-profile {
+    padding-right: 8px;
+  }
+
+  .navbar-user-name {
+    max-width: 76px;
+    font-size: 11.5px;
+  }
+
+  .navbar-login {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+}
+
+/* ==========================================================================
+   11. TABLET AND MOBILE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  :root {
+    --navbar-height: var(--navbar-mobile-height);
+  }
+
+  #navbar-container {
+    min-height: var(--navbar-mobile-height);
+  }
+
+  .navbar {
+    height: var(--navbar-mobile-height);
+  }
+
+  .navbar-container {
+    gap: 8px;
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .navbar-brand {
+    min-width: 0;
+  }
+
+  .navbar-logo {
+    max-width: 150px;
+    height: 38px;
+    max-height: 42px;
+    padding: 3px 6px;
+  }
+
+  .navbar-toggle {
+    display: inline-flex;
+  }
+
+  .navbar-auth {
+    min-width: 0;
+  }
+
+  /* The drawer stays in the layout at all times and is animated purely with
+     transform/opacity. This means it now glides in AND out — the old
+     display:none swap only ever animated the open, never the close. */
+  .navbar-menu {
+    position: fixed;
+    top: var(--navbar-mobile-height);
+    right: 0;
+    bottom: 0;
+    z-index: 1195;
+
+    display: flex;
+    align-items: stretch;
+    justify-content: flex-start;
+    flex-direction: column;
+    gap: 10px;
+
+    width: var(--drawer-width);
+    min-height: calc(100vh - var(--navbar-mobile-height));
+    margin: 0;
+    padding: 22px 16px 28px;
+
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    background:
+      linear-gradient(
+        180deg,
+        #FFFFFF 0%,
+        #F8FAFC 100%
+      );
+    border: none;
+    border-left: 1px solid var(--c-border);
+    border-radius: 0;
+    box-shadow: none;
+
+    transform: translateX(100%);
+    visibility: hidden;
+    pointer-events: none;
+
+    transition:
+      transform var(--dur-drawer) var(--ease-out-expo),
+      box-shadow var(--dur-drawer) var(--ease-out-expo),
+      visibility var(--dur-drawer) var(--ease-out-expo);
+  }
+
+  .navbar-menu.is-open {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+    box-shadow: var(--navbar-drawer-shadow);
+  }
+
+  /* Links stagger in on open, each starting a beat after the last, so the
+     drawer reads as one gesture rather than a static panel appearing. */
+  .navbar-menu .navbar-link {
+    opacity: 0;
+    transform: translateX(14px);
+    transition:
+      opacity var(--dur-base) var(--ease-out-expo),
+      transform var(--dur-base) var(--ease-out-expo),
+      background-color var(--dur-base) var(--ease-smooth),
+      border-color var(--dur-base) var(--ease-smooth),
+      color var(--dur-base) var(--ease-smooth);
+  }
+
+  .navbar-menu.is-open .navbar-link {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .navbar-menu.is-open .navbar-link:nth-child(1) { transition-delay: 0.05s; }
+  .navbar-menu.is-open .navbar-link:nth-child(2) { transition-delay: 0.09s; }
+  .navbar-menu.is-open .navbar-link:nth-child(3) { transition-delay: 0.13s; }
+  .navbar-menu.is-open .navbar-link:nth-child(4) { transition-delay: 0.17s; }
+  .navbar-menu.is-open .navbar-link:nth-child(5) { transition-delay: 0.21s; }
+  .navbar-menu.is-open .navbar-link:nth-child(6) { transition-delay: 0.25s; }
+  .navbar-menu.is-open .navbar-link:nth-child(7) { transition-delay: 0.29s; }
+
+  .navbar-menu .navbar-link {
+    justify-content: flex-start;
+
+    width: 100%;
+    min-height: 46px;
+    padding: 0 17px;
+
+    color: var(--c-text-dark);
+    background: var(--c-white);
+    border: 1px solid var(--c-border);
+    border-radius: 11px;
+
+    font-size: 12px;
+    letter-spacing: 0.04em;
+  }
+
+  .navbar-menu .navbar-link:hover {
+    color: var(--c-red);
+    background: var(--c-red-light);
+    border-color: var(--c-red-border);
+    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.14);
+    transform: translateX(4px) scale(1.01);
+  }
+
+  .navbar-menu .navbar-link:not(.active)::before {
+    right: auto;
+    bottom: auto;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+
+    width: 3px;
+    height: auto;
+
+    transform: scaleY(0);
+    transform-origin: center;
+  }
+
+  .navbar-menu .navbar-link:not(.active):hover::before {
+    transform: scaleY(1);
+  }
+
+  .navbar-menu .navbar-link:active {
+    transform: translateX(4px) scale(0.98);
+    transition-duration: 0.08s;
+  }
+
+  .navbar-menu .navbar-link:focus-visible {
+    color: var(--c-red);
+    background: var(--c-red-light);
+    border-color: var(--c-red);
+  }
+
+  .navbar-menu .navbar-link.active {
+    color: var(--c-white) !important;
+    background:
+      linear-gradient(
+        135deg,
+        var(--c-red) 0%,
+        var(--c-red-dark) 100%
+      );
+    border-color: var(--c-red);
+    box-shadow: 0 5px 14px rgba(220, 38, 38, 0.2);
+  }
+}
+
+/* ==========================================================================
+   12. SMALL MOBILE DEVICES
+   ========================================================================== */
+
+@media (max-width: 520px) {
+  .navbar-container {
+    padding-right: 9px;
+    padding-left: 9px;
+  }
+
+  .navbar-logo {
+    max-width: 132px;
+    height: 36px;
+    padding: 2px 5px;
+  }
+
+  .navbar-right {
+    gap: 6px;
+  }
+
+  .navbar-toggle {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+  }
+
+  .navbar-toggle-bar {
+    width: 17px;
+  }
+
+  .navbar-profile {
+    min-height: 36px;
+    padding: 2px;
+    border-radius: 50%;
+  }
+
+  .navbar-avatar {
+    width: 30px;
+    height: 30px;
+  }
+
+  .navbar-user-name {
+    display: none;
+  }
+
+  .navbar-login {
+    min-height: 36px;
+    padding-right: 12px;
+    padding-left: 12px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  .navbar-logo {
+    max-width: 118px;
+    padding: 2px 4px;
+  }
+
+  .navbar-toggle {
+    width: 34px;
+  }
+
+  .navbar-login {
+    padding-right: 9px;
+    padding-left: 9px;
+  }
+}
+
+/* ==========================================================================
+   13. REDUCED MOTION
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .navbar,
+  .navbar *,
+  .navbar-overlay {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+  }
+}

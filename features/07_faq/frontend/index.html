@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frequently Asked Questions - UNIORA Welfare Platform</title>
+
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Common Design System & Navbar CSS -->
+  <link rel="stylesheet" href="../../../common/css/global.css">
+  <link rel="stylesheet" href="../../../common/components/navbar.css">
+  <link rel="stylesheet" href="../../../common/css/responsive.css">
+
+  <!-- Feature 07 - FAQ Styles -->
+  <link rel="stylesheet" href="./style.css">
+
+  <!-- INSTANT 0MS SYNCHRONOUS AUTH HYDRATION (Prevents page-refresh flicker) -->
+  <script>
+    (function() {
+      try {
+        var name = localStorage.getItem('uniora_cached_user_name');
+        var hasUser = false;
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+            var raw = localStorage.getItem(k);
+            if (raw) {
+              var p = JSON.parse(raw);
+              if (p && p.user) {
+                hasUser = true;
+                if (!name) {
+                  name = p.user.user_metadata?.full_name || p.user.user_metadata?.name || p.user.email?.split('@')[0] || 'User';
+                }
+                break;
+              }
+            }
+          }
+        }
+        if (hasUser) {
+          document.write('<style>#navbarUser{display:flex !important;} #navbarLogin{display:none !important;} #navbarAuth.is-loading > *{visibility:visible !important;} #navbarAuth.is-loading::after{display:none !important;}</style>');
+        } else {
+          document.write('<style>#navbarLogin{display:inline-flex !important;} #navbarUser{display:none !important;} #navbarAuth.is-loading > *{visibility:visible !important;} #navbarAuth.is-loading::after{display:none !important;}</style>');
+        }
+      } catch(e) {}
+    })();
+  </script>
+</head>
+
+<body class="dashboard-page faq-page">
+
+  <div class="app-layout">
+
+    <!-- ==========================================================================
+         COMMON NAVBAR (Pre-rendered inline for ZERO blinking/flicker)
+         ========================================================================== -->
+    <div id="navbar-container">
+      <header class="navbar" id="appNavbar">
+        <div class="navbar-container">
+          <a href="/dashboard/index.html" class="navbar-brand" aria-label="UNIORA Dashboard">
+            <img src="../../../common/assets/uniora_logo_navbar.png" alt="UNIORA" class="navbar-logo" />
+          </a>
+          <nav class="navbar-menu" id="navbarMenu" aria-label="Main navigation">
+            <a href="../../../dashboard/index.html" class="navbar-link" data-page="dashboard">
+              <span class="navbar-link-text">Dashboard</span>
+            </a>
+            <a href="/features/01_scheme_recommendation/frontend/index.html" class="navbar-link" data-page="schemes">
+              <span class="navbar-link-text">Schemes</span>
+            </a>
+            <a href="/features/03_documents_verification/frontend/index.html" class="navbar-link" data-page="documents">
+              <span class="navbar-link-text">Documents</span>
+            </a>
+            <a href="/features/04_eligible_schemes/frontend/index.html" class="navbar-link" data-page="eligible">
+              <span class="navbar-link-text">Eligible</span>
+            </a>
+            <a href="/features/05_my_readiness/frontend/index.html" class="navbar-link" data-page="readiness">
+              <span class="navbar-link-text">Readiness</span>
+            </a>
+            <a href="/features/06_government_services/frontend/index.html" class="navbar-link" data-page="services">
+              <span class="navbar-link-text">Services</span>
+            </a>
+            <a href="/features/02_ask_uniora/frontend/index.html" class="navbar-link navbar-link-ask" data-page="ask">
+              <span class="navbar-link-text">Ask Uniora</span>
+            </a>
+          </nav>
+          <div class="navbar-right">
+            <button type="button" class="navbar-toggle" id="navbarToggle" aria-label="Open navigation menu" aria-expanded="false" aria-controls="navbarMenu">
+              <span class="navbar-toggle-bar"></span>
+              <span class="navbar-toggle-bar"></span>
+              <span class="navbar-toggle-bar"></span>
+            </button>
+            <div class="navbar-auth is-loading" id="navbarAuth">
+              <div class="navbar-user" id="navbarUser" hidden>
+                <a href="/features/10_profile/frontend/index.html" class="navbar-profile" id="navbarProfileLink" aria-label="View Profile">
+                  <div class="navbar-avatar" id="navbarAvatar" aria-hidden="true">U</div>
+                  <span class="navbar-user-name" id="navbarUserName">User</span>
+                </a>
+              </div>
+              <a href="/auth/login/index.html" class="navbar-login" id="navbarLogin" hidden>LOGIN</a>
+            </div>
+          </div>
+        </div>
+      </header>
+      <div class="navbar-overlay" id="navbarOverlay"></div>
+    </div>
+
+    <!-- ==========================================================================
+         MAIN FAQ CONTENT (Redesigned & Polished UI)
+         ========================================================================== -->
+    <main class="faq-main" id="faqMain">
+
+      <!-- PAGE HEADING HERO -->
+      <section class="faq-page-heading">
+        <div class="faq-heading-content">
+          <span class="faq-badge">Citizen Knowledge Base</span>
+          <h1 class="faq-title">Frequently Asked Questions (FAQ)</h1>
+          <p class="faq-subtitle">
+            Find instant answers about Central and Tamil Nadu State Schemes, document verification procedures, eligibility checks, and citizen welfare services.
+          </p>
+        </div>
+      </section>
+
+      <!-- SEARCH CONSOLE -->
+      <section class="faq-search-section" aria-label="Search FAQs">
+        <div class="faq-search-wrapper">
+          <span class="faq-search-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </span>
+
+          <input
+            type="search"
+            id="faqSearchInput"
+            class="faq-search-input"
+            placeholder="Search questions by keyword (e.g. Aadhaar, income, ration card, eligibility)…"
+            aria-label="Search frequently asked questions"
+            autocomplete="off"
+          />
+          <button type="button" class="search-clear-btn" id="clearSearchBtn" hidden aria-label="Clear search">×</button>
+        </div>
+      </section>
+
+      <!-- FAQ COUNT & STATUS -->
+      <div class="faq-status-bar">
+        <span class="faq-count" id="faqCount" aria-live="polite">
+          Loading frequently asked questions...
+        </span>
+      </div>
+
+      <!-- LOADING STATE -->
+      <div id="loadingState" class="state-panel">
+        <div class="skeleton-list" aria-hidden="true">
+          <div class="skeleton-item"></div>
+          <div class="skeleton-item"></div>
+          <div class="skeleton-item"></div>
+          <div class="skeleton-item"></div>
+        </div>
+        <p class="state-panel-text">Loading frequently asked questions...</p>
+      </div>
+
+      <!-- ERROR STATE -->
+      <div id="errorState" class="state-panel" hidden>
+        <div class="state-panel-icon" aria-hidden="true">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <p class="state-panel-title">Unable to load questions</p>
+        <p class="state-panel-text">Please check your network connection and try again.</p>
+        <button type="button" id="retryBtn" class="btn btn-primary">Retry</button>
+      </div>
+
+      <!-- EMPTY SEARCH STATE -->
+      <div id="emptyState" class="state-panel" hidden>
+        <div class="state-panel-icon" aria-hidden="true">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </div>
+        <p class="state-panel-title">No matching questions found</p>
+        <p class="state-panel-text">Try searching with another keyword or explore categories.</p>
+        <button type="button" class="btn btn-outline" id="emptyResetBtn">Clear Search</button>
+      </div>
+
+      <!-- FAQ ACCORDION -->
+      <section class="faq-accordion-section" aria-label="FAQ List">
+        <div class="faq-accordion" id="faqAccordion" hidden></div>
+      </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="dashboard-footer" id="appFooter">
+      <div class="dashboard-footer-container">
+        <p class="dashboard-footer-text">© 2026 UNIORA Platform. All Rights Reserved.</p>
+        <p class="dashboard-footer-subtext">An Initiative for Citizen Welfare &amp; Digital Empowerment</p>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- SUPABASE JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- FEATURE 07 SCRIPT -->
+  <script type="module" src="./script.js"></script>
+
+</body>
+</html>

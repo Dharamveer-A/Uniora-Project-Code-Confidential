@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Explore Welfare Schemes - UNIORA</title>
+
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <!-- Common Design System -->
+  <link rel="stylesheet" href="../../../common/css/global.css">
+
+  <!-- Common Navbar CSS -->
+  <link rel="stylesheet" href="../../../common/components/navbar.css">
+
+  <!-- Common Responsive -->
+  <link rel="stylesheet" href="../../../common/css/responsive.css">
+
+  <!-- Feature-specific stylesheet -->
+  <link rel="stylesheet" href="./style.css">
+
+  <!-- INSTANT 0MS SYNCHRONOUS AUTH HYDRATION (Prevents page-refresh flicker) -->
+  <script>
+    (function() {
+      try {
+        var name = localStorage.getItem('uniora_cached_user_name');
+        var hasUser = false;
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+            var raw = localStorage.getItem(k);
+            if (raw) {
+              var p = JSON.parse(raw);
+              if (p && p.user) {
+                hasUser = true;
+                if (!name) {
+                  name = p.user.user_metadata?.full_name || p.user.user_metadata?.name || p.user.email?.split('@')[0] || 'User';
+                }
+                break;
+              }
+            }
+          }
+        }
+        if (hasUser) {
+          document.write('<style>#navbarUser{display:flex !important;} #navbarLogin{display:none !important;} #navbarAuth.is-loading > *{visibility:visible !important;} #navbarAuth.is-loading::after{display:none !important;}</style>');
+        } else {
+          document.write('<style>#navbarLogin{display:inline-flex !important;} #navbarUser{display:none !important;} #navbarAuth.is-loading > *{visibility:visible !important;} #navbarAuth.is-loading::after{display:none !important;}</style>');
+        }
+      } catch(e) {}
+    })();
+  </script>
+</head>
+
+<body class="dashboard-page schemes-page">
+
+  <div class="app-layout">
+
+    <!-- ==========================================================================
+         COMMON NAVBAR (Pre-rendered inline for ZERO blinking/flicker)
+         ========================================================================== -->
+    <div id="navbar-container">
+      <header class="navbar" id="appNavbar">
+        <div class="navbar-container">
+
+          <!-- UNIORA LOGO -->
+          <a href="../../../dashboard/index.html" class="navbar-brand" aria-label="UNIORA Dashboard">
+            <img
+              src="../../../common/assets/uniora_logo_navbar.png"
+              alt="UNIORA"
+              class="navbar-logo"
+            />
+          </a>
+
+          <!-- MAIN NAVIGATION (6 Features) -->
+          <nav class="navbar-menu" id="navbarMenu" aria-label="Main navigation">
+            <a href="../../../dashboard/index.html" class="navbar-link" data-page="dashboard">
+              <span class="navbar-link-text">Dashboard</span>
+            </a>
+            <a href="../../../features/01_scheme_recommendation/frontend/index.html" class="navbar-link" data-page="schemes">
+              <span class="navbar-link-text">Schemes</span>
+            </a>
+            <a href="../../../features/03_documents_verification/frontend/index.html" class="navbar-link" data-page="documents">
+              <span class="navbar-link-text">Documents</span>
+            </a>
+            <a href="../../../features/04_eligible_schemes/frontend/index.html" class="navbar-link" data-page="eligible">
+              <span class="navbar-link-text">Eligible</span>
+            </a>
+            <a href="../../../features/05_my_readiness/frontend/index.html" class="navbar-link" data-page="readiness">
+              <span class="navbar-link-text">Readiness</span>
+            </a>
+            <a href="../../../features/06_government_services/frontend/index.html" class="navbar-link" data-page="services">
+              <span class="navbar-link-text">Services</span>
+            </a>
+            <a href="../../../features/02_ask_uniora/frontend/index.html" class="navbar-link navbar-link-ask" data-page="ask">
+              <span class="navbar-link-text">Ask Uniora</span>
+            </a>
+          </nav>
+
+          <!-- RIGHT CLUSTER (Toggle + Supabase Auth) -->
+          <div class="navbar-right">
+            <!-- HAMBURGER TOGGLE (Mobile only) -->
+            <button
+              type="button"
+              class="navbar-toggle"
+              id="navbarToggle"
+              aria-label="Open navigation menu"
+              aria-expanded="false"
+              aria-controls="navbarMenu"
+            >
+              <span class="navbar-toggle-bar"></span>
+              <span class="navbar-toggle-bar"></span>
+              <span class="navbar-toggle-bar"></span>
+            </button>
+
+            <!-- AUTHENTICATION AREA (Initially in loading state, both states hidden) -->
+            <div class="navbar-auth is-loading" id="navbarAuth">
+              <!-- AUTHENTICATED USER -->
+              <div class="navbar-user" id="navbarUser" hidden>
+                <a
+                  href="../../../features/10_profile/frontend/index.html"
+                  class="navbar-profile"
+                  id="navbarProfileLink"
+                  aria-label="View Profile"
+                >
+                  <div class="navbar-avatar" id="navbarAvatar" aria-hidden="true">U</div>
+                  <span class="navbar-user-name" id="navbarUserName">User</span>
+                </a>
+              </div>
+
+              <!-- GUEST USER -->
+              <a href="../../../auth/login/index.html" class="navbar-login" id="navbarLogin" hidden>
+                LOGIN
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </header>
+      <div class="navbar-overlay" id="navbarOverlay"></div>
+    </div>
+
+    <!-- ==============================================================
+         MAIN CONTENT
+         ============================================================== -->
+    <main class="schemes-main" id="mainContent">
+
+      <!-- PAGE HEADING -->
+      <section class="page-heading">
+        <div class="page-heading__text">
+          <h1 class="page-heading__title">
+            Explore Welfare Schemes
+          </h1>
+          <p class="page-heading__subtitle">
+            Browse every government scheme in the UNIORA database and open a
+            scheme to see full details.
+          </p>
+        </div>
+
+        <div class="info-note" role="note">
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="9"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+            <path
+              d="M12 11v5.5"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+            <circle
+              cx="12"
+              cy="8"
+              r="1"
+              fill="currentColor"
+            />
+          </svg>
+          <span>
+            UNIORA lists schemes for discovery only. Final eligibility is
+            determined by the respective government department.
+          </span>
+        </div>
+      </section>
+
+      <!-- SEARCH -->
+      <section
+        class="search-section"
+        aria-label="Search schemes"
+      >
+        <div
+          class="header-search-wrapper"
+          style="
+            background:#ffffff;
+            border:1px solid #cbd5e1;
+            border-radius:12px;
+            padding:12px 20px;
+            display:flex;
+            align-items:center;
+            gap:14px;
+            margin-top:20px;
+            box-shadow:0 1px 3px rgba(15,23,42,0.03);
+          "
+        >
+          <span
+            class="header-search-icon"
+            aria-hidden="true"
+            style="
+              color:#64748b;
+              display:flex;
+              align-items:center;
+            "
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle
+                cx="11"
+                cy="11"
+                r="8"
+              />
+              <line
+                x1="21"
+                y1="21"
+                x2="16.65"
+                y2="16.65"
+              />
+            </svg>
+          </span>
+
+          <input
+            type="search"
+            id="schemeSearchInput"
+            class="header-search-input"
+            placeholder="Search schemes by name, keyword or benefit…"
+            aria-label="Search welfare schemes"
+            autocomplete="off"
+            style="
+              border:none;
+              outline:none;
+              width:100%;
+              font-size:15px;
+              background:transparent;
+              font-family:inherit;
+              color:#0f172a;
+            "
+          >
+        </div>
+      </section>
+
+      <!-- FILTERS -->
+      <section
+        class="filters-section"
+        aria-label="Filter schemes"
+      >
+        <div class="filters-grid">
+          <!-- Category -->
+          <div class="filter-field">
+            <label for="filterCategory">
+              Category Type
+            </label>
+            <select
+              id="filterCategory"
+              aria-label="Filter by category type"
+            >
+              <option value="all">
+                All Categories
+              </option>
+            </select>
+          </div>
+
+          <!-- Sector -->
+          <div class="filter-field">
+            <label for="filterSector">
+              Sector
+            </label>
+            <select
+              id="filterSector"
+              aria-label="Filter by sector"
+            >
+              <option value="all">
+                All Sectors
+              </option>
+            </select>
+          </div>
+
+          <!-- Gender -->
+          <div class="filter-field">
+            <label for="filterGender">
+              Gender
+            </label>
+            <select
+              id="filterGender"
+              aria-label="Filter by gender"
+            >
+              <option value="all">
+                All
+              </option>
+            </select>
+          </div>
+
+          <!-- Status -->
+          <div class="filter-field">
+            <label for="filterStatus">
+              Scheme Status
+            </label>
+            <select
+              id="filterStatus"
+              aria-label="Filter by scheme status"
+            >
+              <option value="all">
+                All Statuses
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Filter actions -->
+        <div class="filters-actions">
+          <button
+            type="button"
+            id="resetFiltersBtn"
+            class="btn btn-ghost"
+          >
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path
+                d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
+              />
+              <path
+                d="M3 3v5h5"
+              />
+            </svg>
+            Reset Filters
+          </button>
+        </div>
+      </section>
+
+      <!-- RESULTS -->
+      <section
+        class="results-section"
+        aria-label="Scheme results"
+      >
+        <div class="results-header">
+          <h2 class="results-header__title">
+            Available Schemes
+          </h2>
+          <span
+            class="results-header__count"
+            id="resultsCount"
+            aria-live="polite"
+          >
+            Loading…
+          </span>
+        </div>
+
+        <!-- Loading -->
+        <div
+          id="loadingState"
+          class="state-panel"
+        >
+          <div
+            class="skeleton-grid"
+            aria-hidden="true"
+          >
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+          </div>
+          <p class="state-panel__text">
+            Loading welfare schemes…
+          </p>
+        </div>
+
+        <!-- Error -->
+        <div
+          id="errorState"
+          class="state-panel"
+          hidden
+        >
+          <div
+            class="state-panel__icon"
+            aria-hidden="true"
+          >
+            <svg
+              width="36"
+              height="36"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="9"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <path
+                d="M12 8v5"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+              <circle
+                cx="12"
+                cy="16"
+                r="1"
+                fill="currentColor"
+              />
+            </svg>
+          </div>
+          <p class="state-panel__title">
+            Unable to load schemes
+          </p>
+          <p class="state-panel__text">
+            Please check your connection and try again.
+          </p>
+          <button
+            type="button"
+            id="retryBtn"
+            class="btn btn-primary"
+          >
+            Retry
+          </button>
+        </div>
+
+        <!-- Empty -->
+        <div
+          id="emptyState"
+          class="state-panel"
+          hidden
+        >
+          <div
+            class="state-panel__icon"
+            aria-hidden="true"
+          >
+            <svg
+              width="36"
+              height="36"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <circle
+                cx="11"
+                cy="11"
+                r="7"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <path
+                d="M21 21L16.65 16.65"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
+          <p class="state-panel__title">
+            No schemes found
+          </p>
+          <p class="state-panel__text">
+            Try adjusting your search or resetting the filters.
+          </p>
+          <button
+            type="button"
+            id="emptyResetBtn"
+            class="btn btn-primary"
+          >
+            Reset Filters
+          </button>
+        </div>
+
+        <!-- Scheme grid -->
+        <div
+          class="scheme-grid"
+          id="schemeGrid"
+          hidden
+        ></div>
+
+        <!-- Pagination -->
+        <nav
+          class="pagination"
+          id="pagination"
+          aria-label="Scheme pages"
+          hidden
+        >
+          <button
+            type="button"
+            id="paginationPrev"
+            class="pagination__btn"
+            aria-label="Previous page"
+          >
+            ← Previous
+          </button>
+
+          <ul
+            class="pagination__list"
+            id="paginationList"
+            role="list"
+          ></ul>
+
+          <button
+            type="button"
+            id="paginationNext"
+            class="pagination__btn"
+            aria-label="Next page"
+          >
+            Next →
+          </button>
+        </nav>
+      </section>
+
+    </main>
+
+    <!-- SCHEME DETAILS MODAL -->
+    <div
+      class="modal-overlay"
+      id="schemeModalOverlay"
+      hidden
+    >
+      <div
+        class="modal"
+        id="schemeModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modalSchemeName"
+        tabindex="-1"
+      >
+        <button
+          type="button"
+          class="modal__close"
+          id="modalCloseBtn"
+          aria-label="Close scheme details"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line
+              x1="18"
+              y1="6"
+              x2="6"
+              y2="18"
+            />
+            <line
+              x1="6"
+              y1="6"
+              x2="18"
+              y2="18"
+            />
+          </svg>
+        </button>
+
+        <div class="modal__header">
+          <div
+            class="modal__tags"
+            id="modalTags"
+          ></div>
+          <h2
+            class="modal__title"
+            id="modalSchemeName"
+          ></h2>
+          <div
+            class="modal__meta"
+            id="modalMeta"
+          ></div>
+        </div>
+
+        <div
+          class="modal__body"
+          id="modalBody"
+        ></div>
+
+        <div
+          class="modal__footer"
+          id="modalFooter"
+        ></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SUPABASE -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- FEATURE SCRIPT -->
+  <script type="module" src="./script.js"></script>
+
+</body>
+
+</html>

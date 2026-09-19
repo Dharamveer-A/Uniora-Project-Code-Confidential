@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
+  <title>Sign in – UNIORA</title>
+
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Common Design System CSS -->
+  <link rel="stylesheet" href="../../common/css/global.css">
+  <link rel="stylesheet" href="../../common/css/header.css">
+  <link rel="stylesheet" href="../../common/css/responsive.css">
+
+  <!-- Page Specific CSS -->
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body class="login-page">
+
+  <div class="login-layout">
+
+    <!-- LEFT PANEL: logo, headline and sign-in steps (white background, red divider on its right edge) -->
+        <!-- LEFT PANEL: headline and sign-in steps (white background, red divider on its right edge) -->
+    <aside class="login-brand">
+      <div class="login-brand-inner">
+
+        <div class="login-pitch">
+          <h2 class="login-pitch-title">Welfare Access for a Brighter Tomorrow.</h2>
+          <p class="login-pitch-text">Sign in once, tell us a little about yourself, and see the services that fit your situation.</p>
+
+          <ol class="login-steps">
+            <li>
+              <span class="login-step-title">Sign in with Google</span>
+              <span class="login-step-text">No new password to remember.</span>
+            </li>
+            <li>
+              <span class="login-step-title">Complete your profile</span>
+              <span class="login-step-text">A few short questions, only the first time.</span>
+            </li>
+            <li>
+              <span class="login-step-title">Explore your services</span>
+              <span class="login-step-text">Personalized to the answers you give.</span>
+            </li>
+          </ol>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- RIGHT PANEL: authentication -->
+    <section class="login-main">
+
+      <main class="login-card" id="loginCard" aria-labelledby="loginTitle">
+
+        <!-- Shown while we check for an existing session (prevents a flash of the sign-in form) -->
+        <div class="login-checking" id="loginChecking" role="status" hidden>
+          <span class="login-spinner login-spinner-lg" aria-hidden="true"></span>
+          <span id="loginCheckingText">Checking your session…</span>
+        </div>
+
+        <div class="login-content" id="loginContent">
+          <div class="login-header">
+            <h1 class="login-title" id="loginTitle">Sign in to UNIORA</h1>
+            <p class="login-subtitle">Use your Google account. If you're new, we'll create your UNIORA account automatically.</p>
+          </div>
+
+          <!-- Accessible alert / message container -->
+          <div class="auth-message" id="authMessage" aria-live="polite"></div>
+
+          <!-- PRIMARY ACTION -->
+          <div class="login-action-container">
+            <button type="button" class="google-login-button" id="googleLoginBtn">
+              <svg class="google-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+              <span class="login-spinner" aria-hidden="true"></span>
+              <span id="googleLoginLabel">Continue with Google</span>
+            </button>
+          </div>
+
+          <!-- Privacy reassurance -->
+          <p class="login-privacy">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="4" y="11" width="16" height="10" rx="2"/>
+              <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+            </svg>
+            <span>We receive only your name, email and profile photo from Google. We never see your Google password.</span>
+          </p>
+
+          <!-- Help for people without a Google account -->
+          <p class="login-help">
+            Don't have a Google account?
+            <a href="https://accounts.google.com/signup" target="_blank" rel="noopener noreferrer">Create one for free<span class="visually-hidden"> (opens in a new tab)</span></a>
+          </p>
+        </div>
+
+        <noscript>
+          <p class="auth-message active error">JavaScript is needed to sign in. Please turn it on in your browser and reload this page.</p>
+        </noscript>
+
+      </main>
+
+      <!-- BACK TO HOME (in its own container) -->
+            <!-- GO TO HOME (in its own container) -->
+      <div class="login-back-box">
+        <a href="../../dashboard/index.html" class="login-back">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>
+          </svg>
+          Go to Home
+        </a>
+      </div>
+
+    </section>
+
+  </div>
+
+  <!-- Supabase JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Page Logic Script -->
+  <script type="module" src="./script.js"></script>
+</body>
+</html>

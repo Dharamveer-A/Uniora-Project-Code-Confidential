@@ -1,0 +1,106 @@
+{
+  "services": [
+    {
+      "id": 1,
+      "name": "Common Service Centres (CSC)",
+      "description": "Find nearby Common Service Centres for digital government certificates and citizen services.",
+      "search_query": "Common Service Centre CSC"
+    },
+    {
+      "id": 2,
+      "name": "Aadhaar Seva Kendras",
+      "description": "Locate official centers for new Aadhaar enrollment, biometric updates, and mobile updates.",
+      "search_query": "Aadhaar Seva Kendra enrollment"
+    },
+    {
+      "id": 3,
+      "name": "Government Offices",
+      "description": "Find local Block Development Offices (BDO), Collectorates, and administrative offices.",
+      "search_query": "Government Office Collectorate BDO"
+    },
+    {
+      "id": 4,
+      "name": "Ration / Fair Price Shops",
+      "description": "Locate nearby Public Distribution System (PDS) shops for subsidized foodgrains.",
+      "search_query": "Ration Shop Fair Price Shop PDS"
+    },
+    {
+      "id": 5,
+      "name": "PAN & Tax Services",
+      "description": "Locate NSDL/UTIITSL TIN facilitation centers for PAN card applications.",
+      "search_query": "TIN Facilitation Centre PAN Card"
+    },
+    {
+      "id": 6,
+      "name": "Public Sector Banks",
+      "description": "Find nearby nationalized bank branches for Jan Dhan accounts and scheme direct benefit transfer.",
+      "search_query": "Public Sector Bank DBTL"
+    },
+    {
+      "id": 7,
+      "name": "India Post Offices",
+      "description": "Locate post offices for IPPB banking, savings schemes, and postal verification services.",
+      "search_query": "Post Office IPPB"
+    },
+    {
+      "id": 8,
+      "name": "Primary Health Centres (PHC)",
+      "description": "Find nearest government primary healthcare centers and community health centers.",
+      "search_query": "Primary Health Centre PHC"
+    },
+    {
+      "id": 9,
+      "name": "District & Government Hospitals",
+      "description": "Locate major public hospitals empanelled under Ayushman Bharat health insurance.",
+      "search_query": "District Hospital Government Hospital Ayushman"
+    },
+    {
+      "id": 10,
+      "name": "Employment Exchanges",
+      "description": "Find local employment registration centers and job assistance desks.",
+      "search_query": "Employment Exchange Office"
+    },
+    {
+      "id": 11,
+      "name": "Skill Development Centres",
+      "description": "Locate PMKVY centers for free vocational skill training and certification.",
+      "search_query": "PMKVY Skill Development Training Centre"
+    },
+    {
+      "id": 12,
+      "name": "Pension Helpdesks",
+      "description": "Find offices for senior citizen, widow, and disability pension application submission.",
+      "search_query": "Social Welfare Pension Office"
+    },
+    {
+      "id": 13,
+      "name": "Agriculture & Krishi Vigyan Kendras",
+      "description": "Locate farmer support centers, soil testing labs, and PM-KISAN guidance counters.",
+      "search_query": "Krishi Vigyan Kendra Agriculture Office"
+    },
+    {
+      "id": 14,
+      "name": "Revenue Offices & Tehsils",
+      "description": "Find Tehsil offices for land revenue records, Patwari inquiries, and income certificates.",
+      "search_query": "Tehsil Tehsildar Revenue Office"
+    },
+    {
+      "id": 15,
+      "name": "Municipal Corporation Offices",
+      "description": "Locate urban local body offices for birth/death certificates and civic services.",
+      "search_query": "Municipal Corporation Municipality"
+    },
+    {
+      "id": 16,
+      "name": "Police Stations & Help Desks",
+      "description": "Find local police stations and women help desks for public assistance and verification.",
+      "search_query": "Police Station Public Assistance"
+    },
+    {
+      "id": 17,
+      "name": "Legal Aid Centres",
+      "description": "Locate District Legal Services Authority (DLSA) desks for free legal aid services.",
+      "search_query": "District Legal Services Authority DLSA"
+    }
+  ]
+}

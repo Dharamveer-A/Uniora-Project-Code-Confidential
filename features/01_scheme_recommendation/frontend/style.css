@@ -1,0 +1,1264 @@
+/* ==========================================================================
+   UNIORA — Explore Welfare Schemes
+   File: features/01_scheme_recommendation/frontend/style.css
+
+   Sections 1–3 (layout / header / sidebar) are copied 1:1 from
+   dashboard/style.css so the navbar and side nav are pixel-identical
+   between the two pages, as requested. Sections 4+ are page-specific.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   0. PAGE + LAYOUT SHELL
+   -------------------------------------------------------------------------- */
+.schemes-page {
+  background-color: #ffffff;
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: #0f172a;
+}
+
+* , *::before, *::after { box-sizing: border-box; }
+
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-body {
+  display: flex;
+  flex: 1;
+}
+
+[hidden] { display: none !important; }
+
+:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   1. HEADER — identical to dashboard/style.css
+   -------------------------------------------------------------------------- */
+.header {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 72px;
+}
+
+.header-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 32px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.header-brand {
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.header-logo-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.header-logo-text {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1e3a8a;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.header-tagline {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 400;
+}
+
+.header-search {
+  flex: 1;
+  max-width: 480px;
+}
+
+.header-search-wrapper {
+  background-color: #f1f5f9;
+  border-radius: 10px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: border-color 0.2s, background-color 0.2s;
+  border: 1px solid transparent;
+}
+
+.header-search-wrapper:focus-within {
+  background-color: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.header-search-icon {
+  color: #64748b;
+  display: flex;
+  align-items: center;
+}
+
+.header-search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-size: 14px;
+  color: #0f172a;
+  font-family: inherit;
+}
+
+.header-search-input::placeholder { color: #94a3b8; }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  padding: 6px 12px 6px 6px;
+  border-radius: 24px;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.header-user-profile:hover { background-color: #f1f5f9; }
+
+.header-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.header-user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.header-user-dropdown-icon {
+  color: #64748b;
+  display: flex;
+  align-items: center;
+}
+
+.header-mobile-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: #1e3a8a;
+  border-radius: 10px;
+}
+
+.header-mobile-toggle:hover { background-color: #f1f5f9; }
+
+/* Buttons (self-contained so the header/logout button and page CTAs
+   render correctly even if common/css/global.css is not yet wired up) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.btn-primary,
+.btn--primary {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+.btn-primary:hover,
+.btn--primary:hover { background-color: #1d4ed8; }
+
+.btn-outline {
+  background-color: #ffffff;
+  color: #2563eb;
+  border-color: #bfdbfe;
+}
+
+.btn-outline:hover { background-color: #eff6ff; }
+
+.btn-ghost,
+.btn--ghost {
+  background-color: #ffffff;
+  color: #475569;
+  border-color: #e2e8f0;
+}
+
+.btn-ghost:hover,
+.btn--ghost:hover {
+  border-color: #3b82f6;
+  color: #1d4ed8;
+  background-color: #eff6ff;
+}
+
+.btn-sm { height: 34px; padding: 0 14px; font-size: 13px; }
+
+/* --------------------------------------------------------------------------
+   2. SIDEBAR — identical to dashboard/style.css
+   -------------------------------------------------------------------------- */
+.sidebar {
+  width: 240px;
+  background-color: #f8fafc;
+  border-right: 1px solid #e2e8f0;
+  padding: 24px 12px;
+  flex-shrink: 0;
+}
+
+.sidebar-nav { display: flex; flex-direction: column; gap: 8px; }
+.sidebar-section { display: flex; flex-direction: column; gap: 4px; }
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.sidebar-item:hover { background-color: #e2e8f0; color: #0f172a; }
+
+.sidebar-item.active {
+  background-color: #dbeafe;
+  color: #1e40af;
+  font-weight: 600;
+}
+
+.sidebar-icon { display: flex; align-items: center; }
+
+.sidebar-divider {
+  height: 1px;
+  background-color: #cbd5e1;
+  margin: 16px 12px;
+}
+
+.sidebar-overlay { display: none; }
+
+/* --------------------------------------------------------------------------
+   3. MAIN CONTENT SHELL
+   -------------------------------------------------------------------------- */
+.schemes-main {
+  flex: 1;
+  min-width: 0;
+  padding: 32px 40px 56px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* --------------------------------------------------------------------------
+   4. PAGE HEADING
+   -------------------------------------------------------------------------- */
+.page-heading__title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.page-heading__subtitle {
+  margin-top: 6px;
+  font-size: 14.5px;
+  color: #64748b;
+}
+
+.info-note {
+  margin-top: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  color: #1e40af;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.info-note svg { flex-shrink: 0; margin-top: 1px; }
+
+/* --------------------------------------------------------------------------
+   5. FILTERS
+   -------------------------------------------------------------------------- */
+.filters-section {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  padding: 20px 22px;
+  margin: 22px 0 20px;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.filter-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+
+.filter-field label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.filter-field select {
+  height: 40px;
+  padding: 0 30px 0 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #0f172a;
+  font-size: 13.5px;
+  font-family: inherit;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'><path d='M1 1.5L6 6.5L11 1.5' stroke='%2364748B' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  transition: border-color 0.15s ease;
+}
+
+.filter-field select:hover,
+.filter-field select:focus-visible { border-color: #3b82f6; }
+
+.filters-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+/* --------------------------------------------------------------------------
+   6. RESULTS HEADER
+   -------------------------------------------------------------------------- */
+.results-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.results-header__title {
+  font-size: 19px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.results-header__count {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* --------------------------------------------------------------------------
+   7. STATE PANELS (loading / error / empty)
+   -------------------------------------------------------------------------- */
+.state-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 20px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+}
+
+.state-panel__icon { color: #94a3b8; margin-bottom: 12px; }
+
+.state-panel__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.state-panel__text {
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 0 0 16px;
+}
+
+#loadingState .state-panel__text { margin-top: 16px; margin-bottom: 0; }
+
+.skeleton-grid {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.skeleton-card {
+  height: 128px;
+  border-radius: 14px;
+  background: linear-gradient(100deg, #eef2f6 30%, #f6f8fa 50%, #eef2f6 70%);
+  background-size: 300% 100%;
+  animation: uniora-skeleton 1.6s ease-in-out infinite;
+}
+
+@keyframes uniora-skeleton {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-card { animation: none; }
+}
+
+/* --------------------------------------------------------------------------
+   8. SCHEME CARDS — icon avatar, status badges, meta-icon row, and a
+      "Key Benefit" panel with the View Details CTA.
+   -------------------------------------------------------------------------- */
+.scheme-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scheme-card {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 232px;
+  align-items: start;
+  column-gap: 18px;
+  row-gap: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  padding: 20px;
+  transition: box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.scheme-card:hover,
+.scheme-card:focus-within {
+  box-shadow: 0 8px 20px -8px rgba(15, 23, 42, 0.14);
+  border-color: #bfdbfe;
+}
+
+/* ── Avatar ─────────────────────────────────────────────── */
+.scheme-card__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--icon-bg, #eff6ff);
+  color: var(--icon-color, #2563eb);
+}
+
+/* ── Main column ────────────────────────────────────────── */
+.scheme-card__main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.scheme-card__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.scheme-card__badge,
+.scheme-card__category {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background-color: #f1f5f9;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.scheme-card__badge--active   { background-color: #dcfce7; color: #15803d; }
+.scheme-card__badge--upcoming { background-color: #ede9fe; color: #6d28d9; }
+.scheme-card__badge--closed   { background-color: #fee2e2; color: #b91c1c; }
+.scheme-card__category        { background-color: #eff6ff; color: #1d4ed8; }
+
+.scheme-card__name {
+  font-size: 16.5px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.3;
+  margin: 0 0 3px;
+  overflow-wrap: anywhere;
+}
+
+.scheme-card__dept,
+.scheme-card__description {
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.scheme-card__dept {
+  font-size: 12.5px;
+  color: #64748b;
+  margin: 0 0 8px;
+  -webkit-line-clamp: 1;
+}
+
+.scheme-card__description {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+  margin: 0 0 14px;
+  -webkit-line-clamp: 2;
+  max-width: 68ch;
+}
+
+.scheme-card__more {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: #2563eb;
+  cursor: pointer;
+}
+
+.scheme-card__more:hover { color: #1d4ed8; text-decoration: underline; }
+
+/* ── Meta row ───────────────────────────────────────────── */
+.scheme-card__meta-icons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px 22px;
+  margin-top: auto;
+}
+
+.scheme-card__meta-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  min-width: 0;
+}
+
+.scheme-card__meta-item svg {
+  color: #94a3b8;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.scheme-card__meta-item-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.scheme-card__meta-item-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.scheme-card__meta-item-value {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #1e293b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Side column ────────────────────────────────────────── */
+.scheme-card__side {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scheme-card__benefit {
+  background: #eff6ff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.scheme-card__benefit-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.scheme-card__benefit-text {
+  font-size: 12.5px;
+  color: #1e3a8a;
+  line-height: 1.45;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.scheme-card__cta {
+  width: 100%;
+  height: 40px;
+  margin-top: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scheme-card { transition: none; }
+}
+
+/* --------------------------------------------------------------------------
+   9. PAGINATION
+   -------------------------------------------------------------------------- */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 32px;
+  flex-wrap: wrap;
+}
+
+.pagination__btn {
+  height: 38px;
+  padding: 0 16px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.pagination__btn:hover:not(:disabled) {
+  border-color: #3b82f6;
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+
+.pagination__btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.pagination__list { display: flex; align-items: center; gap: 6px; list-style: none; margin: 0; padding: 0; }
+
+.pagination__page {
+  min-width: 38px;
+  height: 38px;
+  padding: 0 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination__page:hover { border-color: #3b82f6; color: #1d4ed8; }
+
+.pagination__page--active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+.pagination__ellipsis { padding: 0 4px; color: #94a3b8; font-size: 13px; }
+
+/* --------------------------------------------------------------------------
+   10. SCHEME DETAILS DRAWER
+   Opens on the right, 40% of the screen wide, below the navbar. A thin red
+   line divides it from the page. --drawer-top is set from script.js
+   (syncDrawerOffset) to the navbar's bottom edge so nothing overlaps it.
+   -------------------------------------------------------------------------- */
+.modal-overlay {
+  position: fixed;
+  top: var(--drawer-top, 96px);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 200;
+  background: rgba(15, 23, 42, 0.4);
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+  padding: 0;
+  animation: drawer-fade-in 0.2s ease;
+}
+
+.modal {
+  position: relative;
+  width: 40vw;
+  min-width: 440px;
+  max-width: 100%;
+  height: 100%;
+  background: #ffffff;
+  border-left: 2px solid #dc2626;
+  box-shadow: -16px 0 40px -16px rgba(15, 23, 42, 0.35);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: drawer-slide-in 0.26s cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+
+.modal:focus-visible { outline: none; }
+
+@keyframes drawer-slide-in {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes drawer-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.modal__close:hover { background: #fee2e2; color: #b91c1c; }
+
+/* ── Header (stays pinned) ──────────────────────────────── */
+.modal__header {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  column-gap: 16px;
+  padding: 26px 60px 20px 28px;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.modal__icon {
+  grid-row: 1 / span 3;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--icon-bg, #eff6ff);
+  color: var(--icon-color, #2563eb);
+}
+
+.modal__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.modal__tag {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background-color: #f1f5f9;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.modal__tag--active   { background-color: #dcfce7; color: #15803d; }
+.modal__tag--upcoming { background-color: #ede9fe; color: #6d28d9; }
+.modal__tag--closed   { background-color: #fee2e2; color: #b91c1c; }
+.modal__tag--category { background-color: #eff6ff; color: #1d4ed8; }
+
+.modal__title {
+  font-size: 21px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.28;
+  letter-spacing: -0.01em;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.modal__meta {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* ── Body (the only part that scrolls) ──────────────────── */
+.modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 22px 28px 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Quick facts strip */
+.modal__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  gap: 1px;
+  background: #e2e8f0;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 22px;
+}
+
+.modal__fact {
+  background: #f8fafc;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.modal__fact-label { font-size: 11px; font-weight: 600; color: #94a3b8; }
+
+.modal__fact-value {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+  overflow-wrap: anywhere;
+}
+
+/* Benefit panel — the one loud element in the drawer */
+.modal__benefit {
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 22px;
+}
+
+.modal__benefit h3 {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #1d4ed8;
+  margin: 0 0 6px;
+}
+
+.modal__benefit p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #1e3a8a;
+  margin: 0;
+}
+
+.modal__benefit-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal__benefit-list li {
+  font-size: 14px;
+  line-height: 1.55;
+  color: #1e3a8a;
+  padding-left: 16px;
+  position: relative;
+}
+
+.modal__benefit-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #93c5fd;
+}
+
+.modal__benefit-item-label { font-weight: 700; }
+
+/* Sections */
+.modal__section + .modal__section {
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px solid #eef1f6;
+}
+
+.modal__section h3 {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: #1d4ed8;
+  margin: 0 0 10px;
+}
+
+.modal__section p {
+  font-size: 14px;
+  color: #1e293b;
+  line-height: 1.65;
+  margin: 0;
+  max-width: 68ch;
+}
+
+.modal__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px 20px;
+  margin: 0;
+}
+
+.modal__grid dt {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 3px;
+}
+
+.modal__grid dd {
+  font-size: 13.5px;
+  color: #1e293b;
+  overflow-wrap: anywhere;
+  margin: 0;
+}
+
+.modal__grid dd a {
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.modal__grid dd a:hover { color: #1d4ed8; }
+
+/* Numbered application steps */
+.modal__steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal__steps li {
+  counter-increment: step;
+  position: relative;
+  padding-left: 34px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #1e293b;
+  max-width: 66ch;
+}
+
+.modal__steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 1px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 11.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Application process phase groups */
+.modal__step-group + .modal__step-group { margin-top: 18px; }
+
+.modal__step-group-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 10px;
+}
+
+/* Document chips */
+.modal__chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.modal__chips li {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 13px;
+  color: #334155;
+}
+
+/* Multi-item "other conditions" list under Eligibility, reusing the
+   document-chip look but as a block list instead of wrapped pills */
+.modal__chips--block {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.modal__chips--block li {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.55;
+  position: relative;
+  padding-left: 14px;
+}
+
+.modal__chips--block li::before {
+  content: '–';
+  position: absolute;
+  left: 0;
+  color: #94a3b8;
+}
+
+.modal__note {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.55;
+}
+
+/* ── Footer (stays pinned) ──────────────────────────────── */
+.modal__footer {
+  padding: 16px 28px 22px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.modal__footer .btn { flex: 1; min-width: 160px; height: 42px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .modal, .modal-overlay { animation: none; }
+  .modal__close { transition: none; }
+}
+
+/* --------------------------------------------------------------------------
+   11. RESPONSIVE
+   All breakpoints are consolidated here, widest to narrowest, so the
+   cascade order matches the visual order — nothing later in the file
+   silently overrides something set earlier for the same width.
+   -------------------------------------------------------------------------- */
+
+/* ── 1180px: scheme-card side column narrows before it wraps ─────── */
+@media (max-width: 1180px) {
+  .scheme-card { grid-template-columns: 56px minmax(0, 1fr) 200px; }
+}
+
+/* ── 1024px: page padding, filters, wider details drawer ──────────── */
+@media (max-width: 1024px) {
+  .schemes-main { padding: 24px 20px 48px; }
+  .filters-grid { grid-template-columns: repeat(2, 1fr); }
+
+  .modal { width: 55vw; }
+}
+
+/* ── 960px: scheme-card side column drops below content ───────────── */
+@media (max-width: 960px) {
+  .scheme-card {
+    grid-template-columns: 52px minmax(0, 1fr);
+  }
+  .scheme-card__side {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .scheme-card__benefit { flex: 1; }
+  .scheme-card__cta {
+    width: auto;
+    align-self: center;
+    margin-top: 0;
+    padding: 0 20px;
+    white-space: nowrap;
+  }
+  .scheme-card__icon { width: 52px; height: 52px; }
+}
+
+/* ── 768px: header, sidebar, filters, cards, AND the details drawer
+   as a full-width panel below the navbar. This is the single 768px
+   block — everything for this breakpoint lives here so nothing
+   downstream re-overrides it. ── */
+@media (max-width: 768px) {
+  .header-container { padding: 0 16px; }
+  .header-tagline { display: none; }
+  .header-user-name { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .header-mobile-toggle { display: flex; }
+  .header-search { display: none; }
+
+  .app-body { position: relative; }
+
+  .sidebar {
+    position: fixed;
+    top: 72px;
+    left: 0;
+    height: calc(100vh - 72px);
+    z-index: 150;
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14);
+  }
+
+  .sidebar.is-open { transform: translateX(0); }
+
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 72px 0 0 0;
+    background: rgba(15, 23, 42, 0.4);
+    z-index: 120;
+  }
+
+  .sidebar-overlay.is-visible { display: block; }
+
+  .page-heading__title { font-size: 22px; }
+
+  .filters-grid { grid-template-columns: 1fr; }
+  .filters-actions { justify-content: stretch; }
+  .filters-actions .btn { width: 100%; }
+
+  .scheme-grid, .skeleton-grid { grid-template-columns: 1fr; }
+
+  .results-header { flex-direction: column; align-items: flex-start; }
+
+  /* Details drawer → full-width panel below the navbar */
+  .modal {
+    width: 100%;
+    min-width: 0;
+    border-left: none;
+  }
+
+  .modal__header {
+    grid-template-columns: 44px minmax(0, 1fr);
+    column-gap: 12px;
+    padding: 20px 52px 16px 16px;
+  }
+
+  .modal__icon { width: 44px; height: 44px; border-radius: 12px; }
+  .modal__icon svg { width: 22px; height: 22px; }
+  .modal__title { font-size: 18px; }
+
+  .modal__body { padding: 18px 16px 12px; }
+  .modal__facts { grid-template-columns: repeat(2, 1fr); }
+  .modal__grid { grid-template-columns: 1fr; }
+
+  .modal__footer {
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    box-shadow: 0 -4px 16px -8px rgba(15, 23, 42, 0.25);
+  }
+
+  .modal__footer .btn { flex: 1 1 100%; }
+}
+
+/* ── 620px: scheme-card collapses to one column ────────────────────── */
+@media (max-width: 620px) {
+  .scheme-card {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 16px 14px;
+    row-gap: 12px;
+  }
+  .scheme-card__icon { width: 44px; height: 44px; border-radius: 12px; }
+  .scheme-card__icon svg { width: 22px; height: 22px; }
+  .scheme-card__description { -webkit-line-clamp: 3; }
+  .scheme-card__meta-icons { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+  .scheme-card__side { flex-direction: column; }
+  .scheme-card__cta { width: 100%; align-self: stretch; }
+}
+
+/* ── 480px: header logo, pagination list ───────────────────────────── */
+@media (max-width: 480px) {
+  .header-logo-text { font-size: 20px; }
+  .pagination__list { order: 3; width: 100%; justify-content: center; }
+}
+
+/* ── 420px: drawer header stacks the icon above the title ──────────── */
+@media (max-width: 420px) {
+  .modal__header { grid-template-columns: minmax(0, 1fr); }
+  .modal__icon { grid-row: auto; margin-bottom: 12px; }
+}

@@ -1,0 +1,164 @@
+<!-- ==========================================================================
+     UNIORA PLATFORM — COMMON NAVBAR
+     File: common/components/navbar.html
+     ========================================================================== -->
+
+<header class="navbar" id="appNavbar">
+
+  <div class="navbar-container">
+
+    <!-- UNIORA LOGO -->
+    <a
+      href="/dashboard/index.html"
+      class="navbar-brand"
+      aria-label="UNIORA Dashboard"
+    >
+      <img
+        src="/common/assets/uniora_logo_navbar.png"
+        alt="UNIORA"
+        class="navbar-logo"
+      />
+    </a>
+
+    <!-- MAIN NAVIGATION -->
+    <nav
+      class="navbar-menu"
+      id="navbarMenu"
+      aria-label="Main navigation"
+    >
+
+      <a
+        href="/dashboard/index.html"
+        class="navbar-link"
+        data-page="dashboard"
+      >
+        <span class="navbar-link-text">Dashboard</span>
+      </a>
+
+      <a
+        href="/features/01_scheme_recommendation/frontend/index.html"
+        class="navbar-link"
+        data-page="schemes"
+      >
+        <span class="navbar-link-text">Schemes</span>
+      </a>
+
+      <a
+        href="/features/03_documents_verification/frontend/index.html"
+        class="navbar-link"
+        data-page="documents"
+      >
+        <span class="navbar-link-text">Documents</span>
+      </a>
+
+      <a
+        href="/features/04_eligible_schemes/frontend/index.html"
+        class="navbar-link"
+        data-page="eligible"
+      >
+        <span class="navbar-link-text">Eligible</span>
+      </a>
+
+      <a
+        href="/features/05_my_readiness/frontend/index.html"
+        class="navbar-link"
+        data-page="readiness"
+      >
+        <span class="navbar-link-text">Readiness</span>
+      </a>
+
+      <a
+        href="/features/06_government_services/frontend/index.html"
+        class="navbar-link"
+        data-page="services"
+      >
+        <span class="navbar-link-text">Services</span>
+      </a>
+
+      <a
+        href="/features/02_ask_uniora/frontend/index.html"
+        class="navbar-link navbar-link-ask"
+        data-page="ask"
+      >
+        <span class="navbar-link-text">Ask Uniora</span>
+      </a>
+
+    </nav>
+
+    <!-- RIGHT NAVIGATION CLUSTER -->
+    <div class="navbar-right">
+
+      <!-- HAMBURGER TOGGLE -->
+      <button
+        type="button"
+        class="navbar-toggle"
+        id="navbarToggle"
+        aria-label="Open navigation menu"
+        aria-expanded="false"
+        aria-controls="navbarMenu"
+      >
+        <span class="navbar-toggle-bar"></span>
+        <span class="navbar-toggle-bar"></span>
+        <span class="navbar-toggle-bar"></span>
+      </button>
+
+      <!-- AUTHENTICATION AREA -->
+      <div
+        class="navbar-auth is-loading"
+        id="navbarAuth"
+        aria-live="polite"
+      >
+
+        <!-- AUTHENTICATED USER -->
+        <div
+          class="navbar-user"
+          id="navbarUser"
+          hidden
+        >
+          <a
+            href="/features/10_profile/frontend/index.html"
+            class="navbar-profile"
+            id="navbarProfileLink"
+            aria-label="View profile"
+          >
+            <div
+              class="navbar-avatar"
+              id="navbarAvatar"
+              aria-hidden="true"
+            >
+              U
+            </div>
+
+            <span
+              class="navbar-user-name"
+              id="navbarUserName"
+            >
+              User
+            </span>
+          </a>
+        </div>
+
+        <!-- GUEST USER -->
+        <a
+          href="/auth/login/index.html"
+          class="navbar-login"
+          id="navbarLogin"
+          hidden
+        >
+          LOGIN
+        </a>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</header>
+
+<!-- MOBILE DRAWER OVERLAY -->
+<div
+  class="navbar-overlay"
+  id="navbarOverlay"
+  aria-hidden="true"
+></div>

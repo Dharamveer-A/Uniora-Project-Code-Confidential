@@ -1,0 +1,491 @@
+/* ==========================================================================
+   UNIORA PLATFORM — FEATURE 07: FAQ STYLESHEET (Redesigned Civic UI/UX)
+   File: features/07_faq/frontend/style.css
+   ========================================================================== */
+
+:root {
+  --c-navy: #0B2545;
+  --c-navy-light: #133E87;
+  --c-red: #DC2626;
+  --c-red-dark: #B91C1C;
+  --c-red-light: #FEF2F2;
+  --c-red-border: #FECACA;
+  --c-text-main: #0F172A;
+  --c-text-muted: #475569;
+  --c-border: #E2E8F0;
+  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body.faq-page {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  background: #F8FAFC;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--c-text-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-layout {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* Strictly remove text underlines across all states */
+a, button, .faq-item, .faq-item * {
+  text-decoration: none !important;
+  border-bottom: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   1. MAIN FAQ CONTAINER
+   -------------------------------------------------------------------------- */
+.faq-main {
+  flex: 1;
+  padding: 32px 24px 56px;
+  max-width: 1120px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* --------------------------------------------------------------------------
+   2. HERO HEADER SECTION
+   -------------------------------------------------------------------------- */
+.faq-page-heading {
+  background: #FFFFFF;
+  border: 1px solid var(--c-border);
+  border-radius: 16px;
+  padding: 28px 32px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 10px rgba(11, 37, 69, 0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+.faq-page-heading::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #DC2626, #991B1B);
+}
+
+.faq-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--c-red);
+  background: var(--c-red-light);
+  border: 1px solid var(--c-red-border);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  margin-bottom: 10px;
+}
+
+.faq-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--c-navy);
+  letter-spacing: -0.02em;
+  margin: 0 0 8px 0;
+  line-height: 1.25;
+}
+
+.faq-subtitle {
+  font-size: 14px;
+  color: var(--c-text-muted);
+  margin: 0;
+  line-height: 1.55;
+  max-width: 820px;
+}
+
+/* --------------------------------------------------------------------------
+   3. SEARCH CONSOLE
+   -------------------------------------------------------------------------- */
+.faq-search-section {
+  margin-bottom: 20px;
+}
+
+.faq-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #FFFFFF;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 12px;
+  padding: 0 16px;
+  box-shadow: 0 2px 8px rgba(11, 37, 69, 0.03);
+  transition: all 0.2s var(--ease-smooth);
+}
+
+.faq-search-wrapper:focus-within {
+  border-color: var(--c-red);
+  background: #FFFFFF;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.12);
+}
+
+.faq-search-icon {
+  position: absolute;
+  left: 16px;
+  color: #94A3B8;
+  pointer-events: none;
+}
+
+.faq-search-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 38px 0 40px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--c-text-main);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.faq-search-input::placeholder {
+  color: #94A3B8;
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 14px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #E2E8F0;
+  border: none;
+  font-size: 16px;
+  color: #475569;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.search-clear-btn:hover {
+  background: #CBD5E1;
+}
+
+/* --------------------------------------------------------------------------
+   4. STATUS BAR & STATE PANELS
+   -------------------------------------------------------------------------- */
+.faq-status-bar {
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.faq-count {
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748B;
+}
+
+.state-panel {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 44px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.state-panel-icon {
+  color: #94A3B8;
+  margin-bottom: 12px;
+}
+
+.state-panel-title {
+  font-size: 16.5px;
+  font-weight: 800;
+  color: var(--c-navy);
+  margin: 0 0 6px 0;
+}
+
+.state-panel-text {
+  font-size: 13.5px;
+  color: #64748B;
+  margin: 0 0 18px 0;
+}
+
+/* Skeleton Loader */
+.skeleton-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeleton-item {
+  width: 100%;
+  height: 58px;
+  border-radius: 12px;
+  background: linear-gradient(100deg, #E2E8F0 30%, #F1F5F9 50%, #E2E8F0 70%);
+  background-size: 300% 100%;
+  animation: uniora-skeleton 1.6s ease-in-out infinite;
+}
+
+@keyframes uniora-skeleton {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* --------------------------------------------------------------------------
+   5. BUTTONS
+   -------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-smooth);
+}
+
+.btn-primary {
+  background-color: var(--c-red);
+  color: #FFFFFF !important;
+  box-shadow: 0 3px 10px rgba(220, 38, 38, 0.25);
+}
+
+.btn-primary:hover {
+  background-color: var(--c-red-dark);
+  transform: translateY(-1.5px);
+  box-shadow: 0 5px 15px rgba(220, 38, 38, 0.35);
+}
+
+.btn-outline {
+  background-color: #FFFFFF;
+  color: var(--c-navy);
+  border-color: #CBD5E1;
+}
+
+.btn-outline:hover {
+  border-color: var(--c-red);
+  color: var(--c-red);
+  background-color: var(--c-red-light);
+}
+
+/* --------------------------------------------------------------------------
+   6. FLOATING ACCORDION CARDS
+   -------------------------------------------------------------------------- */
+.faq-accordion-section {
+  width: 100%;
+}
+
+.faq-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.faq-item {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.22s var(--ease-smooth);
+  box-shadow: 0 2px 6px rgba(11, 37, 69, 0.02);
+}
+
+.faq-item:hover {
+  border-color: #F87171;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.08);
+}
+
+/* Active Glowing Left Accent Pillar */
+.faq-item.open {
+  border-color: var(--c-red);
+  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.12);
+}
+
+.faq-item.open::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #DC2626, #991B1B);
+}
+
+.faq-button {
+  width: 100%;
+  min-height: 62px;
+  padding: 16px 22px 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+
+.faq-item.open .faq-button {
+  background: #FEF2F2;
+  padding-left: 26px;
+}
+
+.faq-number {
+  min-width: 34px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: var(--c-red);
+  font-size: 11.5px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.faq-item.open .faq-number {
+  background: var(--c-red);
+  color: #FFFFFF;
+  border-color: var(--c-red);
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
+}
+
+.faq-question {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--c-navy);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.faq-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #F1F5F9;
+  color: #64748B;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.22s ease, background-color 0.18s ease, color 0.18s ease;
+}
+
+.faq-button:hover .faq-icon-wrapper {
+  background: #E2E8F0;
+  color: var(--c-navy);
+}
+
+.faq-item.open .faq-icon-wrapper {
+  transform: rotate(180deg);
+  background: var(--c-red);
+  color: #FFFFFF;
+}
+
+.faq-answer-container {
+  display: block;
+}
+
+.faq-answer-content {
+  overflow: hidden;
+}
+
+.faq-answer {
+  padding: 16px 26px 20px 72px;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.65;
+  border-top: 1px dashed #FECACA;
+}
+
+.faq-answer p {
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   8. FOOTER
+   -------------------------------------------------------------------------- */
+.dashboard-footer {
+  background-color: #FFFFFF;
+  color: var(--c-text-main);
+  padding: 20px;
+  margin-top: 48px;
+  border-top: 2px solid var(--c-red);
+  width: 100%;
+}
+
+.dashboard-footer-container {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+}
+
+.dashboard-footer-text {
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.dashboard-footer-subtext {
+  font-size: 11px;
+  color: #94A3B8;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   9. RESPONSIVE MEDIA QUERIES
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .faq-main {
+    padding: 20px 16px 36px;
+  }
+
+  .faq-page-heading {
+    padding: 20px;
+  }
+
+  .faq-title {
+    font-size: 20px;
+  }
+
+  .faq-answer {
+    padding: 14px 18px 18px 18px;
+  }
+}

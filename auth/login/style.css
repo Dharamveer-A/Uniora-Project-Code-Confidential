@@ -1,0 +1,509 @@
+/* ==========================================================================
+   UNIORA PLATFORM - GOOGLE AUTHENTICATION LOGIN STYLESHEET
+   File: auth/login/style.css
+
+   Layout: white brand panel on the left (60% of the screen) with centered
+   content, a red vertical divider, and the sign-in card on the right (40%).
+
+   Uses your global design tokens (var(--color-*), ...) where they exist.
+   Every local token has a fallback so the page still looks right if a token
+   is missing from global.css.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   0. LOCAL TOKENS
+   -------------------------------------------------------------------------- */
+.login-page {
+  --lp-primary: var(--color-primary, #1d4ed8);
+  --lp-primary-dark: var(--color-primary-dark, #1e3a8a);
+  --lp-primary-light: var(--color-primary-light, #eaf1ff);
+  --lp-bg: var(--color-primary-surface, #f4f7fd);
+  --lp-surface: var(--color-surface, #ffffff);
+  --lp-border: var(--color-border, #d6deee);
+  --lp-text: var(--color-text-primary, #0f1b33);
+  --lp-text-muted: var(--color-text-secondary, #4a5878);
+  --lp-danger: var(--color-danger, #b42318);
+  --lp-danger-bg: var(--color-danger-bg, #fef3f2);
+  --lp-danger-border: var(--color-danger-border, #fecdca);
+  --lp-success: var(--color-success, #067647);
+  --lp-success-bg: var(--color-success-bg, #ecfdf3);
+  --lp-success-border: var(--color-success-border, #abefc6);
+  --lp-info: var(--color-info, #175cd3);
+  --lp-info-bg: var(--color-info-bg, #eff8ff);
+  --lp-info-border: var(--color-info-border, #b2ddff);
+  --lp-focus: #f5b301;
+
+  /* Red divider and the width of the left (brand) panel */
+  --lp-divider: #d92d20;
+  --lp-divider-width: 3px;
+  --lp-split: 60%;
+
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: var(--lp-bg);
+  color: var(--lp-text);
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Visible keyboard focus everywhere on this page */
+.login-page :focus-visible {
+  outline: 3px solid var(--lp-focus);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --------------------------------------------------------------------------
+   1. PAGE LAYOUT (sign-in panel only on small screens, split on desktop)
+   -------------------------------------------------------------------------- */
+.login-layout {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 1fr;
+}
+
+/* --------------------------------------------------------------------------
+   2. LEFT PANEL: headline + steps, centered (white background, red divider)
+   Hidden on small screens so the sign-in form is the first thing people see.
+   -------------------------------------------------------------------------- */
+.login-brand {
+  display: none;
+  background-color: #ffffff;
+  color: var(--lp-text);
+}
+
+.login-brand-inner {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.login-pitch {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Headline stays on a single line; the size scales with the screen width */
+.login-pitch-title {
+  margin: 0 0 16px;
+  font-size: clamp(1.25rem, 2.2vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+  color: var(--lp-primary-dark);
+}
+
+.login-pitch-text {
+  margin: 0 auto 48px;
+  max-width: 46ch;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--lp-text-muted);
+}
+
+/* Steps run left to right in a single row: number circle on top,
+   a connector line between the circles, title and description below. */
+.login-steps {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  width: 100%;
+  max-width: 760px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  text-align: center;
+  counter-reset: step;
+}
+
+.login-steps li {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0 12px;
+  counter-increment: step;
+}
+
+.login-steps li::before {
+  content: counter(step);
+  position: relative;
+  z-index: 1;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 12px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background-color: var(--lp-primary);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  box-shadow: 0 0 0 4px var(--lp-primary-light);
+}
+
+/* Horizontal connector from this circle to the next one */
+.login-steps li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 15.25px;
+  left: calc(50% + 26px);
+  width: calc(100% - 52px);
+  height: 1.5px;
+  background: var(--lp-border);
+}
+
+.login-step-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--lp-text);
+}
+
+.login-step-text {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--lp-text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   3. RIGHT PANEL: SIGN-IN CARD
+   -------------------------------------------------------------------------- */
+.login-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 28px 16px 40px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 480px;
+  background-color: var(--lp-surface);
+  border: 1px solid var(--lp-border);
+  border-radius: var(--radius-card, 16px);
+  padding: 44px 36px;
+  box-shadow: 0 1px 2px rgba(15, 27, 51, 0.06), 0 8px 24px rgba(15, 27, 51, 0.06);
+}
+
+.login-header {
+  margin-bottom: 36px;
+}
+
+.login-title {
+  margin: 0 0 12px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: var(--lp-text);
+}
+
+.login-subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--lp-text-muted);
+}
+
+/* Checking-session state */
+.login-checking {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 48px 0;
+  font-size: 0.95rem;
+  color: var(--lp-text-muted);
+  text-align: center;
+}
+
+.login-checking[hidden] {
+  display: none;
+}
+
+.login-card.is-checking .login-content {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   4. GOOGLE SIGN-IN BUTTON
+   Follows Google's guidance: light button, full-colour "G", clear label.
+   -------------------------------------------------------------------------- */
+.login-action-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.google-login-button {
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  background-color: #ffffff;
+  border: 1.5px solid #b8c2d6;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.google-login-button:hover {
+  background-color: #f6f8fc;
+  border-color: var(--lp-primary);
+  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.12);
+}
+
+.google-login-button:active {
+  background-color: #eef2fa;
+}
+
+.google-login-button[aria-busy='true'] {
+  cursor: progress;
+  background-color: #f6f8fc;
+  border-color: #b8c2d6;
+  box-shadow: none;
+}
+
+/* Spinner replaces the Google icon while connecting */
+.login-spinner {
+  display: none;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid #c9d3e6;
+  border-top-color: var(--lp-primary);
+  border-radius: 50%;
+  animation: login-spin 0.8s linear infinite;
+}
+
+.login-spinner-lg {
+  display: block;
+  width: 36px;
+  height: 36px;
+  border-width: 3.5px;
+}
+
+.google-login-button[aria-busy='true'] .login-spinner {
+  display: inline-block;
+}
+
+.google-login-button[aria-busy='true'] .google-icon {
+  display: none;
+}
+
+@keyframes login-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --------------------------------------------------------------------------
+   5. SUPPORTING TEXT
+   -------------------------------------------------------------------------- */
+.login-privacy {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 28px 0 0;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--lp-text-muted);
+}
+
+.login-privacy svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--lp-primary);
+}
+
+.login-help {
+  margin: 32px 0 0;
+  padding-top: 28px;
+  border-top: 1px solid var(--lp-border);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--lp-text-muted);
+  text-align: center;
+}
+
+/* "Create one for free": no underline */
+.login-help a {
+  color: var(--lp-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.login-help a:hover {
+  color: var(--lp-primary-dark);
+  text-decoration: none;
+}
+
+/* --------------------------------------------------------------------------
+   6. GO TO HOME (own container; the whole box is clickable)
+   -------------------------------------------------------------------------- */
+.login-back-box {
+  width: 100%;
+  max-width: 480px;
+  margin-top: 8px;
+  background-color: var(--lp-surface);
+  border: 1px solid var(--lp-border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(15, 27, 51, 0.05);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.login-back-box:hover {
+  border-color: var(--lp-primary);
+  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.12);
+}
+
+.login-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  font-size: 0.925rem;
+  font-weight: 600;
+  color: var(--lp-primary);
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.login-back:hover {
+  background-color: var(--lp-primary-light);
+  color: var(--lp-primary-dark);
+  text-decoration: none;
+}
+
+/* --------------------------------------------------------------------------
+   7. AUTHENTICATION MESSAGE AREA
+   -------------------------------------------------------------------------- */
+.auth-message {
+  display: none;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  margin-bottom: 24px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.auth-message.active {
+  display: flex;
+}
+
+.auth-message svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.auth-message.error {
+  background-color: var(--lp-danger-bg);
+  border: 1px solid var(--lp-danger-border);
+  color: var(--lp-danger);
+}
+
+.auth-message.success {
+  background-color: var(--lp-success-bg);
+  border: 1px solid var(--lp-success-border);
+  color: var(--lp-success);
+}
+
+.auth-message.info {
+  background-color: var(--lp-info-bg);
+  border: 1px solid var(--lp-info-border);
+  color: var(--lp-info);
+}
+
+/* --------------------------------------------------------------------------
+   8. RESPONSIVE
+   -------------------------------------------------------------------------- */
+@media (max-width: 480px) {
+  .login-main {
+    padding: 20px 12px 32px;
+    justify-content: flex-start;
+  }
+
+  .login-card {
+    padding: 32px 22px;
+    border-radius: var(--radius-lg, 14px);
+  }
+
+  .login-header {
+    margin-bottom: 28px;
+  }
+
+  .login-title {
+    font-size: 1.4rem;
+  }
+}
+
+/* Split layout on desktop: left panel (60%) + red divider + sign-in panel (40%) */
+@media (min-width: 900px) {
+  .login-layout {
+    grid-template-columns: var(--lp-split) minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+
+  .login-brand {
+    display: flex;
+    align-items: center;      /* vertical centre */
+    justify-content: center;  /* horizontal centre */
+    padding: 40px clamp(24px, 3vw, 64px);
+    border-right: var(--lp-divider-width) solid var(--lp-divider);
+  }
+
+  .login-main {
+    padding: 40px 24px;
+  }
+
+  .login-card {
+    padding: 44px clamp(24px, 2.6vw, 40px);
+  }
+}
+
+/* Respect reduced-motion preferences (spinner slows down but still signals progress) */
+@media (prefers-reduced-motion: reduce) {
+  .google-login-button,
+  .login-back-box,
+  .login-back {
+    transition: none;
+  }
+
+  .login-spinner {
+    animation-duration: 2s;
+  }
+}

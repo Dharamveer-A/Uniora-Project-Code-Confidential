@@ -1,0 +1,84 @@
+{
+  "faqs": [
+    {
+      "id": 1,
+      "question": "What is UNIORA?",
+      "answer": "UNIORA is a public welfare access platform designed to help citizens discover, understand, verify, and access Central and State government welfare schemes easily."
+    },
+    {
+      "id": 2,
+      "question": "What can I do with UNIORA?",
+      "answer": "You can search and filter government schemes, verify required eligibility documents, calculate your readiness score, locate nearby service centers, and get answers from our public-service assistant."
+    },
+    {
+      "id": 3,
+      "question": "How does UNIORA recommend welfare schemes?",
+      "answer": "UNIORA matches your profile details—such as age, state, occupation, income level, and category—with the official eligibility criteria specified by government departments."
+    },
+    {
+      "id": 4,
+      "question": "What information is used for scheme matching?",
+      "answer": "Matching uses basic demographic and economic information like age, state, district, occupation, social category, annual household income, and land ownership status."
+    },
+    {
+      "id": 5,
+      "question": "Are the schemes from Central and State governments?",
+      "answer": "Yes, UNIORA indexes welfare programs launched by both the Central Government of India and various State Governments."
+    },
+    {
+      "id": 6,
+      "question": "What is Eligible Schemes?",
+      "answer": "Eligible Schemes is a personalized dashboard section that highlights programs you pre-qualify for based on your verified citizen profile."
+    },
+    {
+      "id": 7,
+      "question": "What is My Readiness?",
+      "answer": "My Readiness measures how prepared you are to apply for a scheme, showing your document completion score and any missing requirements."
+    },
+    {
+      "id": 8,
+      "question": "What is Documents & Verification?",
+      "answer": "Documents & Verification allows you to check and upload key identity and income credentials (such as Aadhaar, Ration Card, or Income Certificates) for instant scheme matching."
+    },
+    {
+      "id": 9,
+      "question": "Can I use UNIORA without creating an account?",
+      "answer": "Yes, guest users can browse the scheme directory and ask questions. However, creating an account enables personalized eligibility matching and document readiness tracking."
+    },
+    {
+      "id": 10,
+      "question": "Why should I create an account?",
+      "answer": "Creating an account saves your verified details so you receive automated scheme updates, document expiry alerts, and faster application readiness."
+    },
+    {
+      "id": 11,
+      "question": "Is my personal information secure?",
+      "answer": "Yes, UNIORA adheres to strict public data privacy standards and uses encrypted authentication protocols to protect your personal information."
+    },
+    {
+      "id": 12,
+      "question": "Can I update my information?",
+      "answer": "Yes, you can edit your profile, update your income status, or upload renewed certificates anytime from the Citizen Profile section."
+    },
+    {
+      "id": 13,
+      "question": "What does 'Needs Verification' mean?",
+      "answer": "'Needs Verification' indicates that a scheme requires an unverified document or additional certificate before your application can be processed."
+    },
+    {
+      "id": 14,
+      "question": "Does UNIORA guarantee government scheme eligibility?",
+      "answer": "No. UNIORA provides eligibility guidance and document verification assistance. Final scheme approval and benefit disbursement rest solely with the respective government departments."
+    },
+    {
+      "id": 15,
+      "question": "How can I find nearby government services?",
+      "answer": "Use the 'Services Nearby' section to view an interactive map and address directory of Common Service Centers (CSC) and Aadhaar Seva Kendras near your PIN code."
+    },
+    {
+      "id": 16,
+      "question": "What is Ask Uniora?",
+      "answer": "Ask Uniora is an AI public-service assistant that explains government scheme guidelines, required documents, and application steps in simple everyday language."
+    }
+  ]
+}
