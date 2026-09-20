@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Document Verification - UNIORA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <header class="main-header">
+        <div class="logo">
+            <h1><span>UNI</span>ORA</h1>
+        </div>
+        <nav class="nav-links">
+            <a href="../../../dashboard/index.html">DASHBOARD</a>
+            <a href="../../01_scheme_recommendation/frontend/index.html">SCHEMES</a>
+            <a href="#" class="active"><span class="dot"></span> DOCUMENTS</a>
+            <a href="../../04_eligible_schemes/frontend/index.html">ELIGIBLE</a>
+            <a href="../../05_my_readiness/frontend/index.html">READINESS</a>
+            <a href="../../06_government_services/frontend/index.html">SERVICES</a>
+            <a href="../../02_ask_uniora/frontend/index.html">ASK UNIORA</a>
+        </nav>
+        <div class="auth-btn">
+            <button class="login-btn">LOGIN</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">Document Verification</h1>
+        
+        <!-- Status Dashboard -->
+        <div class="status-dashboard">
+            <div class="status-col unuploaded">
+                <h3>To Upload</h3>
+                <ul id="unuploadedList">
+                    <li>Aadhaar Card</li>
+                    <li>PAN Card</li>
+                    <li>Income Certificate</li>
+                </ul>
+            </div>
+            <div class="status-col pending">
+                <h3>Pending</h3>
+                <ul id="pendingList"></ul>
+            </div>
+            <div class="status-col uploaded">
+                <h3>Verified</h3>
+                <ul id="uploadedList"></ul>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- Step 1: Upload -->
+        <div id="step1" class="step active">
+            <h2>1. Upload Document</h2>
+            <div class="dropdown-container">
+                <label>Select Document Type:</label>
+                <select id="docType">
+                    <option value="Aadhaar Card">Aadhaar Card</option>
+                    <option value="PAN Card">PAN Card</option>
+                    <option value="Income Certificate">Income Certificate</option>
+                </select>
+            </div>
+            <div class="upload-box" id="uploadBox">
+                <p>Select your document image or PDF</p>
+                <input type="file" id="fileInput" class="file-input" accept="image/*,.pdf">
+                <br>
+                <button onclick="processDocument()" id="processBtn" class="primary-btn">Process Document AI</button>
+            </div>
+        </div>
+
+        <!-- Step 2: Cross Check -->
+        <div id="step2" class="step" style="display: none;">
+            <h2>2. Cross Check & Edit</h2>
+            <p style="color: #64748b; margin-bottom: 24px; font-weight: 500;">
+                Our AI has extracted the following details. Please edit them if they are incorrect to match your proof exactly.
+            </p>
+            <div id="extractedFields" class="form-grid">
+                <!-- Fields injected via JS -->
+            </div>
+            <div class="btn-group">
+                <button onclick="resetUpload()" class="secondary-btn">&larr; Start Over</button>
+                <button onclick="confirmAndStore()" id="confirmBtn" class="primary-btn" style="flex: 1;">Looks Good, Verify & Store</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../../../common/js/api.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
