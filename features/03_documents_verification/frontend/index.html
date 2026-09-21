@@ -1,90 +1,244 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Document Verification - UNIORA</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Verification - UNIORA Welfare Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../../common/css/global.css">
+    <link rel="stylesheet" href="../../../common/components/navbar.css">
+    <link rel="stylesheet" href="../../../common/css/responsive.css">
     <link rel="stylesheet" href="style.css">
+
+    <!-- INSTANT 0MS SYNCHRONOUS AUTH HYDRATION -->
+    <script>
+      (function() {
+        try {
+          var name = localStorage.getItem('uniora_cached_user_name');
+          var hasUser = false;
+          for (var i = 0; i < localStorage.length; i++) {
+            var k = localStorage.key(i);
+            if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+              var raw = localStorage.getItem(k);
+              if (raw) {
+                var p = JSON.parse(raw);
+                if (p && p.user) {
+                  hasUser = true;
+                  if (!name) {
+                    name = p.user.user_metadata?.full_name || p.user.user_metadata?.name || p.user.email?.split('@')[0] || 'User';
+                  }
+                  break;
+                }
+              }
+            }
+          }
+          if (hasUser) {
+            document.write('<style>#navbarUser{display:flex !important;} #navbarLogin{display:none !important;} #navbarAuth.is-loading > *{visibility:visible !important;} #navbarAuth.is-loading::after{display:none !important;}</style>');
+          } else {
+            document.write('<style>#navbarLogin{display:inline-flex !important;} #navbarUser{display:none !important;} #navbarAuth.is-loading > *{visibility:visible !important;} #navbarAuth.is-loading::after{display:none !important;}</style>');
+          }
+        } catch(e) {}
+      })();
+    </script>
 </head>
-<body>
-    <!-- Top Navigation Bar -->
-    <header class="main-header">
-        <div class="logo">
-            <h1><span>UNI</span>ORA</h1>
-        </div>
-        <nav class="nav-links">
-            <a href="../../../dashboard/index.html">DASHBOARD</a>
-            <a href="../../01_scheme_recommendation/frontend/index.html">SCHEMES</a>
-            <a href="#" class="active"><span class="dot"></span> DOCUMENTS</a>
-            <a href="../../04_eligible_schemes/frontend/index.html">ELIGIBLE</a>
-            <a href="../../05_my_readiness/frontend/index.html">READINESS</a>
-            <a href="../../06_government_services/frontend/index.html">SERVICES</a>
-            <a href="../../02_ask_uniora/frontend/index.html">ASK UNIORA</a>
-        </nav>
-        <div class="auth-btn">
-            <button class="login-btn">LOGIN</button>
+<body class="dashboard-page">
+<div class="app-layout">
+
+    <!-- NAVBAR -->
+    <header class="navbar" id="appNavbar">
+        <div class="navbar-container">
+            <a href="../../../dashboard/index.html" class="navbar-brand">
+                <img src="../../../common/assets/uniora_logo_navbar.png" alt="UNIORA" class="navbar-logo" />
+            </a>
+            <nav class="navbar-menu" id="navbarMenu">
+                <a href="../../../dashboard/index.html" class="navbar-link" data-page="dashboard"><span class="navbar-link-text">Dashboard</span></a>
+                <a href="../../01_scheme_recommendation/frontend/index.html" class="navbar-link" data-page="schemes"><span class="navbar-link-text">Schemes</span></a>
+                <a href="index.html" class="navbar-link active" data-page="documents"><span class="navbar-link-text">Documents</span></a>
+                <a href="../../04_eligible_schemes/frontend/index.html" class="navbar-link" data-page="eligible"><span class="navbar-link-text">Eligible</span></a>
+                <a href="../../05_my_readiness/frontend/index.html" class="navbar-link" data-page="readiness"><span class="navbar-link-text">Readiness</span></a>
+                <a href="../../06_government_services/frontend/index.html" class="navbar-link" data-page="services"><span class="navbar-link-text">Services</span></a>
+                <a href="../../02_ask_uniora/frontend/index.html" class="navbar-link" data-page="ask"><span class="navbar-link-text">Ask Uniora</span></a>
+            </nav>
+            <!-- RIGHT CLUSTER (Toggle + Supabase Auth) -->
+            <div class="navbar-right">
+              <!-- HAMBURGER TOGGLE (Mobile only) -->
+              <button
+                type="button"
+                class="navbar-toggle"
+                id="navbarToggle"
+                aria-label="Open navigation menu"
+                aria-expanded="false"
+                aria-controls="navbarMenu"
+              >
+                <span class="navbar-toggle-bar"></span>
+                <span class="navbar-toggle-bar"></span>
+                <span class="navbar-toggle-bar"></span>
+              </button>
+
+              <!-- AUTHENTICATION AREA -->
+              <div class="navbar-auth is-loading" id="navbarAuth">
+                <!-- AUTHENTICATED USER -->
+                <div class="navbar-user" id="navbarUser" hidden>
+                  <a
+                    href="../../../features/10_profile/frontend/index.html"
+                    class="navbar-profile"
+                    id="navbarProfileLink"
+                    aria-label="View Profile"
+                  >
+                    <div class="navbar-avatar" id="navbarAvatar" aria-hidden="true">U</div>
+                    <span class="navbar-user-name" id="navbarUserName">User</span>
+                  </a>
+                </div>
+
+                <!-- GUEST USER -->
+                <a href="../../../auth/login/index.html" class="navbar-login" id="navbarLogin" hidden>
+                  LOGIN
+                </a>
+              </div>
+            </div>
         </div>
     </header>
 
-    <div class="container">
-        <h1 class="page-title">Document Verification</h1>
-        
-        <!-- Status Dashboard -->
-        <div class="status-dashboard">
-            <div class="status-col unuploaded">
-                <h3>To Upload</h3>
-                <ul id="unuploadedList">
-                    <li>Aadhaar Card</li>
-                    <li>PAN Card</li>
-                    <li>Income Certificate</li>
-                </ul>
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title">My Documents</h1>
+            <p class="subtitle">Manage and verify your government documents to check scheme eligibility.</p>
+        </div>
+
+        <!-- SECTION 1: Pending -->
+        <div class="doc-section">
+            <div class="section-title-row">
+                <h2 class="section-title">Pending Documents</h2>
+                <span class="section-badge pending-badge" id="pendingCount">0 pending</span>
             </div>
-            <div class="status-col pending">
-                <h3>Pending</h3>
-                <ul id="pendingList"></ul>
+            <div class="tip-banner tip-info">
+                <span class="tip-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                </span>
+                <span>Prioritize adding these <strong>essential documents first</strong> before checking eligibility for welfare schemes and scholarships. Click any card to upload or enter details.</span>
             </div>
-            <div class="status-col uploaded">
-                <h3>Verified</h3>
-                <ul id="uploadedList"></ul>
+            <!-- Single Continuous 4-Column Grid -->
+            <div class="doc-grid" id="pendingDocGrid"></div>
+
+            <!-- Single Expand/Collapse Button at the Bottom -->
+            <div class="see-more-footer" id="seeMoreFooter" style="display:none;">
+                <button type="button" class="see-more-btn" id="seeMoreBtn" onclick="window.toggleExtendedDocs()">
+                    <span id="seeMoreText">Show More Documents</span>
+                    <span class="see-more-chevron" id="seeMoreChevron">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </span>
+                </button>
             </div>
         </div>
 
-        <hr class="divider">
-
-        <!-- Step 1: Upload -->
-        <div id="step1" class="step active">
-            <h2>1. Upload Document</h2>
-            <div class="dropdown-container">
-                <label>Select Document Type:</label>
-                <select id="docType">
-                    <option value="Aadhaar Card">Aadhaar Card</option>
-                    <option value="PAN Card">PAN Card</option>
-                    <option value="Income Certificate">Income Certificate</option>
-                </select>
+        <!-- SECTION 2: Verified -->
+        <div class="doc-section">
+            <div class="section-title-row">
+                <h2 class="section-title">Verified Documents</h2>
+                <span class="section-badge verified-badge" id="verifiedCount">0 verified</span>
             </div>
-            <div class="upload-box" id="uploadBox">
-                <p>Select your document image or PDF</p>
-                <input type="file" id="fileInput" class="file-input" accept="image/*,.pdf">
-                <br>
-                <button onclick="processDocument()" id="processBtn" class="primary-btn">Process Document AI</button>
+            <div class="tip-banner tip-warning">
+                <span class="tip-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </span>
+                <span>If you have recently <strong>updated a document</strong> (e.g., address change), you must <strong>re-upload it in UNIORA</strong> for scheme eligibility to reflect the latest data.</span>
+            </div>
+            <!-- 4-Column Grid of Verified Documents -->
+            <div class="doc-grid" id="verifiedDocGrid">
+                <div class="empty-state" id="verifiedEmptyState">
+                    <div class="empty-icon">
+                        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                    </div>
+                    <p>No verified documents yet.</p>
+                    <p class="empty-sub">Click any document above to get started.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- ===== WIZARD MODAL ===== -->
+<div id="wizardModal" class="modal-overlay">
+    <div class="modal-content wizard-modal">
+        <button class="modal-close" onclick="window.closeWizardModal()">×</button>
+        <div class="modal-header" id="wizardTitle">Document</div>
+
+        <div class="wizard-body">
+            <!-- LEFT: Upload -->
+            <div class="wizard-left">
+                <p class="wizard-col-label">Upload Document</p>
+                <div class="upload-box" id="wizardUploadBox">
+                    <div id="wizardUploadText">
+                        <div class="upload-icon">
+                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        </div>
+                        <p class="upload-hint">Drag & drop or</p>
+                        <button type="button" class="secondary-btn" onclick="document.getElementById('wizardFileInput').click()">Browse Files</button>
+                        <p class="upload-formats">JPG · PNG · PDF</p>
+                    </div>
+                    <div id="wizardFileInfo" style="display:none;">
+                        <div class="upload-file-icon">
+                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        </div>
+                        <div id="wizardFileName" class="wizard-filename"></div>
+                        <button onclick="window.clearWizardFile()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:13px;margin-top:6px;font-weight:600;">✕ Remove</button>
+                    </div>
+                    <input type="file" id="wizardFileInput" accept="image/*,.pdf" style="display:none;">
+                </div>
+
+                <button onclick="window.runExtraction()" id="wizardExtractBtn" class="primary-btn wizard-extract-btn" style="display:none;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                    <span>Extract with AI</span>
+                </button>
+                <div id="wizardExtractStatus" class="extract-status"></div>
+            </div>
+
+            <!-- RIGHT: Editable Fields -->
+            <div class="wizard-right">
+                <p class="wizard-col-label">Document Details</p>
+                <p class="wizard-field-tip">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                    <span>Enter the details <strong>exactly</strong> as they appear in your document.</span>
+                </p>
+                <div id="wizardFields" class="wizard-fields-container"></div>
+                <div id="wizardVerifyNotice" class="verify-notice" style="display:none;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <span>AI has filled these fields. Please <strong>carefully verify</strong> each field matches your document before saving.</span>
+                </div>
             </div>
         </div>
 
-        <!-- Step 2: Cross Check -->
-        <div id="step2" class="step" style="display: none;">
-            <h2>2. Cross Check & Edit</h2>
-            <p style="color: #64748b; margin-bottom: 24px; font-weight: 500;">
-                Our AI has extracted the following details. Please edit them if they are incorrect to match your proof exactly.
-            </p>
-            <div id="extractedFields" class="form-grid">
-                <!-- Fields injected via JS -->
-            </div>
-            <div class="btn-group">
-                <button onclick="resetUpload()" class="secondary-btn">&larr; Start Over</button>
-                <button onclick="confirmAndStore()" id="confirmBtn" class="primary-btn" style="flex: 1;">Looks Good, Verify & Store</button>
+        <div class="wizard-footer">
+            <button onclick="window.unverifyCurrentDocument()" class="danger-btn" id="wizardUnverifyBtn" style="display:none; margin-right:auto;">Remove</button>
+            <button onclick="window.closeWizardModal()" class="secondary-btn">Cancel</button>
+            <button onclick="window.saveWizardDocument()" class="primary-btn" id="wizardSaveBtn">Save & Verify</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== VERIFIED DETAIL MODAL ===== -->
+<div id="verifiedDetailModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 520px;">
+        <button class="modal-close" onclick="window.closeVerifiedModal()">×</button>
+        <div class="modal-header" id="verifiedModalTitle">Document Details</div>
+        <div class="modal-body" id="verifiedModalBody"></div>
+        <div class="modal-footer-actions">
+            <button class="danger-btn" onclick="window.unverifyCurrentDocument()">Remove</button>
+            <div class="modal-footer-right">
+                <button class="secondary-btn" onclick="window.reupdateDocument()">Re-upload</button>
+                <button class="primary-btn" onclick="window.closeVerifiedModal()">Close</button>
             </div>
         </div>
     </div>
-    
-    <script src="../../../common/js/api.js"></script>
-    <script src="script.js"></script>
+</div>
+
+<!-- SUPABASE JS CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- COMMON API -->
+<script src="../../../common/js/api.js"></script>
+<!-- FEATURE SCRIPT (MODULE) -->
+<script type="module" src="./script.js"></script>
 </body>
 </html>
