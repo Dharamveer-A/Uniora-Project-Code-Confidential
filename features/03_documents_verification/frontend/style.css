@@ -571,3 +571,124 @@ input[type="date"].form-control::-webkit-calendar-picker-indicator:hover {
     .doc-card-hint { font-size: 12px; margin-bottom: 12px; }
     .form-control { font-size: 13.5px; padding: 10px 12px; }
 }
+
+/* ── ELIGIBILITY CTA BANNER ── */
+.eligibility-cta-banner {
+    margin-top: 56px;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #3b82f6 100%);
+    border-radius: 16px;
+    padding: 32px 36px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.25), 0 8px 10px -6px rgba(37, 99, 235, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.eligibility-cta-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 320px;
+    height: 320px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
+    pointer-events: none;
+}
+
+.cta-content {
+    max-width: 780px;
+    position: relative;
+    z-index: 1;
+}
+
+.cta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.cta-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+}
+
+.cta-desc {
+    font-size: 14.5px;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.55;
+    margin: 0;
+}
+
+.check-schemes-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #ffffff;
+    color: #1d4ed8;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 14px 26px;
+    border-radius: 10px;
+    text-decoration: none;
+    white-space: nowrap;
+    box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.12);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.check-schemes-btn:hover {
+    background: #f8fafc;
+    color: #1e40af;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.18);
+}
+
+.check-schemes-btn svg {
+    transition: transform 0.2s ease;
+}
+
+.check-schemes-btn:hover svg {
+    transform: translateX(4px);
+}
+
+@media (max-width: 860px) {
+    .eligibility-cta-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 24px;
+        gap: 20px;
+    }
+    .check-schemes-btn {
+        width: 100%;
+    }
+    .cta-title {
+        font-size: 19px;
+    }
+    .cta-desc {
+        font-size: 13.5px;
+    }
+}
+
