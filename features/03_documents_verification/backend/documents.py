@@ -64,6 +64,12 @@ def refine_extracted_fields(extracted: dict) -> dict:
     except Exception:
         pass
 
+    # Strip leading zeroes from marks (e.g. "0517" -> "517", "0600" -> "600")
+    if cleaned.get("obtained_marks"):
+        cleaned["obtained_marks"] = re.sub(r'^0+(?=\d)', '', str(cleaned["obtained_marks"]).strip())
+    if cleaned.get("maximum_marks"):
+        cleaned["maximum_marks"] = re.sub(r'^0+(?=\d)', '', str(cleaned["maximum_marks"]).strip())
+
     # Normalize percentage formatting (ensure % symbol at end)
     if cleaned.get("percentage"):
         pct_val = cleaned["percentage"].strip()

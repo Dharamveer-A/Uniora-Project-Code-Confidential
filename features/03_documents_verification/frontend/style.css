@@ -521,8 +521,53 @@ input[type="date"].form-control::-webkit-calendar-picker-indicator:hover {
     vertical-align: middle;
 }
 
-/* ── Responsive ── */
-@media (max-width: 640px) {
-    .wizard-body { grid-template-columns: 1fr; }
-    .wizard-modal { max-width: 100% !important; }
+/* ── Responsive Mobile Optimizations ── */
+@media (max-width: 768px) {
+    .modal-overlay {
+        padding: 12px;
+    }
+    .modal-content {
+        padding: 22px 18px;
+        border-radius: 14px;
+        max-height: 94vh;
+    }
+    .wizard-body {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    .wizard-modal {
+        max-width: 100% !important;
+    }
+    .wizard-fields-container {
+        max-height: 280px;
+    }
+    .wizard-footer {
+        flex-direction: column-reverse;
+        gap: 10px;
+    }
+    .wizard-footer button {
+        width: 100%;
+    }
+    .modal-footer-actions {
+        flex-direction: column-reverse;
+        gap: 10px;
+    }
+    .modal-footer-right {
+        width: 100%;
+        flex-direction: column;
+    }
+    .modal-footer-actions button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 560px) {
+    h1.page-title { font-size: 23px; }
+    .subtitle { font-size: 13.5px; }
+    .section-title { font-size: 18px; }
+    .tip-banner { font-size: 13px; padding: 12px 14px; }
+    .doc-card { padding: 16px; border-radius: 10px; }
+    .doc-card-title { font-size: 14.5px; }
+    .doc-card-hint { font-size: 12px; margin-bottom: 12px; }
+    .form-control { font-size: 13.5px; padding: 10px 12px; }
 }

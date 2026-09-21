@@ -845,6 +845,8 @@ function fillWizardFields(data) {
         if (el) {
             if (DATE_FIELDS.has(key)) {
                 el.value = formatDateForInput(value);
+            } else if (key === 'obtained_marks' || key === 'maximum_marks') {
+                el.value = String(value || '').replace(/^0+(?=\d)/, '');
             } else {
                 el.value = value || '';
             }
