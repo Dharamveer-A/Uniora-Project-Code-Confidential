@@ -205,9 +205,14 @@ const SECRET_KEY = "uniora_secure_2024";
 let guestProfile = {
   isFilled: false,
   isPartial: false,
+  isFromDatabase: false,
   isFromVerifiedDocs: false,
   verifiedDocsCount: 0,
   verifiedDocTypes: [],
+  userName: "",
+  userEmail: "",
+  phone: "",
+  date_of_birth: "",
   age: null,
   gender: "",
   state: "",
@@ -332,6 +337,193 @@ function normalizeSocialCategory(raw) {
   if (s.includes("obc") || s.includes("backward class") || s.includes("bc") || s.includes("bcm")) return "OBC";
   if (s.includes("general") || s.includes("oc") || s.includes("fc") || s.includes("open") || s.includes("forward")) return "General";
   return "";
+}
+
+function normalizeIncomeRange(raw) {
+  if (!raw) return "";
+  const s = String(raw).trim();
+  if (s.includes("Below") || (s.includes("1") && s.includes("Lakh") && !s.includes("2.5") && !s.includes("–") && !s.includes("-"))) {
+    return "Below ₹1 Lakh";
+  }
+  if (s.includes("1") && (s.includes("2.5") || s.includes("2"))) {
+    return "₹1 – 2.5 Lakh";
+  }
+  if (s.includes("2.5") && s.includes("5")) {
+    return "₹2.5 – 5 Lakh";
+  }
+  if (s.includes("5") || s.includes("8") || s.includes("Above")) {
+    return "Above ₹5 Lakh";
+  }
+  const numeric = parseIncome(raw);
+  if (numeric !== null) {
+    return getIncomeBracket(numeric);
+  }
+  return s;
+}
+
+function normalizeOccupation(raw) {
+  if (!raw) return "";
+  const s = String(raw).trim().toLowerCase();
+  if (s.includes("student")) return "Student";
+  if (s.includes("farmer") || s.includes("agriculture")) return "Farmer";
+  if (s.includes("artisan") || s.includes("wage") || s.includes("gig")) return "Daily Wage / Artisan";
+  if (s.includes("self") || s.includes("business")) return "Self-Employed";
+  if (s.includes("govt") || s.includes("government") || s.includes("private") || s.includes("salaried") || s.includes("employee")) return "Salaried";
+  if (s.includes("unemployed") || s.includes("looking") || s.includes("retired") || s.includes("homemaker")) return "Unemployed";
+  const valid = ["Student", "Farmer", "Self-Employed", "Unemployed", "Daily Wage / Artisan", "Salaried"];
+  const matched = valid.find(v => v.toLowerCase() === s);
+  return matched || raw;
+}
+
+function normalizeEducationLevel(raw) {
+  if (!raw) return "";
+  const s = String(raw).trim().toLowerCase();
+  if (s.includes("postgraduate") || s.includes("post graduate") || s.includes("pg")) return "Postgraduate";
+  if (s.includes("undergraduate") || s.includes("graduate") || s.includes("ug") || s.includes("degree") || s.includes("bachelor")) return "Undergraduate";
+  if (s.includes("diploma") || s.includes("vocational")) return "Diploma/Vocational";
+  if (s.includes("school") || s.includes("primary") || s.includes("secondary") || s.includes("middle") || s.includes("10th") || s.includes("12th") || s.includes("illiterate")) return "School";
+  return raw;
+}
+
+function normalizeEmploymentStatus(raw) {
+  if (!raw) return "";
+  const s = String(raw).trim().toLowerCase();
+  if (s.includes("student")) return "Student";
+  if (s.includes("self")) return "Self-Employed";
+  if (s.includes("unemployed") || s.includes("retired") || s.includes("not seeking")) return "Unemployed";
+  if (s.includes("employed") || s.includes("salaried") || s.includes("worker") || s.includes("wage")) return "Employed";
+  return raw;
+}
+
+function normalizeSpecialBeneficiary(raw) {
+  if (!raw) return "None";
+  const s = String(raw).trim().toLowerCase();
+  if (s.includes("widow")) return "Destitute Widow";
+  if (s.includes("ex-serviceman") || s.includes("defense")) return "Ex-Serviceman";
+  if (s.includes("minority") || s.includes("orphan") || s.includes("transgender")) return "Minority";
+  return "None";
+}
+
+function normalizeMaritalStatus(raw) {
+  if (!raw) return "Single";
+  const s = String(raw).trim().toLowerCase();
+  if (s.startsWith("mar")) return "Married";
+  if (s.startsWith("wid")) return "Widowed";
+  if (s.startsWith("div") || s.startsWith("sep")) return "Divorced";
+  return "Single";
+}
+
+function normalizeDisability(raw) {
+  if (!raw) return "No";
+  const s = String(raw).trim().toLowerCase();
+  if (s.startsWith("yes")) return "Yes";
+  return "No";
+}
+
+function buildProfileFromDbUserInfo(dbUserInfo, verifiedDocs = [], dbUserProfile = null) {
+  if (!dbUserInfo) return null;
+
+  const incomeRange = normalizeIncomeRange(dbUserInfo.annual_family_income);
+  const incomeMap = {
+    "Below ₹1 Lakh": 90000,
+    "₹1 – 2.5 Lakh": 180000,
+    "₹2.5 – 5 Lakh": 350000,
+    "Above ₹5 Lakh": 600000
+  };
+
+  let numericIncome = null;
+  if (dbUserInfo.annual_income !== null && dbUserInfo.annual_income !== undefined) {
+    numericIncome = parseIncome(dbUserInfo.annual_income);
+  }
+  if (numericIncome === null && incomeRange) {
+    numericIncome = incomeMap[incomeRange] || null;
+  }
+
+  // Calculate age from DOB or age field
+  let age = null;
+  if (dbUserInfo.date_of_birth) {
+    age = extractAgeFromDob(dbUserInfo.date_of_birth);
+  }
+  if (!age && dbUserInfo.age) {
+    const parsedAge = parseInt(dbUserInfo.age, 10);
+    if (!isNaN(parsedAge) && parsedAge > 0 && parsedAge < 120) {
+      age = parsedAge;
+    }
+  }
+
+  // Normalize residence
+  let residence = "Urban";
+  if (dbUserInfo.residence_type) {
+    residence = String(dbUserInfo.residence_type).toLowerCase().includes("rural") ? "Rural" : "Urban";
+  }
+
+  // Family size
+  let familySize = 4;
+  if (dbUserInfo.family_size) {
+    const fVal = parseInt(dbUserInfo.family_size, 10);
+    if (!isNaN(fVal) && fVal > 0) familySize = fVal;
+  }
+
+  const profile = {
+    isFilled: false,
+    isPartial: false,
+    isFromDatabase: true,
+    isFromVerifiedDocs: Boolean(verifiedDocs && verifiedDocs.length > 0),
+    verifiedDocsCount: verifiedDocs ? verifiedDocs.length : 0,
+    verifiedDocTypes: verifiedDocs ? verifiedDocs.map(d => d.document_type || d.document_name || d.name).filter(Boolean) : [],
+    userName: dbUserProfile?.name || "",
+    userEmail: dbUserProfile?.email || "",
+    phone: dbUserInfo.phone || "",
+    date_of_birth: dbUserInfo.date_of_birth || "",
+    age: age,
+    gender: dbUserInfo.gender || "",
+    state: dbUserInfo.state || "",
+    district: dbUserInfo.district || "",
+    residence: residence,
+    occupation: normalizeOccupation(dbUserInfo.occupation),
+    incomeRange: incomeRange,
+    incomeNumeric: numericIncome,
+    category: normalizeSocialCategory(dbUserInfo.social_category),
+    maritalStatus: normalizeMaritalStatus(dbUserInfo.marital_status),
+    disability: normalizeDisability(dbUserInfo.disability_status),
+    education: normalizeEducationLevel(dbUserInfo.education_level),
+    employment: normalizeEmploymentStatus(dbUserInfo.employment_status),
+    familySize: familySize,
+    special: normalizeSpecialBeneficiary(dbUserInfo.special_beneficiary_status),
+    percentage: null
+  };
+
+  // Merge marksheet percentages if available from verified docs
+  if (verifiedDocs && verifiedDocs.length > 0) {
+    for (const d of verifiedDocs) {
+      const p = parseFloat(d.data?.percentage);
+      if (!isNaN(p) && p > 0) {
+        profile.percentage = p;
+        break;
+      }
+    }
+  }
+
+  // Check essential demographic fields required to evaluate scheme eligibility
+  const missing = [];
+  if (!profile.age || profile.age <= 0) missing.push("Age");
+  if (!profile.gender) missing.push("Gender");
+  if (!profile.state) missing.push("State");
+  if (!profile.incomeRange) missing.push("Annual Income");
+  if (!profile.category) missing.push("Social Category");
+  if (!profile.occupation) missing.push("Occupation");
+
+  profile.missingFields = missing;
+
+  if (missing.length === 0) {
+    profile.isFilled = true;
+    profile.isPartial = false;
+  } else {
+    profile.isFilled = false;
+    profile.isPartial = true;
+  }
+
+  return profile;
 }
 
 function extractLocationFromAddress(text) {
@@ -1421,8 +1613,10 @@ async function initFeature() {
     console.warn('[UNIORA] initNavbarAuth warning:', navErr);
   }
 
-  // 3. Fetch & process Verified Documents (from LocalStorage or Supabase)
+  // 3. Fetch Verified Documents & Citizen Profile (from Supabase or LocalStorage)
   let verifiedDocs = getStoredVerifiedDocs();
+  let dbUserInfo = null;
+  let dbUserProfile = null;
 
   try {
     const session = await getCurrentSession();
@@ -1433,13 +1627,26 @@ async function initFeature() {
       }
 
       if (supabase) {
-        const { data: userDocs } = await supabase
-          .from('user_documents')
-          .select('*')
-          .eq('uid', session.user.id)
-          .eq('is_verified', true);
+        const [docsRes, infoRes, profileRes] = await Promise.allSettled([
+          supabase
+            .from('user_documents')
+            .select('*')
+            .eq('uid', session.user.id)
+            .eq('is_verified', true),
+          supabase
+            .from('user_info')
+            .select('*')
+            .eq('uid', session.user.id)
+            .maybeSingle(),
+          supabase
+            .from('user_profile')
+            .select('*')
+            .eq('uid', session.user.id)
+            .maybeSingle()
+        ]);
 
-        if (userDocs && userDocs.length > 0) {
+        if (docsRes.status === 'fulfilled' && docsRes.value?.data && docsRes.value.data.length > 0) {
+          const userDocs = docsRes.value.data;
           const remoteFormatted = userDocs.map(d => ({
             document_type: d.document_type,
             data: d.extracted_data || {}
@@ -1451,14 +1658,45 @@ async function initFeature() {
             }
           });
         }
+
+        if (infoRes.status === 'fulfilled' && infoRes.value?.data) {
+          dbUserInfo = infoRes.value.data;
+        }
+
+        if (profileRes.status === 'fulfilled' && profileRes.value?.data) {
+          dbUserProfile = profileRes.value.data;
+        }
       }
     }
   } catch (authErr) {
     console.warn('[UNIORA] Auth/Supabase check notice:', authErr);
   }
 
-  // 3. Synthesize demographic profile from verified docs or restore session
-  if (verifiedDocs && verifiedDocs.length > 0) {
+  // 4. Initialize Citizen Demographic Profile
+  // Priority 1: User is logged in and has a saved citizen profile in Supabase
+  if (dbUserInfo) {
+    const dbProfile = buildProfileFromDbUserInfo(dbUserInfo, verifiedDocs, dbUserProfile);
+    const sessionProfile = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (sessionProfile) {
+      try {
+        const parsed = JSON.parse(sessionProfile);
+        if (parsed && parsed.manuallySubmitted) {
+          // Preserve manual overrides made in the current session
+          guestProfile = { ...dbProfile, ...parsed, isFromDatabase: true };
+        } else {
+          guestProfile = dbProfile;
+          saveProfileToSession(guestProfile);
+        }
+      } catch {
+        guestProfile = dbProfile;
+        saveProfileToSession(guestProfile);
+      }
+    } else {
+      guestProfile = dbProfile;
+      saveProfileToSession(guestProfile);
+    }
+  } else if (verifiedDocs && verifiedDocs.length > 0) {
+    // Priority 2: Synthesize profile from verified documents
     const synthesized = synthesizeProfileFromVerifiedDocs(verifiedDocs);
     if (synthesized) {
       const sessionProfile = sessionStorage.getItem(SESSION_STORAGE_KEY);
@@ -1469,10 +1707,8 @@ async function initFeature() {
         try {
           const parsed = JSON.parse(sessionProfile);
           if (parsed && parsed.manuallySubmitted) {
-            // User explicitly submitted the form, preserve their inputs with document context
             guestProfile = { ...synthesized, ...parsed, isFromVerifiedDocs: true, verifiedDocsCount: verifiedDocs.length };
           } else {
-            // Re-synthesize cleanly from verified docs without stale fake defaults
             guestProfile = synthesized;
             saveProfileToSession(guestProfile);
           }
@@ -1482,6 +1718,7 @@ async function initFeature() {
       }
     }
   } else {
+    // Priority 3: Restore previous session
     loadProfileFromSession();
   }
 
@@ -2398,9 +2635,26 @@ async function initFeature() {
       }
     }
 
+    const cardTitleText = document.getElementById("cardTitleText");
+    if (cardTitleText) {
+      if (guestProfile.userName) {
+        cardTitleText.textContent = `Your Information — ${guestProfile.userName}`;
+      } else {
+        cardTitleText.textContent = "Your Information";
+      }
+    }
+
     if (!guestProfile.isFilled && !guestProfile.isPartial) {
       // 1. NO DOCUMENTS & NO PROFILE ENTERED
-      if (emptyProfileBanner) emptyProfileBanner.classList.remove("hidden");
+      if (emptyProfileBanner) {
+        emptyProfileBanner.classList.remove("hidden");
+        const emptyText = document.getElementById("emptyProfileText");
+        if (emptyText) {
+          emptyText.textContent = guestProfile.isFromDatabase
+            ? "No citizen profile details found. Please enter your details to check scheme eligibility."
+            : "No verified documents found. Please upload documents in Document Verification or enter your details manually before checking scheme eligibility.";
+        }
+      }
       if (verifiedBanner) verifiedBanner.style.display = "none";
       cardBtnText.textContent = "Enter Details";
 
@@ -2421,7 +2675,7 @@ async function initFeature() {
 
       document.querySelectorAll(".demo-row .value").forEach(el => el.classList.add("blank"));
     } else if (guestProfile.isPartial) {
-      // 2. PARTIAL PROFILE FROM VERIFIED DOCUMENTS
+      // 2. PARTIAL PROFILE FROM VERIFIED DOCUMENTS OR DATABASE
       if (emptyProfileBanner) emptyProfileBanner.classList.add("hidden");
 
       if (verifiedBanner) {
@@ -2445,11 +2699,15 @@ async function initFeature() {
           : "essential fields";
 
         if (verifiedDocsBannerText) {
-          verifiedDocsBannerText.innerHTML = `Demographics partially extracted from <strong>${guestProfile.verifiedDocsCount} verified document(s)</strong> (${docNames}${moreSuffix}). Missing: <strong style="color: #B45309;">${missingStr}</strong>. Complete these to check scheme eligibility.`;
+          if (guestProfile.isFromDatabase) {
+            verifiedDocsBannerText.innerHTML = `Demographics loaded from your <strong>saved citizen profile</strong>. Missing: <strong style="color: #B45309;">${missingStr}</strong>. Complete these to check scheme eligibility.`;
+          } else {
+            verifiedDocsBannerText.innerHTML = `Demographics partially extracted from <strong>${guestProfile.verifiedDocsCount} verified document(s)</strong> (${docNames}${moreSuffix}). Missing: <strong style="color: #B45309;">${missingStr}</strong>. Complete these to check scheme eligibility.`;
+          }
         }
 
         if (btnBannerEdit) {
-          btnBannerEdit.textContent = "Fill Remaining Details";
+          btnBannerEdit.textContent = "Complete Details";
         }
       }
 
@@ -2473,7 +2731,7 @@ async function initFeature() {
       // 3. COMPLETE PROFILE
       if (emptyProfileBanner) emptyProfileBanner.classList.add("hidden");
 
-      if (guestProfile.isFromVerifiedDocs && guestProfile.verifiedDocsCount > 0) {
+      if (guestProfile.isFromDatabase || (guestProfile.isFromVerifiedDocs && guestProfile.verifiedDocsCount > 0)) {
         if (verifiedBanner) {
           verifiedBanner.style.display = "flex";
           verifiedBanner.classList.remove("banner-partial");
@@ -2490,7 +2748,13 @@ async function initFeature() {
           const moreSuffix = (guestProfile.verifiedDocTypes || []).length > 3 ? " etc." : "";
 
           if (verifiedDocsBannerText) {
-            verifiedDocsBannerText.innerHTML = `Demographics auto-calculated from your <strong>${guestProfile.verifiedDocsCount} verified documents</strong> (${docNames}${moreSuffix}). Click <strong>Edit</strong> to modify or adjust values.`;
+            if (guestProfile.isFromDatabase && guestProfile.verifiedDocsCount > 0) {
+              verifiedDocsBannerText.innerHTML = `Demographics loaded from your <strong>saved citizen profile</strong> &amp; verified with <strong>${guestProfile.verifiedDocsCount} document(s)</strong> (${docNames}${moreSuffix}). Click <strong>Edit Details</strong> to modify.`;
+            } else if (guestProfile.isFromDatabase) {
+              verifiedDocsBannerText.innerHTML = `Demographics loaded from your <strong>saved citizen profile</strong>. Click <strong>Edit Details</strong> to modify.`;
+            } else {
+              verifiedDocsBannerText.innerHTML = `Demographics auto-calculated from your <strong>${guestProfile.verifiedDocsCount} verified documents</strong> (${docNames}${moreSuffix}). Click <strong>Edit Details</strong> to modify.`;
+            }
           }
 
           if (btnBannerEdit) {
@@ -2501,7 +2765,7 @@ async function initFeature() {
         if (verifiedBanner) verifiedBanner.style.display = "none";
       }
 
-      cardBtnText.textContent = "Edit";
+      cardBtnText.textContent = "Edit Details";
 
       setDemoValue(valAge, guestProfile.age);
       setDemoValue(valGender, guestProfile.gender);
@@ -2522,7 +2786,7 @@ async function initFeature() {
     renderTable();
   }
 
-  guestProfileForm.addEventListener("submit", (e) => {
+  guestProfileForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     guestProfile.isFilled = true;
@@ -2552,6 +2816,47 @@ async function initFeature() {
     };
 
     guestProfile.incomeNumeric = incomeMap[guestProfile.incomeRange] || 0;
+
+    // Persist to Supabase user_info if user is authenticated
+    try {
+      const session = await getCurrentSession();
+      if (session && session.user && supabase) {
+        let dob = guestProfile.date_of_birth;
+        if (!dob && guestProfile.age) {
+          const birthYear = new Date().getFullYear() - guestProfile.age;
+          dob = `${birthYear}-01-01`;
+        }
+        const userInfoPayload = {
+          uid: session.user.id,
+          date_of_birth: dob,
+          gender: guestProfile.gender,
+          state: guestProfile.state,
+          district: guestProfile.district,
+          residence_type: guestProfile.residence,
+          occupation: guestProfile.occupation,
+          annual_family_income: guestProfile.incomeRange,
+          social_category: guestProfile.category,
+          marital_status: guestProfile.maritalStatus,
+          disability_status: guestProfile.disability,
+          education_level: guestProfile.education,
+          employment_status: guestProfile.employment,
+          family_size: guestProfile.familySize,
+          special_beneficiary_status: guestProfile.special
+        };
+        const { error: dbError } = await supabase
+          .from('user_info')
+          .upsert(userInfoPayload, { onConflict: 'uid' });
+
+        if (!dbError) {
+          guestProfile.isFromDatabase = true;
+          console.log('[UNIORA] Citizen profile updated in Supabase user_info');
+        } else {
+          console.warn('[UNIORA] Failed to update user_info in Supabase:', dbError);
+        }
+      }
+    } catch (saveErr) {
+      console.warn('[UNIORA] Error syncing profile with Supabase:', saveErr);
+    }
 
     saveProfileToSession(guestProfile);
     closeEditModal();
