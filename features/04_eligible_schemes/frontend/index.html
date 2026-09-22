@@ -21,6 +21,37 @@
 
   <!-- Feature-Specific Stylesheet -->
   <link rel="stylesheet" href="./style.css">
+
+  <!-- INSTANT 0MS SYNCHRONOUS AUTH HYDRATION -->
+  <script>
+    (function() {
+      try {
+        var name = localStorage.getItem('uniora_cached_user_name');
+        var hasUser = false;
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+            var raw = localStorage.getItem(k);
+            if (raw) {
+              var p = JSON.parse(raw);
+              if (p && p.user) {
+                hasUser = true;
+                if (!name) {
+                  name = p.user.user_metadata?.full_name || p.user.user_metadata?.name || p.user.email?.split('@')[0] || 'User';
+                }
+                break;
+              }
+            }
+          }
+        }
+        if (hasUser) {
+          document.write('<style>#navbarUser{display:flex !important;} #navbarLogin{display:none !important;} #navbarAuth.is-loading > *{visibility:visible !important;} #navbarAuth.is-loading::after{display:none !important;} .guest-advisory-card{display:none !important;}</style>');
+        } else {
+          document.write('<style>#navbarLogin{display:inline-flex !important;} #navbarUser{display:none !important;} #navbarAuth.is-loading > *{visibility:visible !important;} #navbarAuth.is-loading::after{display:none !important;}</style>');
+        }
+      } catch(e) {}
+    })();
+  </script>
 </head>
 
 <body class="dashboard-page">
@@ -70,9 +101,23 @@
               <span class="navbar-toggle-bar"></span>
             </button>
 
-            <!-- Directly Visible Red Pill LOGIN Button (Removed hidden / is-loading blocking) -->
-            <div class="navbar-auth" id="navbarAuth">
-              <a href="../../../auth/login/index.html" class="navbar-login" id="navbarLogin">
+            <!-- AUTHENTICATION AREA -->
+            <div class="navbar-auth is-loading" id="navbarAuth">
+              <!-- AUTHENTICATED USER -->
+              <div class="navbar-user" id="navbarUser" hidden>
+                <a
+                  href="../../../features/10_profile/frontend/index.html"
+                  class="navbar-profile"
+                  id="navbarProfileLink"
+                  aria-label="View Profile"
+                >
+                  <div class="navbar-avatar" id="navbarAvatar" aria-hidden="true">U</div>
+                  <span class="navbar-user-name" id="navbarUserName">User</span>
+                </a>
+              </div>
+
+              <!-- GUEST USER -->
+              <a href="../../../auth/login/index.html" class="navbar-login" id="navbarLogin" hidden>
                 LOGIN
               </a>
             </div>
@@ -135,16 +180,44 @@
           </button>
         </div>
 
-        <!-- Initial Blank State Prompt Banner -->
+        <!-- Initial Blank State Prompt Banner (No Documents Found) -->
         <div class="profile-prompt-banner" id="emptyProfileBanner">
-          <span class="prompt-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="16" x2="12" y2="12"/>
-              <line x1="12" y1="8" x2="12.01" y2="8"/>
-            </svg>
-          </span>
-          <span>No demographic details entered yet. Click <strong>Enter Details</strong> to calculate the government schemes you qualify for.</span>
+          <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+            <span class="prompt-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+            </span>
+            <span id="emptyProfileText">No verified documents found. Please upload documents in Document Verification or enter your details manually before checking scheme eligibility.</span>
+          </div>
+          <div class="banner-actions">
+            <a href="../../03_documents_verification/frontend/index.html" class="btn-banner-action">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              Upload Documents
+            </a>
+            <button type="button" class="btn-banner-action" id="btnBannerEnterDetails">
+              Enter Details
+            </button>
+          </div>
+        </div>
+
+        <!-- Auto-filled / Partially Filled from Verified Documents Banner -->
+        <div class="profile-prompt-banner verified-docs-banner" id="verifiedDocsBanner" style="display: none;">
+          <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+            <span class="prompt-icon" id="verifiedBannerIcon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </span>
+            <span id="verifiedDocsBannerText">Demographics auto-calculated from your <strong id="verifiedDocsCountText">verified documents</strong>. Click <strong>Edit</strong> to modify or adjust values.</span>
+          </div>
+          <div class="banner-actions">
+            <button type="button" class="btn-banner-action action-green" id="btnBannerEdit">
+              Edit Details
+            </button>
+          </div>
         </div>
 
         <!-- 3-Column Demographic Grid -->
@@ -281,7 +354,13 @@
           </div>
           <h4 class="empty-state-title" id="emptyStateTitle">No Schemes Found</h4>
           <p class="empty-state-text" id="emptyStateText">No welfare schemes match your search or filter criteria.</p>
-          <button type="button" class="btn-clean-action" id="btnResetFilters" style="margin: 0 auto;">Show All Schemes</button>
+          <div class="empty-state-actions" id="emptyStateActions" style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 10px;">
+            <button type="button" class="btn-clean-action" id="btnResetFilters">Show All Schemes</button>
+            <a href="../../03_documents_verification/frontend/index.html" class="btn-banner-action action-green" id="btnEmptyUploadDocs" style="display: none; padding: 8px 16px; font-size: 13px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><path d="M12 5v14M5 12h14"/></svg>
+              Upload Documents
+            </a>
+          </div>
         </div>
 
         <!-- 10-Item Pagination Row -->
@@ -574,7 +653,9 @@
               </span>
               <h4>Required Documents to Apply</h4>
             </div>
+            <div id="modalDocReadinessContainer" style="display: none;"></div>
             <div class="drawer-doc-cluster" id="modalDocChips"></div>
+            <div id="modalDocActionPrompt" class="drawer-doc-action-prompt" style="display: none;"></div>
           </section>
 
           <!-- BENEFITS & OVERVIEW SECTION -->
@@ -603,19 +684,24 @@
     </aside>
   </div>
 
+  <!-- Supabase JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <!-- Shared Navbar Controller Module -->
   <script type="module">
-    import { initActiveNavLink, initNavbarMenu } from '../../../common/js/navbar.js';
+    import { initActiveNavLink, initNavbarMenu, initNavbarAuth } from '../../../common/js/navbar.js';
     document.addEventListener('DOMContentLoaded', () => {
       try {
         initActiveNavLink();
         initNavbarMenu();
+        initNavbarAuth();
       } catch (err) {
         console.warn('Navbar script warning:', err);
       }
     });
   </script>
 
-  <script src="./script.js"></script>
+  <!-- Feature Script (Module) -->
+  <script type="module" src="./script.js"></script>
 </body>
 </html>

@@ -1,8 +1,11 @@
 /**
- * UNIORA Feature 04: Eligible Schemes (Without Login / Guest Mode)
+ * UNIORA Feature 04: Eligible Schemes (Integrated with Supabase Auth & Document Verification)
  * File: features/04_eligible_schemes/frontend/script.js
- * Crisp SVG Vector Scheme Icons, Explicit Search, Session Persistence & Schemes Drawer Sync
  */
+
+import { supabase } from '../../../common/js/supabase.js';
+import { getCurrentUser, getCurrentSession } from '../../../common/js/auth.js';
+import { initNavbarAuth } from '../../../common/js/navbar.js';
 
 // 1. EMBEDDED LOCATION DATASET (Reliable instant fallback from common/data/state_districts.json)
 const EMBEDDED_LOCATION_DATA = {
@@ -194,9 +197,17 @@ const EMBEDDED_LOCATION_DATA = {
 
 let locationData = EMBEDDED_LOCATION_DATA;
 
-// 2. GUEST USER PROFILE STATE (Starts EMPTY)
+// =========================================================================
+// 2. GUEST USER PROFILE STATE & DOCUMENT VERIFICATION INTEGRATION (FEATURE 03)
+// =========================================================================
+const SECRET_KEY = "uniora_secure_2024";
+
 let guestProfile = {
   isFilled: false,
+  isPartial: false,
+  isFromVerifiedDocs: false,
+  verifiedDocsCount: 0,
+  verifiedDocTypes: [],
   age: null,
   gender: "",
   state: "",
@@ -204,14 +215,15 @@ let guestProfile = {
   residence: "",
   occupation: "",
   incomeRange: "",
-  incomeNumeric: 0,
+  incomeNumeric: null,
   category: "",
   maritalStatus: "",
   disability: "",
   education: "",
   employment: "",
   familySize: null,
-  special: ""
+  special: "",
+  percentage: null
 };
 
 const SESSION_STORAGE_KEY = 'uniora_guest_demographic_profile';
@@ -229,13 +241,370 @@ function loadProfileFromSession() {
     const stored = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (parsed && typeof parsed === 'object' && parsed.isFilled) {
+      if (parsed && typeof parsed === 'object' && (parsed.isFilled || parsed.isPartial)) {
         guestProfile = parsed;
       }
     }
   } catch (err) {
     console.warn('[UNIORA] Unable to restore profile from sessionStorage:', err);
   }
+}
+
+function decryptData(b64) {
+  try {
+    let text = atob(b64), result = '';
+    for (let i = 0; i < text.length; i++) {
+      result += String.fromCharCode(text.charCodeAt(i) ^ SECRET_KEY.charCodeAt(i % SECRET_KEY.length));
+    }
+    return JSON.parse(decodeURIComponent(result));
+  } catch {
+    return [];
+  }
+}
+
+function getStoredVerifiedDocs() {
+  try {
+    const raw = localStorage.getItem('uniora_verified_docs');
+    return raw ? decryptData(raw) : [];
+  } catch (err) {
+    console.warn('[UNIORA] Failed reading uniora_verified_docs from localStorage:', err);
+    return [];
+  }
+}
+
+function extractAgeFromDob(dobStr) {
+  if (!dobStr) return null;
+  const str = String(dobStr).trim();
+  let day = 1, month = 0, year = null;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    const parts = str.split('-');
+    year = parseInt(parts[0], 10);
+    month = parseInt(parts[1], 10) - 1;
+    day = parseInt(parts[2], 10);
+  } else {
+    const m = str.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/);
+    if (m) {
+      day = parseInt(m[1], 10);
+      month = parseInt(m[2], 10) - 1;
+      year = parseInt(m[3], 10);
+    } else {
+      const yMatch = str.match(/\b(19\d{2}|20\d{2})\b/);
+      if (yMatch) {
+        year = parseInt(yMatch[1], 10);
+      }
+    }
+  }
+
+  if (year && !isNaN(year)) {
+    const today = new Date();
+    const birthDate = new Date(year, month, day);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const mDiff = today.getMonth() - birthDate.getMonth();
+    if (mDiff < 0 || (mDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    if (age >= 1 && age <= 120) return age;
+  }
+  return null;
+}
+
+function parseIncome(val) {
+  if (!val) return null;
+  const num = Number(String(val).replace(/[₹,\s]/g, "").replace(/[^\d.-]/g, ""));
+  return Number.isFinite(num) && num >= 0 ? num : null;
+}
+
+function getIncomeBracket(numericIncome) {
+  if (numericIncome === null || numericIncome === undefined) return "";
+  if (numericIncome <= 100000) return "Below ₹1 Lakh";
+  if (numericIncome <= 250000) return "₹1 – 2.5 Lakh";
+  if (numericIncome <= 500000) return "₹2.5 – 5 Lakh";
+  return "Above ₹5 Lakh";
+}
+
+function normalizeSocialCategory(raw) {
+  if (!raw) return "";
+  const s = String(raw).toLowerCase().trim();
+  if (s.includes("sc") || s.includes("scheduled caste")) return "SC";
+  if (s.includes("st") || s.includes("scheduled tribe")) return "ST";
+  if (s.includes("mbc") || s.includes("dnc") || s.includes("denotified")) return "MBC/DNC";
+  if (s.includes("obc") || s.includes("backward class") || s.includes("bc") || s.includes("bcm")) return "OBC";
+  if (s.includes("general") || s.includes("oc") || s.includes("fc") || s.includes("open") || s.includes("forward")) return "General";
+  return "";
+}
+
+function extractLocationFromAddress(text) {
+  if (!text) return { state: "", district: "" };
+  const combined = String(text).toLowerCase();
+
+  let foundState = "";
+  let foundDistrict = "";
+
+  const allRegions = [
+    ...(locationData.states || []),
+    ...(locationData.union_territories || [])
+  ];
+
+  for (const reg of allRegions) {
+    if (combined.includes(reg.name.toLowerCase())) {
+      foundState = reg.name;
+      for (const d of reg.districts || []) {
+        if (combined.includes(d.toLowerCase())) {
+          foundDistrict = d;
+          break;
+        }
+      }
+      break;
+    }
+  }
+
+  if (!foundState) {
+    for (const reg of allRegions) {
+      for (const d of reg.districts || []) {
+        if (combined.includes(d.toLowerCase())) {
+          foundState = reg.name;
+          foundDistrict = d;
+          break;
+        }
+      }
+      if (foundState) break;
+    }
+  }
+
+  return { state: foundState, district: foundDistrict };
+}
+
+function synthesizeProfileFromVerifiedDocs(docs) {
+  if (!docs || docs.length === 0) return null;
+
+  const profile = {
+    isFilled: false,
+    isPartial: false,
+    isFromVerifiedDocs: true,
+    verifiedDocsCount: docs.length,
+    verifiedDocTypes: docs.map(d => d.document_type || d.document_name || d.name).filter(Boolean),
+    age: null,
+    gender: "",
+    state: "",
+    district: "",
+    residence: "Urban",
+    occupation: "",
+    incomeRange: "",
+    incomeNumeric: null,
+    category: "",
+    maritalStatus: "Single",
+    disability: "No",
+    education: "",
+    employment: "",
+    familySize: 4,
+    special: "None",
+    percentage: null
+  };
+
+  const docMap = {};
+  docs.forEach(d => {
+    const key = d.document_type || d.document_name || d.name;
+    if (key) docMap[key] = d.data || {};
+  });
+
+  // 1. Age / Date of Birth
+  const dobSources = [
+    docMap['Aadhaar Card']?.date_of_birth,
+    docMap['Birth Certificate']?.date_of_birth,
+    docMap['Driving License']?.date_of_birth,
+    docMap['Passport']?.date_of_birth,
+    docMap['10th Marksheet']?.date_of_birth,
+    docMap['12th Marksheet']?.date_of_birth
+  ];
+  for (const dob of dobSources) {
+    if (dob) {
+      const calcAge = extractAgeFromDob(dob);
+      if (calcAge) {
+        profile.age = calcAge;
+        break;
+      }
+    }
+  }
+
+  // Also check explicit age fields in Voter ID Card
+  if (!profile.age && docMap['Voter ID Card']?.age) {
+    const vAge = parseInt(docMap['Voter ID Card'].age, 10);
+    if (!isNaN(vAge) && vAge > 0 && vAge < 120) profile.age = vAge;
+  }
+
+  // 2. Gender
+  const genderSources = [
+    docMap['Aadhaar Card']?.gender,
+    docMap['Voter ID Card']?.gender,
+    docMap['Passport']?.gender,
+    docMap['Birth Certificate']?.gender
+  ];
+  for (const g of genderSources) {
+    if (g) {
+      const gNorm = String(g).trim().toLowerCase();
+      if (gNorm.startsWith("m")) { profile.gender = "Male"; break; }
+      if (gNorm.startsWith("f")) { profile.gender = "Female"; break; }
+      if (gNorm.startsWith("t")) { profile.gender = "Transgender"; break; }
+    }
+  }
+
+  // 3. State & District
+  const addressSources = [
+    docMap['Domicile Certificate']?.state_residency,
+    docMap['Domicile Certificate']?.district,
+    docMap['Aadhaar Card']?.address,
+    docMap['Voter ID Card']?.address,
+    docMap['Smart Ration Card']?.address,
+    docMap['Electricity Bill']?.address,
+    docMap['10th Marksheet']?.school_name,
+    docMap['12th Marksheet']?.school_name,
+    docMap['Community Certificate']?.district,
+    docMap['Community Certificate']?.issuing_authority
+  ];
+  for (const addr of addressSources) {
+    if (addr) {
+      const loc = extractLocationFromAddress(addr);
+      if (loc.state && !profile.state) profile.state = loc.state;
+      if (loc.district && !profile.district) profile.district = loc.district;
+    }
+  }
+
+  // 4. Annual Income & Bracket
+  if (docMap['Income Certificate']?.annual_income) {
+    const inc = parseIncome(docMap['Income Certificate'].annual_income);
+    if (inc !== null) {
+      profile.incomeNumeric = inc;
+      profile.incomeRange = getIncomeBracket(inc);
+    }
+  }
+
+  // 5. Social Category
+  if (docMap['Community Certificate']) {
+    const comm = docMap['Community Certificate'];
+    const cat = normalizeSocialCategory(comm.social_category || comm.caste);
+    if (cat) profile.category = cat;
+  }
+
+  // 6. Disability Status
+  if (docMap['UDID Card'] || Object.values(docMap).some(d => d.disability_type || d.disability_percentage)) {
+    profile.disability = "Yes";
+  }
+
+  // 7. Education & Academic Marks
+  if (docMap['Postgraduate (PG) Degree']) {
+    profile.education = "Postgraduate";
+    profile.percentage = parseFloat(docMap['Postgraduate (PG) Degree'].percentage) || null;
+  } else if (docMap['Undergraduate (UG) Degree']) {
+    profile.education = "Undergraduate";
+    profile.percentage = parseFloat(docMap['Undergraduate (UG) Degree'].percentage) || null;
+  } else if (docMap['Diploma Certificate']) {
+    profile.education = "Diploma/Vocational";
+    profile.percentage = parseFloat(docMap['Diploma Certificate'].percentage) || null;
+  } else if (docMap['12th Marksheet']) {
+    profile.education = "School";
+    profile.percentage = parseFloat(docMap['12th Marksheet'].percentage) || null;
+  } else if (docMap['10th Marksheet']) {
+    profile.education = "School";
+    profile.percentage = parseFloat(docMap['10th Marksheet'].percentage) || null;
+  }
+
+  // 8. Occupation & Employment
+  if (docMap['Bonafide Certificate']) {
+    profile.occupation = "Student";
+    profile.employment = "Student";
+  } else if (docMap['Land Ownership Document']) {
+    profile.occupation = "Farmer";
+    profile.employment = "Employed";
+  } else if (docMap['MGNREGA Job Card']) {
+    profile.occupation = "Daily Wage / Artisan";
+    profile.employment = "Employed";
+    profile.residence = "Rural";
+  } else if (docMap['Udyam Certificate'] || docMap['GST Certificate']) {
+    profile.occupation = "Self-Employed";
+    profile.employment = "Self-Employed";
+  } else if (profile.education) {
+    profile.occupation = "Student";
+    profile.employment = "Student";
+  }
+
+  // 9. Special Beneficiary & Marital Status
+  if (docMap['Widow Certificate']) {
+    profile.special = "Destitute Widow";
+    profile.maritalStatus = "Widowed";
+    profile.gender = "Female";
+  } else if (docMap['Marriage Certificate']) {
+    profile.maritalStatus = "Married";
+  }
+
+  if (docMap['Orphan Certificate']) {
+    profile.special = "Minority";
+  }
+
+  if (docMap['Smart Ration Card']?.family_details) {
+    const fCount = String(docMap['Smart Ration Card'].family_details).match(/\d+/);
+    if (fCount) profile.familySize = parseInt(fCount[0], 10);
+  }
+
+  // 10. Check essential demographic fields required to evaluate scheme eligibility
+  const missing = [];
+  if (!profile.age || profile.age <= 0) missing.push("Age");
+  if (!profile.gender) missing.push("Gender");
+  if (!profile.state) missing.push("State");
+  if (!profile.incomeRange) missing.push("Annual Income");
+  if (!profile.category) missing.push("Social Category");
+  if (!profile.occupation) missing.push("Occupation");
+
+  profile.missingFields = missing;
+
+  if (missing.length === 0) {
+    profile.isFilled = true;
+    profile.isPartial = false;
+  } else {
+    profile.isFilled = false;
+    profile.isPartial = true;
+  }
+
+  return profile;
+}
+
+function isDocumentVerified(requiredDocName, verifiedDocList) {
+  if (!verifiedDocList || verifiedDocList.length === 0) return false;
+  const req = String(requiredDocName || "").toLowerCase().trim();
+  return verifiedDocList.some(v => {
+    const vName = String(v.document_type || "").toLowerCase().trim();
+    if (req === vName) return true;
+    if (req.includes(vName) || vName.includes(req)) return true;
+    if (req.includes("bonafide") && vName.includes("bonafide")) return true;
+    if (req.includes("passbook") && vName.includes("passbook")) return true;
+    if (req.includes("marksheet") && (vName.includes("marksheet") || vName.includes("degree") || vName.includes("diploma"))) return true;
+    if (req.includes("income") && vName.includes("income")) return true;
+    if (req.includes("community") && vName.includes("community")) return true;
+    if ((req.includes("aadhaar") || req.includes("identity card") || req.includes("identity proof")) && (vName.includes("aadhaar") || vName.includes("voter") || vName.includes("pan") || vName.includes("passport"))) return true;
+    if (req.includes("ration") && vName.includes("ration")) return true;
+    if (req.includes("electricity") && vName.includes("electricity")) return true;
+    if ((req.includes("patta") || req.includes("land record") || req.includes("land ownership")) && vName.includes("land")) return true;
+    if ((req.includes("disability") || req.includes("udid")) && vName.includes("udid")) return true;
+    if (req.includes("school") && (vName.includes("10th") || vName.includes("12th") || vName.includes("bonafide"))) return true;
+    return false;
+  });
+}
+
+function computeSchemeDocReadiness(scheme, verifiedDocList) {
+  const docs = scheme.docs || scheme.required_documents || [];
+  if (docs.length === 0) {
+    return { total: 0, verified: 0, missing: 0, percentage: 100 };
+  }
+  const total = docs.length;
+  let verified = 0;
+  docs.forEach(d => {
+    if (isDocumentVerified(d, verifiedDocList)) {
+      verified++;
+    }
+  });
+  const missing = total - verified;
+  const percentage = Math.round((verified / total) * 100);
+  return { total, verified, missing, percentage };
 }
 
 function getLevelClass(level) {
@@ -983,6 +1352,14 @@ async function initFeature() {
   const valEmployment = document.getElementById("valEmployment");
   const valSpecial = document.getElementById("valSpecial");
 
+  // Banner Actions & Status Elements
+  const btnEmptyUploadDocs = document.getElementById("btnEmptyUploadDocs");
+  const btnBannerEnterDetails = document.getElementById("btnBannerEnterDetails");
+  const btnBannerEdit = document.getElementById("btnBannerEdit");
+  const verifiedDocsBanner = document.getElementById("verifiedDocsBanner");
+  const verifiedDocsBannerText = document.getElementById("verifiedDocsBannerText");
+  const verifiedBannerIcon = document.getElementById("verifiedBannerIcon");
+
   // Modals
   const editModal = document.getElementById("editModal");
   const modalFormHeading = document.getElementById("modalFormHeading");
@@ -1037,8 +1414,76 @@ async function initFeature() {
   // 1. Fetch & populate State & District dropdowns
   await loadStateDistrictData();
 
-  // 2. Restore previously saved session profile
-  loadProfileFromSession();
+  // 2. Initialize Navbar Auth UI
+  try {
+    await initNavbarAuth();
+  } catch (navErr) {
+    console.warn('[UNIORA] initNavbarAuth warning:', navErr);
+  }
+
+  // 3. Fetch & process Verified Documents (from LocalStorage or Supabase)
+  let verifiedDocs = getStoredVerifiedDocs();
+
+  try {
+    const session = await getCurrentSession();
+    if (session && session.user) {
+      const advisoryCard = document.querySelector(".guest-advisory-card");
+      if (advisoryCard) {
+        advisoryCard.style.display = "none";
+      }
+
+      if (supabase) {
+        const { data: userDocs } = await supabase
+          .from('user_documents')
+          .select('*')
+          .eq('uid', session.user.id)
+          .eq('is_verified', true);
+
+        if (userDocs && userDocs.length > 0) {
+          const remoteFormatted = userDocs.map(d => ({
+            document_type: d.document_type,
+            data: d.extracted_data || {}
+          }));
+          const existingTypes = new Set(verifiedDocs.map(d => d.document_type));
+          remoteFormatted.forEach(rd => {
+            if (!existingTypes.has(rd.document_type)) {
+              verifiedDocs.push(rd);
+            }
+          });
+        }
+      }
+    }
+  } catch (authErr) {
+    console.warn('[UNIORA] Auth/Supabase check notice:', authErr);
+  }
+
+  // 3. Synthesize demographic profile from verified docs or restore session
+  if (verifiedDocs && verifiedDocs.length > 0) {
+    const synthesized = synthesizeProfileFromVerifiedDocs(verifiedDocs);
+    if (synthesized) {
+      const sessionProfile = sessionStorage.getItem(SESSION_STORAGE_KEY);
+      if (!sessionProfile) {
+        guestProfile = synthesized;
+        saveProfileToSession(guestProfile);
+      } else {
+        try {
+          const parsed = JSON.parse(sessionProfile);
+          if (parsed && parsed.manuallySubmitted) {
+            // User explicitly submitted the form, preserve their inputs with document context
+            guestProfile = { ...synthesized, ...parsed, isFromVerifiedDocs: true, verifiedDocsCount: verifiedDocs.length };
+          } else {
+            // Re-synthesize cleanly from verified docs without stale fake defaults
+            guestProfile = synthesized;
+            saveProfileToSession(guestProfile);
+          }
+        } catch {
+          guestProfile = synthesized;
+        }
+      }
+    }
+  } else {
+    loadProfileFromSession();
+  }
 
   function getEligibleSchemes() {
     if (!guestProfile.isFilled) return [];
@@ -1148,11 +1593,31 @@ async function initFeature() {
 
       if ((currentTab === "ELIGIBLE" || (currentTab === "FILTER" && filterScope === "ELIGIBLE")) && !guestProfile.isFilled) {
         emptyStateIcon.innerHTML = VECTOR_ICONS.graduation;
-        emptyStateTitle.textContent = "Demographic Details Needed";
-        emptyStateText.textContent = "Please enter your demographic profile to calculate the government schemes you are eligible to receive.";
-        btnResetFilters.textContent = "Enter Details Now";
+        if (guestProfile.isPartial) {
+          emptyStateTitle.textContent = "Complete Your Profile";
+          const missingStr = (guestProfile.missingFields && guestProfile.missingFields.length > 0)
+            ? guestProfile.missingFields.join(", ")
+            : "essential demographic fields";
+          emptyStateText.textContent = `Details extracted from your verified documents are missing: ${missingStr}. Please complete your profile before checking scheme eligibility.`;
+          btnResetFilters.textContent = "Fill Remaining Details";
+        } else {
+          emptyStateTitle.textContent = "Demographic Details Needed";
+          emptyStateText.textContent = "No verified documents found. Please upload documents in Document Verification or enter your details manually before checking scheme eligibility.";
+          btnResetFilters.textContent = "Enter Details Manually";
+        }
         btnResetFilters.onclick = openEditModal;
+
+        if (btnEmptyUploadDocs) {
+          btnEmptyUploadDocs.style.display = "inline-flex";
+          btnEmptyUploadDocs.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+            ${guestProfile.isPartial ? "Upload More Documents" : "Upload Documents"}
+          `;
+        }
       } else {
+        if (btnEmptyUploadDocs) btnEmptyUploadDocs.style.display = "none";
         emptyStateIcon.innerHTML = `
           <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
@@ -1175,6 +1640,7 @@ async function initFeature() {
       return;
     }
 
+    if (btnEmptyUploadDocs) btnEmptyUploadDocs.style.display = "none";
     emptyState.style.display = "none";
     paginationFooter.style.display = "flex";
 
@@ -1502,22 +1968,22 @@ async function initFeature() {
   function openEditModal() {
     modalFormHeading.textContent = guestProfile.isFilled
       ? "Update Your Demographic Profile"
-      : "Enter Your Demographic Profile";
+      : (guestProfile.isPartial ? "Complete Your Demographic Profile" : "Enter Your Demographic Profile");
 
-    const ageVal = guestProfile.isFilled ? (guestProfile.age || "") : 22;
-    const genderVal = guestProfile.isFilled ? (guestProfile.gender || "") : "Male";
-    const stateVal = guestProfile.isFilled ? (guestProfile.state || "") : "Tamil Nadu";
-    const districtVal = guestProfile.isFilled ? (guestProfile.district || "") : "Chennai";
-    const residenceVal = guestProfile.isFilled ? (guestProfile.residence || "") : "Urban";
-    const occupationVal = guestProfile.isFilled ? (guestProfile.occupation || "") : "Student";
-    const incomeVal = guestProfile.isFilled ? (guestProfile.incomeRange || "") : "₹1 – 2.5 Lakh";
-    const categoryVal = guestProfile.isFilled ? (guestProfile.category || "") : "OBC";
-    const maritalVal = guestProfile.isFilled ? (guestProfile.maritalStatus || "") : "Single";
-    const familySizeVal = guestProfile.isFilled ? (guestProfile.familySize || "") : 4;
-    const disabilityVal = guestProfile.isFilled ? (guestProfile.disability || "") : "No";
-    const educationVal = guestProfile.isFilled ? (guestProfile.education || "") : "Undergraduate";
-    const employmentVal = guestProfile.isFilled ? (guestProfile.employment || "") : "Student";
-    const specialVal = guestProfile.isFilled ? (guestProfile.special || "") : "None";
+    const ageVal = (guestProfile.age !== null && guestProfile.age !== undefined) ? guestProfile.age : "";
+    const genderVal = guestProfile.gender || "";
+    const stateVal = guestProfile.state || "";
+    const districtVal = guestProfile.district || "";
+    const residenceVal = guestProfile.residence || "Urban";
+    const occupationVal = guestProfile.occupation || "";
+    const incomeVal = guestProfile.incomeRange || "";
+    const categoryVal = guestProfile.category || "";
+    const maritalVal = guestProfile.maritalStatus || "Single";
+    const familySizeVal = (guestProfile.familySize !== null && guestProfile.familySize !== undefined) ? guestProfile.familySize : 4;
+    const disabilityVal = guestProfile.disability || "No";
+    const educationVal = guestProfile.education || "";
+    const employmentVal = guestProfile.employment || "";
+    const specialVal = guestProfile.special || "None";
 
     document.getElementById("formAge").value = ageVal;
     document.getElementById("formGender").value = genderVal;
@@ -1545,8 +2011,24 @@ async function initFeature() {
     document.getElementById("formSpecial").value = specialVal;
 
     editModal.classList.add("is-open");
-    const firstInput = document.getElementById("formAge");
-    if (firstInput) firstInput.focus();
+
+    // Focus the first empty required input
+    const inputsToCheck = [
+      document.getElementById("formAge"),
+      document.getElementById("formGender"),
+      document.getElementById("formState"),
+      document.getElementById("formDistrict"),
+      document.getElementById("formOccupation"),
+      document.getElementById("formIncome"),
+      document.getElementById("formCategory")
+    ];
+    const firstEmpty = inputsToCheck.find(el => el && !el.disabled && !el.value);
+    if (firstEmpty) {
+      firstEmpty.focus();
+    } else {
+      const firstInput = document.getElementById("formAge");
+      if (firstInput) firstInput.focus();
+    }
   }
 
   function closeEditModal() {
@@ -1556,6 +2038,13 @@ async function initFeature() {
   btnOpenEdit.addEventListener("click", openEditModal);
   btnCloseEditModal.addEventListener("click", closeEditModal);
   btnCancelEdit.addEventListener("click", closeEditModal);
+
+  if (btnBannerEnterDetails) {
+    btnBannerEnterDetails.addEventListener("click", openEditModal);
+  }
+  if (btnBannerEdit) {
+    btnBannerEdit.addEventListener("click", openEditModal);
+  }
 
   editModal.addEventListener("click", (e) => {
     if (e.target === editModal) closeEditModal();
@@ -1748,10 +2237,15 @@ async function initFeature() {
       notEvaluatedView.style.display = "flex";
       evaluatedSections.style.display = "none";
       drawerFooterBar.style.display = "none";
+
+      const docReadinessContainer = document.getElementById("modalDocReadinessContainer");
+      if (docReadinessContainer) {
+        docReadinessContainer.style.display = "none";
+      }
     } else {
       // 2. EVALUATED: Shows complete evaluated details and actions
       notEvaluatedView.style.display = "none";
-      evaluatedSections.style.display = "flex";
+      evaluatedSections.style.display = "block";
       drawerFooterBar.style.display = "flex";
 
       if (currentEligibilityCheck.eligible) {
@@ -1761,7 +2255,7 @@ async function initFeature() {
         modalEligibilityHero.className = "eligibility-hero-banner is-eligible";
         modalStatusIcon.textContent = "✓";
         modalStatusTitle.textContent = "Eligible";
-        modalStatusSubtitle.textContent = "You meet all eligibility criteria for this scheme.";
+        modalStatusSubtitle.textContent = "You meet the requirements for this welfare scheme.";
       } else {
         modalStatusPill.textContent = "✕ Not Eligible";
         modalStatusPill.className = "drawer-status-pill ineligible";
@@ -1769,18 +2263,72 @@ async function initFeature() {
         modalEligibilityHero.className = "eligibility-hero-banner is-not-eligible";
         modalStatusIcon.textContent = "✕";
         modalStatusTitle.textContent = "Not Eligible";
-        modalStatusSubtitle.textContent = "You do not meet the eligibility criteria for this scheme.";
+        modalStatusSubtitle.textContent = "You do not meet the qualifications for this scheme.";
       }
 
       renderAccordionSummary(currentEligibilityCheck);
 
+      const verifiedDocList = getStoredVerifiedDocs();
+      const docReadiness = computeSchemeDocReadiness(scheme, verifiedDocList);
+      const docReadinessContainer = document.getElementById("modalDocReadinessContainer");
+      if (docReadinessContainer) {
+        docReadinessContainer.style.display = "block";
+        docReadinessContainer.innerHTML = `
+          <div class="doc-readiness-card">
+            <div class="doc-readiness-header">
+              <span class="doc-readiness-label">Document Readiness</span>
+              <span class="doc-readiness-score">${docReadiness.percentage}% Ready</span>
+            </div>
+            <div class="doc-readiness-track">
+              <div class="doc-readiness-bar" style="width: ${docReadiness.percentage}%;"></div>
+            </div>
+            <div class="doc-readiness-subtext">
+              ${docReadiness.verified} of ${docReadiness.total} required documents verified in your UniOra vault
+            </div>
+          </div>
+        `;
+      }
+
+      let hasMissingDocs = false;
+
       modalDocChips.innerHTML = scheme.docs
-        .map(d => `<span class="doc-tag-pill">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
-          </svg>
-          ${escapeHtml(d)}</span>`)
+        .map(d => {
+          const isVerified = isDocumentVerified(d, verifiedDocList);
+          if (isVerified) {
+            return `<span class="doc-tag-pill doc-tag-verified">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" style="margin-right: 4px;">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>${escapeHtml(d)}</span>
+              <span class="doc-verified-badge">✓ Verified in UniOra</span>
+            </span>`;
+          } else {
+            hasMissingDocs = true;
+            return `<span class="doc-tag-pill doc-tag-pending">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" style="margin-right: 4px;">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              <span>${escapeHtml(d)}</span>
+            </span>`;
+          }
+        })
         .join("");
+
+      const docActionPrompt = document.getElementById("modalDocActionPrompt");
+      if (docActionPrompt) {
+        if (hasMissingDocs) {
+          docActionPrompt.style.display = "block";
+          docActionPrompt.innerHTML = `
+            <a href="../../03_documents_verification/frontend/index.html" class="btn-verify-missing-docs">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              <span>Upload &amp; Verify Requisite Documents</span>
+            </a>
+          `;
+        } else {
+          docActionPrompt.style.display = "none";
+        }
+      }
 
       modalOfficialLink.href = scheme.officialUrl || "#";
       modalOfficialLink.onclick = (event) => {
@@ -1834,8 +2382,26 @@ async function initFeature() {
   });
 
   function updateProfileUI() {
-    if (!guestProfile.isFilled) {
-      emptyProfileBanner.classList.remove("hidden");
+    const verifiedBanner = document.getElementById("verifiedDocsBanner");
+    const verifiedDocsBannerText = document.getElementById("verifiedDocsBannerText");
+    const verifiedBannerIcon = document.getElementById("verifiedBannerIcon");
+    const btnBannerEdit = document.getElementById("btnBannerEdit");
+
+    function setDemoValue(element, val) {
+      if (!element) return;
+      if (val !== null && val !== undefined && String(val).trim() !== "" && String(val).trim() !== "--") {
+        element.textContent = val;
+        element.classList.remove("blank");
+      } else {
+        element.textContent = "--";
+        element.classList.add("blank");
+      }
+    }
+
+    if (!guestProfile.isFilled && !guestProfile.isPartial) {
+      // 1. NO DOCUMENTS & NO PROFILE ENTERED
+      if (emptyProfileBanner) emptyProfileBanner.classList.remove("hidden");
+      if (verifiedBanner) verifiedBanner.style.display = "none";
       cardBtnText.textContent = "Enter Details";
 
       valAge.textContent = "--";
@@ -1854,26 +2420,103 @@ async function initFeature() {
       valSpecial.textContent = "--";
 
       document.querySelectorAll(".demo-row .value").forEach(el => el.classList.add("blank"));
+    } else if (guestProfile.isPartial) {
+      // 2. PARTIAL PROFILE FROM VERIFIED DOCUMENTS
+      if (emptyProfileBanner) emptyProfileBanner.classList.add("hidden");
+
+      if (verifiedBanner) {
+        verifiedBanner.style.display = "flex";
+        verifiedBanner.classList.add("banner-partial");
+
+        if (verifiedBannerIcon) {
+          verifiedBannerIcon.innerHTML = `
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          `;
+        }
+
+        const docNames = (guestProfile.verifiedDocTypes || []).slice(0, 3).join(", ");
+        const moreSuffix = (guestProfile.verifiedDocTypes || []).length > 3 ? " etc." : "";
+        const missingStr = (guestProfile.missingFields && guestProfile.missingFields.length > 0)
+          ? guestProfile.missingFields.join(", ")
+          : "essential fields";
+
+        if (verifiedDocsBannerText) {
+          verifiedDocsBannerText.innerHTML = `Demographics partially extracted from <strong>${guestProfile.verifiedDocsCount} verified document(s)</strong> (${docNames}${moreSuffix}). Missing: <strong style="color: #B45309;">${missingStr}</strong>. Complete these to check scheme eligibility.`;
+        }
+
+        if (btnBannerEdit) {
+          btnBannerEdit.textContent = "Fill Remaining Details";
+        }
+      }
+
+      cardBtnText.textContent = "Complete Details";
+
+      setDemoValue(valAge, guestProfile.age);
+      setDemoValue(valGender, guestProfile.gender);
+      setDemoValue(valState, guestProfile.state);
+      setDemoValue(valDistrict, guestProfile.district);
+      setDemoValue(valResidence, guestProfile.residence);
+      setDemoValue(valOccupation, guestProfile.occupation);
+      setDemoValue(valIncome, guestProfile.incomeRange);
+      setDemoValue(valCategory, guestProfile.category);
+      setDemoValue(valMarital, guestProfile.maritalStatus);
+      setDemoValue(valFamilySize, guestProfile.familySize);
+      setDemoValue(valDisability, guestProfile.disability);
+      setDemoValue(valEducation, guestProfile.education);
+      setDemoValue(valEmployment, guestProfile.employment);
+      setDemoValue(valSpecial, guestProfile.special);
     } else {
-      emptyProfileBanner.classList.add("hidden");
+      // 3. COMPLETE PROFILE
+      if (emptyProfileBanner) emptyProfileBanner.classList.add("hidden");
+
+      if (guestProfile.isFromVerifiedDocs && guestProfile.verifiedDocsCount > 0) {
+        if (verifiedBanner) {
+          verifiedBanner.style.display = "flex";
+          verifiedBanner.classList.remove("banner-partial");
+
+          if (verifiedBannerIcon) {
+            verifiedBannerIcon.innerHTML = `
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            `;
+          }
+
+          const docNames = (guestProfile.verifiedDocTypes || []).slice(0, 3).join(", ");
+          const moreSuffix = (guestProfile.verifiedDocTypes || []).length > 3 ? " etc." : "";
+
+          if (verifiedDocsBannerText) {
+            verifiedDocsBannerText.innerHTML = `Demographics auto-calculated from your <strong>${guestProfile.verifiedDocsCount} verified documents</strong> (${docNames}${moreSuffix}). Click <strong>Edit</strong> to modify or adjust values.`;
+          }
+
+          if (btnBannerEdit) {
+            btnBannerEdit.textContent = "Edit Details";
+          }
+        }
+      } else {
+        if (verifiedBanner) verifiedBanner.style.display = "none";
+      }
+
       cardBtnText.textContent = "Edit";
 
-      valAge.textContent = guestProfile.age;
-      valGender.textContent = guestProfile.gender;
-      valState.textContent = guestProfile.state;
-      valDistrict.textContent = guestProfile.district;
-      valResidence.textContent = guestProfile.residence;
-      valOccupation.textContent = guestProfile.occupation;
-      valIncome.textContent = guestProfile.incomeRange;
-      valCategory.textContent = guestProfile.category;
-      valMarital.textContent = guestProfile.maritalStatus;
-      valFamilySize.textContent = guestProfile.familySize;
-      valDisability.textContent = guestProfile.disability;
-      valEducation.textContent = guestProfile.education;
-      valEmployment.textContent = guestProfile.employment;
-      valSpecial.textContent = guestProfile.special;
-
-      document.querySelectorAll(".demo-row .value").forEach(el => el.classList.remove("blank"));
+      setDemoValue(valAge, guestProfile.age);
+      setDemoValue(valGender, guestProfile.gender);
+      setDemoValue(valState, guestProfile.state);
+      setDemoValue(valDistrict, guestProfile.district);
+      setDemoValue(valResidence, guestProfile.residence);
+      setDemoValue(valOccupation, guestProfile.occupation);
+      setDemoValue(valIncome, guestProfile.incomeRange);
+      setDemoValue(valCategory, guestProfile.category);
+      setDemoValue(valMarital, guestProfile.maritalStatus);
+      setDemoValue(valFamilySize, guestProfile.familySize);
+      setDemoValue(valDisability, guestProfile.disability);
+      setDemoValue(valEducation, guestProfile.education);
+      setDemoValue(valEmployment, guestProfile.employment);
+      setDemoValue(valSpecial, guestProfile.special);
     }
 
     renderTable();
@@ -1883,6 +2526,9 @@ async function initFeature() {
     e.preventDefault();
 
     guestProfile.isFilled = true;
+    guestProfile.isPartial = false;
+    guestProfile.manuallySubmitted = true;
+    guestProfile.missingFields = [];
     guestProfile.age = parseInt(document.getElementById("formAge").value, 10);
     guestProfile.gender = document.getElementById("formGender").value;
     guestProfile.state = document.getElementById("formState").value;
@@ -1911,13 +2557,52 @@ async function initFeature() {
     closeEditModal();
     updateProfileUI();
     switchTab("ELIGIBLE");
+    syncEvaluationWithBackend();
   });
+
+  async function syncEvaluationWithBackend() {
+    if (!guestProfile || !guestProfile.isFilled) return;
+    try {
+      const verifiedDocs = getStoredVerifiedDocs();
+      const payload = {
+        age: guestProfile.age,
+        gender: guestProfile.gender,
+        state: guestProfile.state,
+        district: guestProfile.district,
+        residence: guestProfile.residence,
+        occupation: guestProfile.occupation,
+        annual_income: guestProfile.incomeNumeric,
+        income_range: guestProfile.incomeRange,
+        social_category: guestProfile.category,
+        marital_status: guestProfile.maritalStatus,
+        disability: guestProfile.disability,
+        education: guestProfile.education,
+        employment: guestProfile.employment,
+        special: guestProfile.special,
+        verified_documents: verifiedDocs.map(d => d.document_type || d.document_name || d.name || "")
+      };
+
+      const res = await fetch("http://localhost:8000/api/schemes/evaluate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        console.log("[UNIORA] Backend schemes evaluation synced:", data.summary);
+      }
+    } catch (err) {
+      console.debug("[UNIORA] Backend service not running; offline match engine active:", err.message);
+    }
+  }
 
   populateFilterDropdown();
   updateProfileUI();
 
   if (guestProfile.isFilled) {
     switchTab("ELIGIBLE");
+    syncEvaluationWithBackend();
   } else {
     updateTabHighlights();
     renderTable();
