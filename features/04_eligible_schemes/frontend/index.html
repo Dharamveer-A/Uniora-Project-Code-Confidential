@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eligible Schemes - UNIORA Welfare Platform</title>
+
+  <!-- Google Font Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet"
+  >
+
+  <!-- Common Stylesheets -->
+  <link rel="stylesheet" href="../../../common/css/global.css">
+  <link rel="stylesheet" href="../../../common/components/navbar.css">
+  <link rel="stylesheet" href="../../../common/css/responsive.css">
+
+  <!-- Feature-Specific Stylesheet -->
+  <link rel="stylesheet" href="./style.css">
+</head>
+
+<body class="dashboard-page">
+
+  <div class="app-layout">
+
+    <!-- ================================================================
+         COMMON NAVBAR (Always-Visible Login Button)
+         ================================================================ -->
+    <div id="navbar-container">
+      <header class="navbar" id="appNavbar">
+        <div class="navbar-container">
+
+          <a href="../../../dashboard/index.html" class="navbar-brand" aria-label="UNIORA Dashboard">
+            <img src="../../../common/assets/uniora_logo_navbar.png" alt="UNIORA" class="navbar-logo" />
+          </a>
+
+          <nav class="navbar-menu" id="navbarMenu" aria-label="Main navigation">
+            <a href="../../../dashboard/index.html" class="navbar-link" data-page="dashboard">
+              <span class="navbar-link-text">Dashboard</span>
+            </a>
+            <a href="../../../features/01_scheme_recommendation/frontend/index.html" class="navbar-link" data-page="schemes">
+              <span class="navbar-link-text">Schemes</span>
+            </a>
+            <a href="../../../features/03_documents_verification/frontend/index.html" class="navbar-link" data-page="documents">
+              <span class="navbar-link-text">Documents</span>
+            </a>
+            <a href="../../../features/04_eligible_schemes/frontend/index.html" class="navbar-link navbar-link--active" data-page="eligible">
+              <span class="navbar-link-text">Eligible</span>
+            </a>
+            <a href="../../../features/05_my_readiness/frontend/index.html" class="navbar-link" data-page="readiness">
+              <span class="navbar-link-text">Readiness</span>
+            </a>
+            <a href="../../../features/06_government_services/frontend/index.html" class="navbar-link" data-page="services">
+              <span class="navbar-link-text">Services</span>
+            </a>
+            <a href="../../../features/02_ask_uniora/frontend/index.html" class="navbar-link navbar-link-ask" data-page="ask">
+              <span class="navbar-link-text">Ask Uniora</span>
+            </a>
+          </nav>
+
+          <div class="navbar-right">
+            <button type="button" class="navbar-toggle" id="navbarToggle"
+              aria-label="Open navigation menu" aria-expanded="false" aria-controls="navbarMenu">
+              <span class="navbar-toggle-bar"></span>
+              <span class="navbar-toggle-bar"></span>
+              <span class="navbar-toggle-bar"></span>
+            </button>
+
+            <!-- Directly Visible Red Pill LOGIN Button (Removed hidden / is-loading blocking) -->
+            <div class="navbar-auth" id="navbarAuth">
+              <a href="../../../auth/login/index.html" class="navbar-login" id="navbarLogin">
+                LOGIN
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </header>
+      <div class="navbar-overlay" id="navbarOverlay"></div>
+    </div>
+
+    <!-- MAIN FEATURE VIEWPORT -->
+    <main class="dashboard-main" id="dashboardMain">
+
+      <!-- CLEAN PAGE HEADER -->
+      <section class="clean-page-header-row">
+        <div class="header-text-block">
+          <h1 class="page-title-clean">Eligible Schemes</h1>
+          <p class="page-subtitle-clean">Find Central and Tamil Nadu government schemes eligible for your demographic profile.</p>
+        </div>
+      </section>
+
+      <!-- GUEST TEMPORARY STORAGE ADVISORY CARD -->
+      <section class="guest-advisory-card">
+        <div class="guest-advisory-left">
+          <div class="advisory-icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div class="advisory-text-group">
+            <h3 class="advisory-title">You are not logged in — Information is temporarily stored</h3>
+            <p class="advisory-desc">
+              Sign in to permanently save your profile.
+            </p>
+          </div>
+        </div>
+        <a href="../../../auth/login/index.html" class="btn-advisory-signin">Sign In to Save</a>
+      </section>
+
+      <!-- YOUR INFORMATION CARD -->
+      <section class="scheme-content-card your-info-container">
+        <div class="card-inner-header">
+          <div class="card-header-left">
+            <span class="card-user-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E40AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </span>
+            <h2 class="card-title-text">Your Information</h2>
+          </div>
+          <button type="button" class="btn-clean-action btn-sm" id="btnOpenEdit">
+            <span class="btn-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </span>
+            <span id="cardBtnText">Enter Details</span>
+          </button>
+        </div>
+
+        <!-- Initial Blank State Prompt Banner -->
+        <div class="profile-prompt-banner" id="emptyProfileBanner">
+          <span class="prompt-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+          </span>
+          <span>No demographic details entered yet. Click <strong>Enter Details</strong> to calculate the government schemes you qualify for.</span>
+        </div>
+
+        <!-- 3-Column Demographic Grid -->
+        <div class="demographics-grid">
+          <div class="demo-col">
+            <div class="demo-row"><span class="label">Age</span><span class="value blank" id="valAge">--</span></div>
+            <div class="demo-row"><span class="label">Gender</span><span class="value blank" id="valGender">--</span></div>
+            <div class="demo-row"><span class="label">State</span><span class="value blank" id="valState">--</span></div>
+            <div class="demo-row"><span class="label">District</span><span class="value blank" id="valDistrict">--</span></div>
+            <div class="demo-row"><span class="label">Residence Type</span><span class="value blank" id="valResidence">--</span></div>
+          </div>
+          <div class="demo-col">
+            <div class="demo-row"><span class="label">Occupation</span><span class="value blank" id="valOccupation">--</span></div>
+            <div class="demo-row"><span class="label">Annual Income</span><span class="value blank" id="valIncome">--</span></div>
+            <div class="demo-row"><span class="label">Social Category</span><span class="value blank" id="valCategory">--</span></div>
+            <div class="demo-row"><span class="label">Marital Status</span><span class="value blank" id="valMarital">--</span></div>
+            <div class="demo-row"><span class="label">Family Size</span><span class="value blank" id="valFamilySize">--</span></div>
+          </div>
+          <div class="demo-col">
+            <div class="demo-row"><span class="label">Disability Status</span><span class="value blank" id="valDisability">--</span></div>
+            <div class="demo-row"><span class="label">Education Level</span><span class="value blank" id="valEducation">--</span></div>
+            <div class="demo-row"><span class="label">Employment Status</span><span class="value blank" id="valEmployment">--</span></div>
+            <div class="demo-row"><span class="label">Special Beneficiary</span><span class="value blank" id="valSpecial">--</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4 TABS NAVIGATION TOOLBAR -->
+      <section class="scheme-tabs-toolbar">
+        <div class="tabs-group-shell">
+          <button type="button" class="scheme-tab-btn active" id="tabAll">
+            <span class="tab-glyph">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+            </span> ALL (<span id="countAll">500</span>)
+          </button>
+          <button type="button" class="scheme-tab-btn" id="tabEligible">
+            <span class="tab-glyph">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </span> ELIGIBLE (<span id="countEligible">0</span>)
+          </button>
+          <div class="filter-popover-anchor">
+            <button type="button" class="scheme-tab-btn" id="tabFilter">
+              <span class="tab-glyph">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                </svg>
+              </span> FILTER <span class="caret-icon">▾</span>
+            </button>
+            <div class="department-popover-menu" id="filterDropdownMenu">
+              <div class="popover-heading">Select Department</div>
+              <div class="popover-options-list" id="filterOptionsList"></div>
+            </div>
+          </div>
+          <button type="button" class="scheme-tab-btn" id="tabSearch">
+            <span class="tab-glyph">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </span> SEARCH
+          </button>
+        </div>
+      </section>
+
+      <!-- SEARCH DRAWER -->
+      <section class="search-inline-container" id="searchDrawer" style="display: none;">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+
+          <input
+            type="text"
+            id="searchInput"
+            class="scheme-search-input"
+            placeholder="Search by scheme name, department or keyword..."
+            autocomplete="off"
+          />
+
+          <button type="button" class="search-clear-btn" id="btnClearSearch" aria-label="Clear search">×</button>
+          <button type="button" class="btn-search-submit" id="btnExecuteSearch">Search</button>
+        </div>
+
+        <div class="quick-tags-container">
+          <span class="quick-tags-label">Most Searched:</span>
+          <div class="tag-chips-list" id="recentTagsList">
+            <button type="button" class="tag-chip" data-query="kisan">kisan <span>✕</span></button>
+            <button type="button" class="tag-chip" data-query="scholarship">scholarship <span>✕</span></button>
+            <button type="button" class="tag-chip" data-query="education">education <span>✕</span></button>
+            <button type="button" class="tag-chip" data-query="health">health <span>✕</span></button>
+            <button type="button" class="tag-chip" data-query="women">women <span>✕</span></button>
+          </div>
+          <button type="button" class="btn-clear-all-tags" id="btnClearAllTags">Clear All</button>
+        </div>
+      </section>
+
+      <!-- ACTIVE APPLIED FILTER BAR -->
+      <div class="active-filter-badge-row" id="activeFilterBadgeBar" style="display: none;">
+        <div class="filter-applied-chip">
+          Filtered by: <strong id="selectedDeptName">Agriculture &amp; Farmers Welfare</strong>
+          <button type="button" class="btn-close-chip" id="btnRemoveFilter">✕</button>
+        </div>
+        <button type="button" class="btn-clear-filter-link" id="btnClearFilterText">Clear Filter</button>
+      </div>
+
+      <!-- SCHEMES RESULTS CARD -->
+      <section class="scheme-content-card table-results-card">
+        <div class="table-results-header">
+          <h3 class="table-results-heading" id="resultsTableTitle">All Government Schemes (500)</h3>
+          <span class="table-results-counter" id="resultsShowingCount">Showing 1 – 10 of 500 schemes</span>
+        </div>
+
+        <div class="table-responsive-box">
+          <table class="uniora-data-table" id="schemesTable">
+            <thead id="schemesTableHead"></thead>
+            <tbody id="schemesTableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Empty State View -->
+        <div class="empty-state-card" id="emptyState" style="display: none;">
+          <div class="empty-state-icon" id="emptyStateIcon">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+          <h4 class="empty-state-title" id="emptyStateTitle">No Schemes Found</h4>
+          <p class="empty-state-text" id="emptyStateText">No welfare schemes match your search or filter criteria.</p>
+          <button type="button" class="btn-clean-action" id="btnResetFilters" style="margin: 0 auto;">Show All Schemes</button>
+        </div>
+
+        <!-- 10-Item Pagination Row -->
+        <div class="pagination-footer-row" id="paginationFooter">
+          <button type="button" class="page-arrow-btn" id="btnPrevPage">« Previous</button>
+          <div class="page-numbers-cluster" id="pageNumbersContainer"></div>
+          <button type="button" class="page-arrow-btn" id="btnNextPage">Next »</button>
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- MODAL: ENTER / EDIT DEMOGRAPHIC PROFILE -->
+  <div class="modal-backdrop" id="editModal">
+    <div class="modal-dialog-box">
+      <div class="modal-header-row">
+        <h3 class="modal-heading-text" id="modalFormHeading">Enter Your Demographic Profile</h3>
+        <button type="button" class="btn-modal-close" id="btnCloseEditModal">✕</button>
+      </div>
+      <form class="modal-form-content" id="guestProfileForm">
+        <div class="form-fields-grid">
+          <div class="form-input-group">
+            <label for="formAge">Age</label>
+            <input type="number" id="formAge" min="1" max="100" placeholder="e.g. 22" required />
+          </div>
+          <div class="form-input-group">
+            <label for="formGender">Gender</label>
+            <select id="formGender" required>
+              <option value="" disabled selected>Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Transgender">Transgender</option>
+            </select>
+          </div>
+
+          <div class="form-input-group">
+            <label for="formState">State</label>
+            <select id="formState" required>
+              <option value="" disabled selected>Loading states...</option>
+            </select>
+          </div>
+
+          <div class="form-input-group">
+            <label for="formDistrict">District</label>
+            <select id="formDistrict" required disabled>
+              <option value="" disabled selected>Select state first</option>
+            </select>
+          </div>
+
+          <div class="form-input-group">
+            <label for="formResidence">Residence Type</label>
+            <select id="formResidence" required>
+              <option value="" disabled selected>Select Residence</option>
+              <option value="Urban">Urban</option>
+              <option value="Rural">Rural</option>
+            </select>
+          </div>
+          <div class="form-input-group">
+            <label for="formOccupation">Occupation</label>
+            <select id="formOccupation" required>
+              <option value="" disabled selected>Select Occupation</option>
+              <option value="Student">Student</option>
+              <option value="Farmer">Farmer</option>
+              <option value="Self-Employed">Self-Employed</option>
+              <option value="Unemployed">Unemployed</option>
+              <option value="Daily Wage / Artisan">Daily Wage / Artisan</option>
+              <option value="Salaried">Salaried</option>
+            </select>
+          </div>
+          <div class="form-input-group">
+            <label for="formIncome">Annual Family Income</label>
+            <select id="formIncome" required>
+              <option value="" disabled selected>Select Income Bracket</option>
+              <option value="Below ₹1 Lakh">Below ₹1 Lakh</option>
+              <option value="₹1 – 2.5 Lakh">₹1 – 2.5 Lakh</option>
+              <option value="₹2.5 – 5 Lakh">₹2.5 – 5 Lakh</option>
+              <option value="Above ₹5 Lakh">Above ₹5 Lakh</option>
+            </select>
+          </div>
+          <div class="form-input-group">
+            <label for="formCategory">Social Category</label>
+            <select id="formCategory" required>
+              <option value="" disabled selected>Select Category</option>
+              <option value="General">General</option>
+              <option value="OBC">OBC</option>
+              <option value="SC">SC</option>
+              <option value="ST">ST</option>
+              <option value="MBC/DNC">MBC/DNC</option>
+            </select>
+          </div>
+          <div class="form-input-group">
+            <label for="formMarital">Marital Status</label>
+            <select id="formMarital" required>
+              <option value="" disabled selected>Select Status</option>
+              <option value="Single">Single</option>
+              <option value="Married">Married</option>
+              <option value="Widowed">Widowed</option>
+              <option value="Divorced">Divorced</option>
+            </select>
+          </div>
+          <div class="form-input-group">
+            <label for="formFamilySize">Family Size</label>
+            <input type="number" id="formFamilySize" min="1" max="15" placeholder="e.g. 4" required />
+          </div>
+          <div class="form-input-group">
+            <label for="formDisability">Disability Status (PwD)</label>
+            <select id="formDisability" required>
+              <option value="" disabled selected>Select Status</option>
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+          </div>
+          <div class="form-input-group">
+            <label for="formEducation">Education Level</label>
+            <select id="formEducation" required>
+              <option value="" disabled selected>Select Education</option>
+              <option value="School">School (Up to 12th)</option>
+              <option value="Undergraduate">Undergraduate</option>
+              <option value="Postgraduate">Postgraduate</option>
+              <option value="Diploma/Vocational">Diploma / Vocational</option>
+            </select>
+          </div>
+          <div class="form-input-group">
+            <label for="formEmployment">Employment Status</label>
+            <select id="formEmployment" required>
+              <option value="" disabled selected>Select Employment</option>
+              <option value="Student">Student</option>
+              <option value="Employed">Employed</option>
+              <option value="Unemployed">Unemployed</option>
+              <option value="Self-Employed">Self-Employed</option>
+            </select>
+          </div>
+          <div class="form-input-group">
+            <label for="formSpecial">Special Beneficiary</label>
+            <select id="formSpecial" required>
+              <option value="" disabled selected>Select Option</option>
+              <option value="None">None</option>
+              <option value="Destitute Widow">Destitute Widow</option>
+              <option value="Ex-Serviceman">Ex-Serviceman</option>
+              <option value="Minority">Minority</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer-actions">
+          <button type="button" class="btn-secondary-flat" id="btnCancelEdit">Cancel</button>
+          <button type="submit" class="btn-primary-solid">Check Eligibility</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================================================================
+       RIGHT-SIDE DRAWER: SCHEMES TEMPLATE (NO LINE ABOVE)
+       ================================================================ -->
+  <!-- ================================================================
+       RIGHT-SIDE DRAWER: SCHEMES DETAILS (MATCHING REFERENCE DESIGN)
+       ================================================================ -->
+  <div class="modal-backdrop details-drawer-backdrop" id="detailsModal" aria-hidden="true">
+    <aside class="modal-dialog-box details-drawer" role="dialog" aria-modal="true" aria-labelledby="modalSchemeName">
+      
+      <!-- Drawer Header Strip -->
+      <div class="drawer-header">
+        <div class="drawer-header-left">
+          <div class="drawer-scheme-vector-badge" id="modalSchemeVectorIcon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+            </svg>
+          </div>
+          <div class="drawer-title-headings">
+            <div class="drawer-title-line">
+              <h3 class="drawer-title" id="modalSchemeName">Tamil Pudhalvan Scheme</h3>
+              <span class="drawer-level-pill" id="modalSchemeLevel">Tamil Nadu</span>
+              <span class="drawer-status-pill" id="modalStatusPill" style="display: none;">Not Evaluated</span>
+            </div>
+            <p class="drawer-dept-text" id="modalSchemeDept">Higher Education (Tamil Nadu)</p>
+            <p class="drawer-sub-text" id="modalSchemeSub">Provides education support to eligible youth across the state.</p>
+          </div>
+        </div>
+        <button type="button" class="btn-drawer-close" id="btnCloseDetailsModal" aria-label="Close scheme details">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Drawer Body Content -->
+      <div class="drawer-body">
+
+        <!-- 1. Not Evaluated State -->
+        <div class="not-evaluated-view-container" id="notEvaluatedView">
+          <div class="not-evaluated-hero-card">
+            <div class="not-evaluated-illustration">
+              <svg width="120" height="96" viewBox="0 0 140 110" fill="none">
+                <rect x="25" y="24" width="90" height="66" rx="10" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="2"/>
+                <path d="M45 44H95" stroke="#93C5FD" stroke-width="3" stroke-linecap="round"/>
+                <path d="M45 56H80" stroke="#93C5FD" stroke-width="3" stroke-linecap="round"/>
+                <path d="M45 68H68" stroke="#93C5FD" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="94" cy="68" r="16" fill="#FFFFFF" stroke="#3B82F6" stroke-width="2.5"/>
+                <path d="M94 62V69M94 74V74.01" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="status-xi-badge">
+              <span class="info-char">i</span>
+            </div>
+            <h4 class="not-evaluated-title">Not Evaluated</h4>
+            <p class="not-evaluated-desc">Enter your demographic details to check eligibility for this scheme.</p>
+            <button type="button" class="btn-enter-details-action" id="btnDrawerEnterDetails">
+              Enter Details Now →
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Evaluated Sections (Visible when personal details are evaluated) -->
+        <div class="evaluated-sections-container" id="evaluatedSections" style="display: none;">
+          
+          <!-- MAIN SHOWCASE: ELIGIBLE / NOT ELIGIBLE HERO BANNER -->
+          <div class="eligibility-hero-banner is-not-eligible" id="modalEligibilityHero">
+            <div class="eligibility-hero-badge-wrap">
+              <!-- Radiating festive / burst accents -->
+              <svg class="eligibility-burst-rays" width="108" height="108" viewBox="0 0 108 108" fill="none" aria-hidden="true">
+                <line x1="54" y1="14" x2="54" y2="4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="82" y1="26" x2="89" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="94" y1="54" x2="104" y2="54" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="82" y1="82" x2="89" y2="89" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="54" y1="94" x2="54" y2="104" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="26" y1="82" x2="19" y2="89" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="14" y1="54" x2="4" y2="54" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="26" y1="26" x2="19" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+              <div class="eligibility-hero-icon" id="modalStatusIcon">
+                ✕
+              </div>
+            </div>
+            <div class="eligibility-hero-info">
+              <h4 class="eligibility-hero-heading" id="modalStatusTitle">Not Eligible</h4>
+              <p class="eligibility-hero-sub" id="modalStatusSubtitle">You do not meet the eligibility criteria for this scheme.</p>
+            </div>
+          </div>
+
+          <!-- ELIGIBILITY CRITERIA EVALUATION SECTION -->
+          <section class="drawer-card-box eligibility-evaluation-section">
+            <div class="drawer-section-heading">
+              <span class="heading-icon-wrap icon-blue">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm-4 8H7v-2h6v2z"/>
+                </svg>
+              </span>
+              <h4>Eligibility Criteria Evaluation</h4>
+            </div>
+
+            <!-- Dual Accordion Tabs Side-by-Side -->
+            <div class="criteria-accordion-tabs">
+              <button type="button" class="criteria-tab-btn criteria-tab-satisfied" id="btnSatisfiedAccordion" aria-expanded="false">
+                <span class="criteria-tab-icon criteria-icon-check">✓</span>
+                <span class="criteria-tab-title"><strong id="satisfiedCount">3</strong> Conditions Satisfied</span>
+                <span class="criteria-tab-caret">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </span>
+              </button>
+              <button type="button" class="criteria-tab-btn criteria-tab-failed" id="btnFailedAccordion" aria-expanded="false">
+                <span class="criteria-tab-icon criteria-icon-cross">✕</span>
+                <span class="criteria-tab-title"><strong id="failedCount">1</strong> Condition Not Satisfied</span>
+                <span class="criteria-tab-caret">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </span>
+              </button>
+            </div>
+
+            <!-- Expanded Details Panel -->
+            <div class="criteria-expanded-panel" id="criteriaAccordionContent" hidden>
+              <div class="criteria-expanded-list" id="criteriaAccordionContentInner"></div>
+            </div>
+          </section>
+
+          <!-- REQUIRED DOCUMENTS TO APPLY SECTION -->
+          <section class="drawer-card-box documents-section">
+            <div class="drawer-section-heading">
+              <span class="heading-icon-wrap icon-blue">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm-4 8H7v-2h6v2z"/>
+                </svg>
+              </span>
+              <h4>Required Documents to Apply</h4>
+            </div>
+            <div class="drawer-doc-cluster" id="modalDocChips"></div>
+          </section>
+
+          <!-- BENEFITS & OVERVIEW SECTION -->
+          <section class="drawer-card-box benefits-section">
+            <div class="drawer-section-heading">
+              <span class="heading-icon-wrap icon-red">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.65-.5-.65C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1h-2V5c0-.55.45-1 1-1zM9 4c.55 0 1 .45 1 1v1H8c-.55 0-1-.45-1-1s.45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76V14h2V8.76L15.38 12 17 10.83 14.92 8H20v6z"/>
+                </svg>
+              </span>
+              <h4>Benefits &amp; Overview</h4>
+            </div>
+            <p id="modalSchemeDescription" class="drawer-text-desc"></p>
+          </section>
+
+        </div>
+
+      </div>
+
+      <!-- Footer Bar -->
+      <div class="drawer-footer" id="drawerFooterBar">
+        <button type="button" class="btn-drawer-cancel" id="btnDismissDetails">Close</button>
+        <a href="#" target="_blank" rel="noopener noreferrer" class="btn-drawer-primary" id="modalOfficialLink">Official Portal ↗</a>
+      </div>
+
+    </aside>
+  </div>
+
+  <!-- Shared Navbar Controller Module -->
+  <script type="module">
+    import { initActiveNavLink, initNavbarMenu } from '../../../common/js/navbar.js';
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        initActiveNavLink();
+        initNavbarMenu();
+      } catch (err) {
+        console.warn('Navbar script warning:', err);
+      }
+    });
+  </script>
+
+  <script src="./script.js"></script>
+</body>
+</html>
