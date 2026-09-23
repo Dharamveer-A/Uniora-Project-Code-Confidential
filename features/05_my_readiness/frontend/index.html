@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Readiness - UNIORA</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../../../common/css/global.css">
+  <link rel="stylesheet" href="../../../common/components/navbar.css">
+  <link rel="stylesheet" href="../../../common/css/responsive.css">
+  <link rel="stylesheet" href="./style.css">
+
+  <script>
+    (function () {
+      try {
+        var name = localStorage.getItem('uniora_cached_user_name');
+        var hasUser = false;
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+            var raw = localStorage.getItem(k);
+            if (raw) {
+              var p = JSON.parse(raw);
+              if (p && p.user) {
+                hasUser = true;
+                if (!name) {
+                  name = p.user.user_metadata?.full_name || p.user.user_metadata?.name || p.user.email?.split('@')[0] || 'User';
+                }
+                break;
+              }
+            }
+          }
+        }
+        if (hasUser) {
+          document.write('<style>#navbarUser{display:flex !important;} #navbarLogin{display:none !important;} #navbarAuth.is-loading > *{visibility:visible !important;} #navbarAuth.is-loading::after{display:none !important;}</style>');
+        } else {
+          document.write('<style>#navbarLogin{display:inline-flex !important;} #navbarUser{display:none !important;} #navbarAuth.is-loading > *{visibility:visible !important;} #navbarAuth.is-loading::after{display:none !important;}</style>');
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+
+<body class="dashboard-page readiness-page">
+  <div class="app-layout">
+    <div id="navbar-container">
+      <header class="navbar" id="appNavbar">
+        <div class="navbar-container">
+          <a href="../../../dashboard/index.html" class="navbar-brand" aria-label="UNIORA Dashboard">
+            <img src="../../../common/assets/uniora_logo_navbar.png" alt="UNIORA" class="navbar-logo" />
+          </a>
+
+          <nav class="navbar-menu" id="navbarMenu" aria-label="Main navigation">
+            <a href="../../../dashboard/index.html" class="navbar-link" data-page="dashboard">
+              <span class="navbar-link-text">Dashboard</span>
+            </a>
+            <a href="../../../features/01_scheme_recommendation/frontend/index.html" class="navbar-link" data-page="schemes">
+              <span class="navbar-link-text">Schemes</span>
+            </a>
+            <a href="../../../features/03_documents_verification/frontend/index.html" class="navbar-link" data-page="documents">
+              <span class="navbar-link-text">Documents</span>
+            </a>
+            <a href="../../../features/04_eligible_schemes/frontend/index.html" class="navbar-link" data-page="eligible">
+              <span class="navbar-link-text">Eligible</span>
+            </a>
+            <a href="../../../features/05_my_readiness/frontend/index.html" class="navbar-link navbar-link--active" data-page="readiness">
+              <span class="navbar-link-text">Readiness</span>
+            </a>
+            <a href="../../../features/06_government_services/frontend/index.html" class="navbar-link" data-page="services">
+              <span class="navbar-link-text">Services</span>
+            </a>
+            <a href="../../../features/02_ask_uniora/frontend/index.html" class="navbar-link navbar-link-ask" data-page="ask">
+              <span class="navbar-link-text">Ask Uniora</span>
+            </a>
+          </nav>
+
+          <div class="navbar-right">
+            <button type="button" class="navbar-toggle" id="navbarToggle"
+              aria-label="Open navigation menu" aria-expanded="false" aria-controls="navbarMenu">
+              <span class="navbar-toggle-bar"></span>
+              <span class="navbar-toggle-bar"></span>
+              <span class="navbar-toggle-bar"></span>
+            </button>
+
+            <div class="navbar-auth is-loading" id="navbarAuth">
+              <div class="navbar-user" id="navbarUser" hidden>
+                <a href="../../../features/10_profile/frontend/index.html" class="navbar-profile" id="navbarProfileLink" aria-label="View Profile">
+                  <div class="navbar-avatar" id="navbarAvatar" aria-hidden="true">U</div>
+                  <span class="navbar-user-name" id="navbarUserName">User</span>
+                </a>
+              </div>
+              <a href="../../../auth/login/index.html" class="navbar-login" id="navbarLogin" hidden>
+                LOGIN
+              </a>
+            </div>
+          </div>
+        </div>
+      </header>
+      <div class="navbar-overlay" id="navbarOverlay"></div>
+    </div>
+
+    <main class="readiness-main">
+      <section class="page-heading">
+        <div>
+          <p class="eyebrow">Preparedness check</p>
+          <h1 class="page-title">My Readiness</h1>
+        </div>
+        <div class="header-badge" id="userStateBadge">Guest mode</div>
+      </section>
+
+      <section class="readiness-hero card-box">
+        <div class="hero-copy">
+          <h2 id="heroTitle">Check how ready you are for welfare schemes</h2>
+          <p id="heroSubtitle">Select an eligible scheme, complete only the missing details, verify documents, and move forward with confidence.</p>
+        </div>
+        <div class="hero-summary">
+          <div class="summary-pill">
+            <span class="summary-label">Eligible schemes</span>
+            <strong id="eligibleCount">0</strong>
+          </div>
+          <div class="summary-pill highlight">
+            <span class="summary-label">Best readiness</span>
+            <strong id="bestReadiness">0%</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="readiness-grid">
+        <div class="card-box selector-panel">
+          <div class="section-head">
+            <h3>Eligible schemes</h3>
+          </div>
+          <label class="field-label" for="schemeSelector">Choose a scheme</label>
+          <select id="schemeSelector" class="scheme-select">
+            <option value="">Loading schemes...</option>
+          </select>
+          <div id="schemeMeta" class="scheme-meta"></div>
+        </div>
+
+        <div class="card-box score-panel">
+          <div class="score-ring-wrap">
+            <div class="score-ring" id="scoreRing">
+              <div class="score-ring-inner">
+                <strong id="scoreValue">0%</strong>
+                <span>readiness</span>
+              </div>
+            </div>
+          </div>
+          <div class="score-status" id="scoreStatus">Waiting for profile data</div>
+        </div>
+      </section>
+
+      <section class="details-grid">
+        <div class="card-box details-box">
+          <div class="section-head">
+            <h3>Needed details</h3>
+            <span class="mini-badge" id="detailCountBadge">0 missing</span>
+          </div>
+          <div id="missingDetailsList" class="list-stack"></div>
+          <form id="detailFillForm" class="detail-fill-form"></form>
+        </div>
+
+        <div class="card-box docs-box">
+          <div class="section-head">
+            <h3>Required documents</h3>
+            <span class="mini-badge warning" id="documentCountBadge">0 missing</span>
+          </div>
+          <div id="requiredDocumentsList" class="list-stack"></div>
+          <div class="action-row">
+            <button type="button" id="verifyDocumentsBtn" class="primary-btn">Verify documents</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card-box actions-panel">
+        <div class="section-head">
+          <h3>Next steps</h3>
+        </div>
+        <div class="action-flow">
+          <button type="button" id="continueApplyBtn" class="primary-btn wide">Proceed to apply</button>
+          <button type="button" id="correctServiceBtn" class="secondary-btn wide">Find nearby service correction</button>
+          <button type="button" id="goBackDocBtn" class="ghost-btn wide">Back to document verification</button>
+        </div>
+      </section>
+
+      <section class="card-box services-panel">
+        <div class="section-head">
+          <h3>Nearby service support</h3>
+        </div>
+        <div id="serviceCards" class="service-cards"></div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="./script.js"></script>
+</body>
+</html>
