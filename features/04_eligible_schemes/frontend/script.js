@@ -277,6 +277,310 @@ function getStoredVerifiedDocs() {
   }
 }
 
+function normalizeDocName(rawName) {
+  if (!rawName) return '';
+  const clean = rawName.trim().toLowerCase();
+  if (clean === 'ration card' || clean === 'smart ration card' || clean.includes('ration')) return 'Smart Ration Card';
+  if (clean === 'voter id' || clean === 'voter id card' || clean === 'epic card' || clean === 'epic') return 'Voter ID Card';
+  if (clean === 'aadhaar' || clean === 'aadhaar card' || clean === 'aadhar' || clean === 'aadhar card') return 'Aadhaar Card';
+  if (clean === 'pan' || clean === 'pan card') return 'PAN Card';
+  if (clean === 'income certificate' || clean === 'income') return 'Income Certificate';
+  if (clean === 'community certificate' || clean === 'community' || clean === 'caste') return 'Community Certificate';
+  if (clean === 'birth certificate' || clean === 'birth') return 'Birth Certificate';
+  if (clean === 'bank passbook' || clean === 'bank' || clean === 'passbook') return 'Bank Passbook';
+  if (clean === '10th marksheet' || clean === '10th' || clean === 'sslc') return '10th Marksheet';
+  if (clean === '12th marksheet' || clean === '12th' || clean === 'hsc') return '12th Marksheet';
+  if (clean.includes('undergraduate') || clean.includes('ug degree')) return 'Undergraduate (UG) Degree';
+  if (clean.includes('diploma')) return 'Diploma Certificate';
+  if (clean.includes('postgraduate') || clean.includes('pg degree')) return 'Postgraduate (PG) Degree';
+  if (clean.includes('driving')) return 'Driving License';
+  if (clean.includes('passport')) return 'Passport';
+  if (clean.includes('domicile')) return 'Domicile Certificate';
+  if (clean.includes('bpl')) return 'BPL Certificate';
+  if (clean.includes('udid') || clean.includes('disability')) return 'UDID Card';
+  if (clean.includes('bonafide')) return 'Bonafide Certificate';
+  if (clean.includes('land')) return 'Land Ownership Document';
+  if (clean.includes('electricity') || clean.includes('eb bill')) return 'Electricity Bill';
+  if (clean.includes('mgnrega')) return 'MGNREGA Job Card';
+  if (clean.includes('udyam')) return 'Udyam Certificate';
+  if (clean.includes('gst')) return 'GST Certificate';
+  if (clean.includes('marriage')) return 'Marriage Certificate';
+  if (clean.includes('death')) return 'Death Certificate';
+  if (clean.includes('orphan')) return 'Orphan Certificate';
+  if (clean.includes('widow')) return 'Widow Certificate';
+  return rawName.trim();
+}
+
+const PERMANENT_DOCS_CATALOG = [
+  {
+    displayName: 'Aadhaar Card',
+    canonicalName: 'Aadhaar Card',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="2"/><path d="M15 8h2M15 12h2"/></svg>`
+  },
+  {
+    displayName: 'PAN Card',
+    canonicalName: 'PAN Card',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>`
+  },
+  {
+    displayName: 'Voter ID',
+    canonicalName: 'Voter ID Card',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`
+  },
+  {
+    displayName: 'Ration Card',
+    canonicalName: 'Smart Ration Card',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`
+  },
+  {
+    displayName: 'Birth Certificate',
+    canonicalName: 'Birth Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`
+  },
+  {
+    displayName: 'Income Certificate',
+    canonicalName: 'Income Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 8h12M6 13l7 8M6 13h4a4 4 0 0 0 0-8"/></svg>`
+  },
+  {
+    displayName: 'Community Certificate',
+    canonicalName: 'Community Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>`
+  },
+  {
+    displayName: 'Bank Passbook',
+    canonicalName: 'Bank Passbook',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 2 7 22 7"/></svg>`
+  },
+  {
+    displayName: '10th Marksheet',
+    canonicalName: '10th Marksheet',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`
+  },
+  {
+    displayName: '12th Marksheet',
+    canonicalName: '12th Marksheet',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polygon points="12 12 13.5 15 17 15.5 14.5 18 15 21.5 12 19.5 9 21.5 9.5 18 7 15.5 10.5 15 12 12"/></svg>`
+  },
+  {
+    displayName: 'UG Degree',
+    canonicalName: 'Undergraduate (UG) Degree',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`
+  },
+  {
+    displayName: 'Diploma Certificate',
+    canonicalName: 'Diploma Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>`
+  },
+  {
+    displayName: 'PG Degree',
+    canonicalName: 'Postgraduate (PG) Degree',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/><circle cx="12" cy="18" r="2"/></svg>`
+  },
+  {
+    displayName: 'Driving License',
+    canonicalName: 'Driving License',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v5h-3M7 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0M15 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0"/></svg>`
+  },
+  {
+    displayName: 'Passport',
+    canonicalName: 'Passport',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="12" cy="11" r="3"/><path d="M9 21h6M9 7h6"/></svg>`
+  },
+  {
+    displayName: 'Domicile Certificate',
+    canonicalName: 'Domicile Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`
+  },
+  {
+    displayName: 'BPL Certificate',
+    canonicalName: 'BPL Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>`
+  },
+  {
+    displayName: 'UDID Card',
+    canonicalName: 'UDID Card',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>`
+  },
+  {
+    displayName: 'Bonafide Certificate',
+    canonicalName: 'Bonafide Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M15 8h2M15 12h2M7 16h10"/></svg>`
+  },
+  {
+    displayName: 'Land Ownership',
+    canonicalName: 'Land Ownership Document',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 12 2 21 11 21 22 3 22"/><line x1="9" y1="22" x2="9" y2="14"/><line x1="15" y1="22" x2="15" y2="14"/></svg>`
+  },
+  {
+    displayName: 'Electricity Bill',
+    canonicalName: 'Electricity Bill',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`
+  },
+  {
+    displayName: 'MGNREGA Job Card',
+    canonicalName: 'MGNREGA Job Card',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a9 9 0 1 0 9-9"/><path d="M3 9H1M3 9V7"/></svg>`
+  },
+  {
+    displayName: 'Udyam Certificate',
+    canonicalName: 'Udyam Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>`
+  },
+  {
+    displayName: 'GST Certificate',
+    canonicalName: 'GST Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`
+  },
+  {
+    displayName: 'Marriage Certificate',
+    canonicalName: 'Marriage Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`
+  },
+  {
+    displayName: 'Death Certificate',
+    canonicalName: 'Death Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>`
+  },
+  {
+    displayName: 'Orphan Certificate',
+    canonicalName: 'Orphan Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>`
+  },
+  {
+    displayName: 'Widow Certificate',
+    canonicalName: 'Widow Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>`
+  }
+];
+
+async function fetchUserVerifiedDocs() {
+  let docs = getStoredVerifiedDocs();
+  try {
+    const session = await getCurrentSession();
+    if (session && session.user && supabase) {
+      const { data: userDocs, error } = await supabase
+        .from('user_documents')
+        .select('*')
+        .eq('uid', session.user.id);
+
+      if (!error && Array.isArray(userDocs)) {
+        const remoteFormatted = userDocs
+          .filter(d => (d.is_verified === true) || (d.verification_status === 'verified') || (d.is_verified === undefined && d.verification_status === undefined))
+          .map(d => ({
+            document_type: d.document_type,
+            data: d.extracted_data || {}
+          }));
+
+        const existingTypes = new Set(docs.map(d => normalizeDocName(d.document_type)));
+        remoteFormatted.forEach(rd => {
+          if (!existingTypes.has(normalizeDocName(rd.document_type))) {
+            docs.push(rd);
+          }
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('[UNIORA] fetchUserVerifiedDocs notice:', err);
+  }
+  return docs;
+}
+
+function renderDocumentsBar(verifiedDocsList = []) {
+  const track = document.getElementById('docsCardsTrack');
+  const summaryStatus = document.getElementById('docsSummaryStatus');
+  const btnLeft = document.getElementById('btnDocsScrollLeft');
+  const btnRight = document.getElementById('btnDocsScrollRight');
+  if (!track) return;
+
+  const verifiedMap = new Map();
+  (verifiedDocsList || []).forEach(doc => {
+    const rawName = doc.document_type || doc.document_name || doc.name;
+    if (rawName) {
+      const canonical = normalizeDocName(rawName);
+      verifiedMap.set(canonical, doc);
+    }
+  });
+
+  const verifiedCount = verifiedMap.size;
+  if (summaryStatus) {
+    summaryStatus.textContent = verifiedCount === 1 ? '1 document verified' : `${verifiedCount} documents verified`;
+  }
+
+  const catalogDocs = [...PERMANENT_DOCS_CATALOG];
+  const catalogCanonicals = new Set(catalogDocs.map(d => d.canonicalName));
+
+  verifiedMap.forEach((docData, canonical) => {
+    if (!catalogCanonicals.has(canonical)) {
+      catalogDocs.push({
+        displayName: canonical,
+        canonicalName: canonical,
+        icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>`
+      });
+    }
+  });
+
+  track.innerHTML = '';
+
+  catalogDocs.forEach(doc => {
+    const isVerified = verifiedMap.has(doc.canonicalName);
+    const card = document.createElement('div');
+    card.className = `doc-pill-card ${isVerified ? 'is-verified' : 'is-pending'}`;
+    card.title = `${doc.displayName} (${isVerified ? 'Verified' : 'Pending'}) — Click to open in Document Verification`;
+
+    const iconHtml = isVerified
+      ? `<div class="doc-card-icon-circle"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>`
+      : `<div class="doc-card-icon-circle">${doc.icon}</div>`;
+
+    const statusHtml = isVerified
+      ? `<span class="doc-card-status">Verified</span>`
+      : `<span class="doc-card-status">Pending</span>`;
+
+    const indicatorHtml = isVerified
+      ? `<div class="doc-accent-indicator"></div>`
+      : '';
+
+    card.innerHTML = `
+      ${iconHtml}
+      <div class="doc-card-name">${doc.displayName}</div>
+      ${statusHtml}
+      ${indicatorHtml}
+    `;
+
+    card.addEventListener('click', () => {
+      window.location.href = `../../03_documents_verification/frontend/index.html?doc=${encodeURIComponent(doc.canonicalName)}`;
+    });
+
+    track.appendChild(card);
+  });
+
+  const updateScrollArrows = () => {
+    if (!track) return;
+    const maxScroll = track.scrollWidth - track.clientWidth;
+    if (btnLeft) {
+      btnLeft.style.display = track.scrollLeft > 10 ? 'flex' : 'none';
+    }
+    if (btnRight) {
+      btnRight.style.display = (maxScroll > 10 && track.scrollLeft < maxScroll - 10) ? 'flex' : 'none';
+    }
+  };
+
+  track.onscroll = updateScrollArrows;
+  window.addEventListener('resize', updateScrollArrows);
+  setTimeout(updateScrollArrows, 100);
+
+  if (btnLeft) {
+    btnLeft.onclick = () => {
+      track.scrollBy({ left: -260, behavior: 'smooth' });
+    };
+  }
+  if (btnRight) {
+    btnRight.onclick = () => {
+      track.scrollBy({ left: 260, behavior: 'smooth' });
+    };
+  }
+}
+
 function extractAgeFromDob(dobStr) {
   if (!dobStr) return null;
   const str = String(dobStr).trim();
@@ -464,14 +768,21 @@ function buildProfileFromDbUserInfo(dbUserInfo, verifiedDocs = [], dbUserProfile
     if (!isNaN(fVal) && fVal > 0) familySize = fVal;
   }
 
-  const profile = {
+    let resolvedName = dbUserProfile?.name || dbUserInfo?.full_name || dbUserInfo?.name || "";
+    if (!resolvedName) {
+      try {
+        resolvedName = localStorage.getItem('uniora_cached_user_name') || "";
+      } catch {}
+    }
+
+    const profile = {
     isFilled: false,
     isPartial: false,
     isFromDatabase: true,
     isFromVerifiedDocs: Boolean(verifiedDocs && verifiedDocs.length > 0),
     verifiedDocsCount: verifiedDocs ? verifiedDocs.length : 0,
     verifiedDocTypes: verifiedDocs ? verifiedDocs.map(d => d.document_type || d.document_name || d.name).filter(Boolean) : [],
-    userName: dbUserProfile?.name || "",
+    userName: resolvedName,
     userEmail: dbUserProfile?.email || "",
     phone: dbUserInfo.phone || "",
     date_of_birth: dbUserInfo.date_of_birth || "",
@@ -599,6 +910,14 @@ function synthesizeProfileFromVerifiedDocs(docs) {
     const key = d.document_type || d.document_name || d.name;
     if (key) docMap[key] = d.data || {};
   });
+
+  let verifiedName = docMap['Aadhaar Card']?.name || docMap['PAN Card']?.name || docMap['Voter ID Card']?.name || '';
+  if (!verifiedName) {
+    try {
+      verifiedName = localStorage.getItem('uniora_cached_user_name') || '';
+    } catch {}
+  }
+  profile.userName = verifiedName;
 
   // 1. Age / Date of Birth
   const dobSources = [
@@ -892,13 +1211,14 @@ const VECTOR_ICONS = {
       <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
     </svg>`,
   women: `
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DB2777" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="9" r="6"/>
-      <path d="M12 15v7"/>
-      <path d="M9 19h6"/>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
     </svg>`,
   housing: `
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
       <polyline points="9 22 9 12 15 12 15 22"/>
     </svg>`,
@@ -908,7 +1228,7 @@ const VECTOR_ICONS = {
       <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
     </svg>`,
   solar: `
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="4"/>
       <path d="M12 2v2"/>
       <path d="M12 20v2"/>
@@ -932,8 +1252,17 @@ const VECTOR_ICONS = {
     </svg>`,
   farming: `
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
-      <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>`,
+  farmer: `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
     </svg>`,
   health: `
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -942,6 +1271,24 @@ const VECTOR_ICONS = {
   flame: `
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3z"/>
+    </svg>`,
+  leaf: `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+      <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+    </svg>`,
+  msme: `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="2" width="16" height="20" rx="2"/>
+      <path d="M9 22v-4h6v4"/>
+      <path d="M8 6h.01"/><path d="M16 6h.01"/>
+      <path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/>
+      <path d="M16 10h.01"/><path d="M16 14h.01"/>
+      <path d="M8 10h.01"/><path d="M8 14h.01"/>
+    </svg>`,
+  shield: `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
     </svg>`
 };
 
@@ -951,27 +1298,70 @@ const DEPARTMENTS = [
   "Ministry of Education",
   "Higher Education (Tamil Nadu)",
   "School Education (Tamil Nadu)",
-  "Social Welfare & Women Rights (TN)",
+  "Social Welfare and Women Empowerment (Tamil Nadu)",
   "Ministry of New & Renewable Energy",
-  "Ministry of MSME",
+  "Ministry of Micro, Small and Medium Enterprises",
   "Ministry of Health & Family Welfare",
   "Ministry of Housing & Urban Affairs",
   "Skill Development & Employment (TN)",
   "Backward Classes & Minorities Welfare (TN)",
-  "Rural Development",
-  "Ministry of Petroleum & Natural Gas"
+  "Ministry of Rural Development",
+  "Ministry of Petroleum & Natural Gas",
+  "Ministry of Finance"
 ];
 
-// 6. REAL SCHEMES DATASET
+// 6. REAL SCHEMES DATASET (Finalized 10 Schemes matching Target Design & Pool)
 const RECENT_REAL_SCHEMES = [
   {
     id: 1,
+    name: "Ayushman Bharat PM-JAY",
+    sub: "₹5 lakh cashless health cover per family per year",
+    dept: "Ministry of Health & Family Welfare",
+    level: "Central",
+    applicationMode: "Online",
+    isRecent: false,
+    icon: VECTOR_ICONS.health,
+    iconBg: "#FFF1F2",
+    minAge: 0,
+    maxAge: 100,
+    maxIncome: 250000,
+    genderReq: "All",
+    categoryReq: "All",
+    stateReq: "All",
+    occReq: "All",
+    docs: ["Ration Card", "Identity Card"],
+    desc: "Provides ₹5 lakh cashless health cover per family per year for eligible beneficiaries, ensuring access to quality healthcare services across India."
+  },
+  {
+    id: 2,
+    name: "PM Ujjwala Yojana (Ujjwala 2.0)",
+    sub: "Providing clean cooking fuel access to rural and deprived households",
+    dept: "Ministry of Petroleum & Natural Gas",
+    level: "Tamil Nadu",
+    applicationMode: "Offline",
+    isRecent: false,
+    icon: VECTOR_ICONS.leaf,
+    iconBg: "#F0FDF4",
+    minAge: 18,
+    maxAge: 70,
+    maxIncome: 200000,
+    genderReq: "Female",
+    categoryReq: "All",
+    stateReq: "Tamil Nadu",
+    occReq: "All",
+    docs: ["Ration Card", "Identity Card", "Bank Passbook"],
+    desc: "Providing clean cooking fuel access to rural and deprived households without upfront connection charges."
+  },
+  {
+    id: 3,
     name: "Tamil Pudhalvan Scheme",
     sub: "₹1,000 monthly education stipend for male students",
     dept: "Higher Education (Tamil Nadu)",
     level: "Tamil Nadu",
+    applicationMode: "Online",
     isRecent: true,
     icon: VECTOR_ICONS.graduation,
+    iconBg: "#EFF6FF",
     minAge: 17,
     maxAge: 25,
     maxIncome: 300000,
@@ -980,16 +1370,18 @@ const RECENT_REAL_SCHEMES = [
     stateReq: "Tamil Nadu",
     occReq: "Student",
     docs: ["Government School 6-12th Bonafide", "College Admission Proof", "Bank Passbook"],
-    desc: "Provides ₹1,000/month direct bank transfer to boys who studied in TN Government Schools (6th-12th) and are pursuing higher education."
+    desc: "Provides ₹1,000 monthly education stipend for male students pursuing higher education in Tamil Nadu to support their academic dreams."
   },
   {
-    id: 2,
+    id: 4,
     name: "Pudhumai Penn Scheme (Moovalur Ramamirtham)",
-    sub: "₹1,000 monthly higher education assistance for girl students",
-    dept: "Social Welfare & Women Rights (TN)",
+    sub: "Financial assistance of ₹1,000/month for girl students",
+    dept: "Social Welfare and Women Empowerment (Tamil Nadu)",
     level: "Tamil Nadu",
+    applicationMode: "Online",
     isRecent: true,
     icon: VECTOR_ICONS.women,
+    iconBg: "#FAF5FF",
     minAge: 17,
     maxAge: 26,
     maxIncome: 350000,
@@ -1001,85 +1393,15 @@ const RECENT_REAL_SCHEMES = [
     desc: "Financial assistance of ₹1,000/month for girl students from government schools pursuing degree or diploma courses."
   },
   {
-    id: 3,
-    name: "Naan Mudhalvan Scheme",
-    sub: "Industry-aligned skill development and job placement program",
-    dept: "Skill Development & Employment (TN)",
-    level: "Tamil Nadu",
-    isRecent: true,
-    icon: VECTOR_ICONS.rocket,
-    minAge: 17,
-    maxAge: 29,
-    maxIncome: 1000000,
-    genderReq: "All",
-    categoryReq: "All",
-    stateReq: "Tamil Nadu",
-    occReq: "Student",
-    docs: ["College Bonafide Certificate", "Identity Card", "Resume/Bio-data"],
-    desc: "Comprehensive platform offering free technical training, language skills, and industry placement tracks across colleges."
-  },
-  {
-    id: 4,
-    name: "Kalaignar Magalir Urimai Thogai",
-    sub: "₹1,000/month basic income entitlement for female family heads",
-    dept: "Social Welfare & Women Rights (TN)",
-    level: "Tamil Nadu",
-    isRecent: true,
-    icon: VECTOR_ICONS.women,
-    minAge: 21,
-    maxAge: 65,
-    maxIncome: 250000,
-    genderReq: "Female",
-    categoryReq: "All",
-    stateReq: "Tamil Nadu",
-    occReq: "All",
-    docs: ["Smart Family Ration Card", "Electricity Bill", "Identity Card", "Bank Passbook"],
-    desc: "Monthly financial entitlement of ₹1,000 to eligible women heads of households meeting economic criteria."
-  },
-  {
     id: 5,
-    name: "Kalaignar Kanavu Illam",
-    sub: "Reconstruction and building of safe concrete houses in rural TN",
-    dept: "Rural Development",
-    level: "Tamil Nadu",
-    isRecent: true,
-    icon: VECTOR_ICONS.housing,
-    minAge: 21,
-    maxAge: 75,
-    maxIncome: 200000,
-    genderReq: "All",
-    categoryReq: "All",
-    stateReq: "Tamil Nadu",
-    occReq: "All",
-    docs: ["Patta / Land Record", "Income Certificate", "Ration Card"],
-    desc: "State housing program providing unit subsidies to transform huts and katcha houses into permanent concrete homes."
-  },
-  {
-    id: 6,
-    name: "Post-Matric Scholarship for BC / MBC Students",
-    sub: "Government tuition & maintenance grant for college study",
-    dept: "Backward Classes & Minorities Welfare (TN)",
-    level: "Tamil Nadu",
-    isRecent: false,
-    icon: VECTOR_ICONS.scholarship,
-    minAge: 17,
-    maxAge: 30,
-    maxIncome: 250000,
-    genderReq: "All",
-    categoryReq: "OBC",
-    stateReq: "Tamil Nadu",
-    occReq: "Student",
-    docs: ["Community Certificate", "Income Certificate", "Attendance & College Bonafide"],
-    desc: "Full tuition waiver and maintenance allowances for eligible BC/MBC students in recognized colleges."
-  },
-  {
-    id: 7,
     name: "PM Surya Ghar: Muft Bijli Yojana",
-    sub: "Up to 300 units free monthly solar electricity for homes",
+    sub: "Free solar electricity for homes up to 300 units",
     dept: "Ministry of New & Renewable Energy",
     level: "Central",
+    applicationMode: "Offline",
     isRecent: true,
     icon: VECTOR_ICONS.solar,
+    iconBg: "#FFFBEB",
     minAge: 18,
     maxAge: 85,
     maxIncome: 600000,
@@ -1088,16 +1410,18 @@ const RECENT_REAL_SCHEMES = [
     stateReq: "All",
     occReq: "All",
     docs: ["Electricity Consumer Bill", "House Ownership Document", "Identity Card"],
-    desc: "Direct capital subsidy of up to ₹78,000 for installing rooftop solar panels on residential houses."
+    desc: "Provides financial assistance to install rooftop solar panels in residential households. Eligible households can get up to 300 units of free electricity every month."
   },
   {
-    id: 8,
-    name: "PM Vishwakarma Scheme",
-    sub: "End-to-end support for traditional artisans & craftspeople",
-    dept: "Ministry of MSME",
+    id: 6,
+    name: "PM Vishwakarma Yojana",
+    sub: "Financial and skill support to traditional artisans and craftspeople",
+    dept: "Ministry of Micro, Small and Medium Enterprises",
     level: "Central",
+    applicationMode: "Online",
     isRecent: true,
-    icon: VECTOR_ICONS.tools,
+    icon: VECTOR_ICONS.msme,
+    iconBg: "#FDF2F8",
     minAge: 18,
     maxAge: 70,
     maxIncome: 300000,
@@ -1106,16 +1430,98 @@ const RECENT_REAL_SCHEMES = [
     stateReq: "All",
     occReq: "Daily Wage / Artisan",
     docs: ["Trade Identity Proof", "Skill Verification Certificate", "Identity Card"],
-    desc: "Collateral-free enterprise credit up to ₹3 Lakh at 5% interest plus ₹15,000 free modern toolkit incentive."
+    desc: "Provides financial and skill support to traditional artisans and craftspeople. Helps in skill upgradation, toolkits, credit support and market linkages."
+  },
+  {
+    id: 7,
+    name: "Naan Mudhalvan Scheme",
+    sub: "Industry-aligned skill development and job placement program",
+    dept: "Skill Development & Employment (TN)",
+    level: "Tamil Nadu",
+    applicationMode: "Online",
+    isRecent: true,
+    icon: VECTOR_ICONS.leaf,
+    iconBg: "#F0FDF4",
+    minAge: 17,
+    maxAge: 29,
+    maxIncome: 1000000,
+    genderReq: "All",
+    categoryReq: "All",
+    stateReq: "Tamil Nadu",
+    occReq: "Student",
+    docs: ["College Bonafide Certificate", "Identity Card", "Resume/Bio-data"],
+    desc: "Industry-aligned skill development and job placement program for youth in Tamil Nadu. Helps students gain skills, certifications and employment opportunities."
+  },
+  {
+    id: 8,
+    name: "Pradhan Mantri Awas Yojana (Gramin)",
+    sub: "Financial assistance for construction of pucca houses",
+    dept: "Ministry of Rural Development",
+    level: "Central",
+    applicationMode: "Offline",
+    isRecent: false,
+    icon: VECTOR_ICONS.housing,
+    iconBg: "#FFF1F2",
+    minAge: 21,
+    maxAge: 75,
+    maxIncome: 200000,
+    genderReq: "All",
+    categoryReq: "All",
+    stateReq: "All",
+    occReq: "All",
+    docs: ["Patta / Land Record", "Income Certificate", "Ration Card"],
+    desc: "Provides financial assistance for construction of pucca houses in rural areas, ensuring a safe and secure living environment for eligible households."
   },
   {
     id: 9,
+    name: "PM Kisan Samman Nidhi",
+    sub: "Income support of ₹6,000 per year to eligible farmer families",
+    dept: "Ministry of Agriculture & Farmers Welfare",
+    level: "Central",
+    applicationMode: "Online",
+    isRecent: false,
+    icon: VECTOR_ICONS.farmer,
+    iconBg: "#F0FDF4",
+    minAge: 18,
+    maxAge: 80,
+    maxIncome: 500000,
+    genderReq: "All",
+    categoryReq: "All",
+    stateReq: "All",
+    occReq: "Farmer",
+    docs: ["Patta / Chitta Land Record", "Identity Card", "Bank Passbook"],
+    desc: "Provides income support of ₹6,000 per year to eligible farmer families in three equal installments."
+  },
+  {
+    id: 10,
+    name: "Atal Pension Yojana",
+    sub: "Pension scheme for unorganized sector workers",
+    dept: "Ministry of Finance",
+    level: "Central",
+    applicationMode: "Offline",
+    isRecent: false,
+    icon: VECTOR_ICONS.shield,
+    iconBg: "#EFF6FF",
+    minAge: 18,
+    maxAge: 40,
+    maxIncome: 400000,
+    genderReq: "All",
+    categoryReq: "All",
+    stateReq: "All",
+    occReq: "All",
+    docs: ["Bank Account Details", "Aadhaar Card"],
+    desc: "A pension scheme for unorganized sector workers, providing a guaranteed pension after 60 years of age."
+  },
+  {
+    id: 11,
     name: "Prime Minister's Internship Scheme (PMIS)",
     sub: "Provides internship opportunities to youth in various government organisations and private companies.",
     dept: "Skill Development & Entrepreneurship",
     level: "Central",
+    applicationMode: "Online",
     isRecent: true,
     icon: VECTOR_ICONS.briefcase,
+    iconBg: "#FEF9C3",
     minAge: 21,
     maxAge: 24,
     maxIncome: 800000,
@@ -1127,82 +1533,479 @@ const RECENT_REAL_SCHEMES = [
     desc: "12-month internship opportunities in leading enterprises with ₹5,000 monthly stipend plus ₹6,000 one-time grant. Aims to provide industry exposure and skill development for young professionals."
   },
   {
-    id: 10,
-    name: "PM Kisan Samman Nidhi",
-    sub: "Annual ₹6,000 direct income support for farmers",
-    dept: "Agriculture & Farmers Welfare",
-    level: "Central",
-    isRecent: false,
-    icon: VECTOR_ICONS.farming,
-    minAge: 18,
-    maxAge: 80,
-    maxIncome: 500000,
-    genderReq: "All",
-    categoryReq: "All",
-    stateReq: "All",
-    occReq: "Farmer",
-    docs: ["Patta / Chitta Land Record", "Identity Card", "Bank Passbook"],
-    desc: "Income supplement of ₹6,000 per year in 3 equal four-monthly installments directly into bank accounts."
-  },
-  {
-    id: 11,
-    name: "Ayushman Bharat PM-JAY",
-    sub: "₹5 Lakh cashless health cover per family per year",
-    dept: "Ministry of Health & Family Welfare",
-    level: "Central",
-    isRecent: false,
-    icon: VECTOR_ICONS.health,
-    minAge: 0,
-    maxAge: 100,
-    maxIncome: 250000,
-    genderReq: "All",
-    categoryReq: "All",
-    stateReq: "All",
-    occReq: "All",
-    docs: ["Ration Card", "Identity Card"],
-    desc: "World's largest government-funded healthcare scheme covering secondary and tertiary hospitalizations."
-  },
-  {
     id: 12,
-    name: "PM Ujjwala Yojana (Ujjwala 2.0)",
-    sub: "Deposit-free LPG connection with free first cylinder and stove",
-    dept: "Ministry of Petroleum & Natural Gas",
-    level: "Central",
-    isRecent: false,
-    icon: VECTOR_ICONS.flame,
-    minAge: 18,
-    maxAge: 70,
-    maxIncome: 200000,
+    name: "Kalaignar Magalir Urimai Thogai",
+    sub: "₹1,000/month basic income entitlement for female family heads",
+    dept: "Social Welfare and Women Empowerment (Tamil Nadu)",
+    level: "Tamil Nadu",
+    applicationMode: "Offline",
+    isRecent: true,
+    icon: VECTOR_ICONS.women,
+    iconBg: "#FAF5FF",
+    minAge: 21,
+    maxAge: 65,
+    maxIncome: 250000,
     genderReq: "Female",
     categoryReq: "All",
-    stateReq: "All",
+    stateReq: "Tamil Nadu",
     occReq: "All",
-    docs: ["Ration Card", "Identity Card", "Bank Passbook"],
-    desc: "Providing clean cooking fuel access to rural and deprived households without upfront connection charges."
+    docs: ["Smart Family Ration Card", "Electricity Bill", "Identity Card", "Bank Passbook"],
+    desc: "Monthly financial entitlement of ₹1,000 to eligible women heads of households meeting economic criteria."
+  },
+  {
+    id: 13,
+    name: "Kalaignar Kanavu Illam",
+    sub: "Reconstruction and building of safe concrete houses in rural TN",
+    dept: "Ministry of Rural Development",
+    level: "Tamil Nadu",
+    applicationMode: "Offline",
+    isRecent: true,
+    icon: VECTOR_ICONS.housing,
+    iconBg: "#FFF1F2",
+    minAge: 21,
+    maxAge: 75,
+    maxIncome: 200000,
+    genderReq: "All",
+    categoryReq: "All",
+    stateReq: "Tamil Nadu",
+    occReq: "All",
+    docs: ["Patta / Land Record", "Income Certificate", "Ration Card"],
+    desc: "State housing program providing unit subsidies to transform huts and katcha houses into permanent concrete homes."
+  },
+  {
+    id: 14,
+    name: "Post-Matric Scholarship for BC / MBC Students",
+    sub: "Government tuition & maintenance grant for college study",
+    dept: "Backward Classes & Minorities Welfare (TN)",
+    level: "Tamil Nadu",
+    applicationMode: "Online",
+    isRecent: false,
+    icon: VECTOR_ICONS.scholarship,
+    iconBg: "#F0FDF4",
+    minAge: 17,
+    maxAge: 30,
+    maxIncome: 250000,
+    genderReq: "All",
+    categoryReq: "OBC",
+    stateReq: "Tamil Nadu",
+    occReq: "Student",
+    docs: ["Community Certificate", "Income Certificate", "Attendance & College Bonafide"],
+    desc: "Full tuition waiver and maintenance allowances for eligible BC/MBC students in recognized colleges."
   }
 ];
 
-// 7. SCALE TO 500-SCHEME POOL
-const ALL_SCHEMES = [];
+// 7. FALLBACK REAL SCHEMES POOL & INDEXEDDB CACHING SYSTEM
+function generateFallbackSchemes() {
+  const list = [];
+  for (let i = 1; i <= 500; i++) {
+    const seed = RECENT_REAL_SCHEMES[(i - 1) % RECENT_REAL_SCHEMES.length];
+    const isPMIS = seed.name.includes("PMIS");
+    const dept = (isPMIS || i <= RECENT_REAL_SCHEMES.length) ? seed.dept : DEPARTMENTS[i % DEPARTMENTS.length];
+    const suffix = i > RECENT_REAL_SCHEMES.length ? ` Phase ${Math.floor(i / 14) + 1}` : "";
 
-for (let i = 1; i <= 500; i++) {
-  const seed = RECENT_REAL_SCHEMES[(i - 1) % RECENT_REAL_SCHEMES.length];
-  const isPMIS = seed.id === 9;
-  const dept = isPMIS ? seed.dept : DEPARTMENTS[i % DEPARTMENTS.length];
-  const suffix = i > RECENT_REAL_SCHEMES.length ? ` Phase ${Math.floor(i / 12) + 1}` : "";
+    const assignedLevel = (i <= RECENT_REAL_SCHEMES.length)
+      ? seed.level
+      : (isPMIS ? "Central" : ((seed.level === "Tamil Nadu" || i % 2 === 0) ? "Tamil Nadu" : "Central"));
+    const assignedStateReq = assignedLevel === "Tamil Nadu" ? "Tamil Nadu" : "All";
+    const assignedAppMode = seed.applicationMode || (i % 2 === 0 ? "Offline" : "Online");
+    const assignedIconBg = seed.iconBg || (assignedLevel === "Tamil Nadu" ? "#F0FDF4" : "#EFF6FF");
 
-  const assignedLevel = isPMIS ? "Central" : ((seed.level === "Tamil Nadu" || i % 2 === 0) ? "Tamil Nadu" : "Central");
-  const assignedStateReq = assignedLevel === "Tamil Nadu" ? "Tamil Nadu" : "All";
+    list.push({
+      ...seed,
+      id: i,
+      name: `${seed.name}${suffix}`,
+      dept: dept,
+      level: assignedLevel,
+      applicationMode: assignedAppMode,
+      iconBg: assignedIconBg,
+      stateReq: isPMIS ? "All" : assignedStateReq,
+      isRecent: seed.isRecent && i <= 50
+    });
+  }
+  return list;
+}
 
-  ALL_SCHEMES.push({
-    ...seed,
-    id: i,
-    name: `${seed.name}${suffix}`,
-    dept: (isPMIS || i <= RECENT_REAL_SCHEMES.length) ? seed.dept : dept,
-    level: assignedLevel,
-    stateReq: isPMIS ? "All" : assignedStateReq,
-    isRecent: seed.isRecent && i <= 50
+const FALLBACK_REAL_SCHEMES = generateFallbackSchemes();
+let ALL_SCHEMES = [...FALLBACK_REAL_SCHEMES];
+let currentDataSource = "fallback"; // "live" | "indexeddb" | "fallback"
+let currentCacheMeta = null;
+
+// =========================================================================
+// INDEXEDDB DATABASE MANAGER (SchemeDB)
+// =========================================================================
+const DB_NAME = "SchemeDB";
+const DB_VERSION = 1;
+const STORE_SCHEMES = "schemes";
+const STORE_META = "metadata";
+
+function openSchemeDB() {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined" || !window.indexedDB) {
+      console.warn("[SchemeDB] IndexedDB is not supported in this environment.");
+      return resolve(null);
+    }
+    try {
+      const request = window.indexedDB.open(DB_NAME, DB_VERSION);
+      request.onupgradeneeded = function (e) {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE_SCHEMES)) {
+          db.createObjectStore(STORE_SCHEMES, { keyPath: "id" });
+        }
+        if (!db.objectStoreNames.contains(STORE_META)) {
+          db.createObjectStore(STORE_META, { keyPath: "key" });
+        }
+      };
+      request.onsuccess = function (e) {
+        resolve(e.target.result);
+      };
+      request.onerror = function (e) {
+        console.warn("[SchemeDB] Failed to open IndexedDB:", e.target?.error);
+        resolve(null);
+      };
+    } catch (err) {
+      console.warn("[SchemeDB] Exception opening IndexedDB:", err);
+      resolve(null);
+    }
   });
+}
+
+function getCachedSchemesFromDB() {
+  return new Promise(async (resolve) => {
+    try {
+      const db = await openSchemeDB();
+      if (!db) return resolve({ schemes: null, meta: null });
+
+      const tx = db.transaction([STORE_SCHEMES, STORE_META], "readonly");
+      const schemesStore = tx.objectStore(STORE_SCHEMES);
+      const metaStore = tx.objectStore(STORE_META);
+
+      const schemesReq = schemesStore.getAll();
+      const metaReq = metaStore.get("dataset_meta");
+
+      tx.oncomplete = function () {
+        const schemes = (schemesReq.result && schemesReq.result.length > 0) ? schemesReq.result : null;
+        const meta = metaReq.result || null;
+        resolve({ schemes, meta });
+      };
+
+      tx.onerror = function () {
+        resolve({ schemes: null, meta: null });
+      };
+    } catch (err) {
+      console.warn("[SchemeDB] Error reading cache:", err);
+      resolve({ schemes: null, meta: null });
+    }
+  });
+}
+
+function saveSchemesToDB(schemes, meta = {}) {
+  return new Promise(async (resolve) => {
+    try {
+      const db = await openSchemeDB();
+      if (!db) return resolve(null);
+
+      const tx = db.transaction([STORE_SCHEMES, STORE_META], "readwrite");
+      const schemesStore = tx.objectStore(STORE_SCHEMES);
+      const metaStore = tx.objectStore(STORE_META);
+
+      schemesStore.clear();
+      schemes.forEach(s => schemesStore.put(s));
+
+      const metaRecord = {
+        key: "dataset_meta",
+        cachedAt: meta.cachedAt || new Date().toISOString(),
+        recordCount: schemes.length,
+        source: meta.source || "GoogleSheet",
+        version: meta.version || 1
+      };
+      metaStore.put(metaRecord);
+
+      tx.oncomplete = function () {
+        resolve(metaRecord);
+      };
+      tx.onerror = function (e) {
+        console.warn("[SchemeDB] Error saving schemes to DB:", e.target?.error);
+        resolve(null);
+      };
+    } catch (err) {
+      console.warn("[SchemeDB] Exception saving to DB:", err);
+      resolve(null);
+    }
+  });
+}
+
+// =========================================================================
+// GOOGLE SHEET CSV FETCHER & NORMALIZER
+// =========================================================================
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1MTWk1hOKSt3ZEl-mPiQAYZzmpRg3HgLD5BYA3M5VhXI/gviz/tq?tqx=out:csv&gid=1493062875";
+
+function parseCSV(text) {
+  const rows = [];
+  let currentRow = [];
+  let currentVal = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+
+    if (inQuotes) {
+      if (char === '"' && nextChar === '"') {
+        currentVal += '"';
+        i++;
+      } else if (char === '"') {
+        inQuotes = false;
+      } else {
+        currentVal += char;
+      }
+    } else {
+      if (char === '"') {
+        inQuotes = true;
+      } else if (char === ',') {
+        currentRow.push(currentVal.trim());
+        currentVal = '';
+      } else if (char === '\r') {
+        if (nextChar === '\n') i++;
+        currentRow.push(currentVal.trim());
+        if (currentRow.some(c => c !== '')) rows.push(currentRow);
+        currentRow = [];
+        currentVal = '';
+      } else if (char === '\n') {
+        currentRow.push(currentVal.trim());
+        if (currentRow.some(c => c !== '')) rows.push(currentRow);
+        currentRow = [];
+        currentVal = '';
+      } else {
+        currentVal += char;
+      }
+    }
+  }
+
+  if (currentVal || currentRow.length > 0) {
+    currentRow.push(currentVal.trim());
+    if (currentRow.some(c => c !== '')) rows.push(currentRow);
+  }
+
+  return rows;
+}
+
+function pickSchemeVectorIcon(scheme) {
+  const text = `${scheme.name || ""} ${scheme.dept || ""} ${scheme.desc || ""} ${scheme.sector_category || ""}`.toLowerCase();
+  if (text.includes("solar") || text.includes("electricity") || text.includes("energy") || text.includes("power") || text.includes("bijli")) {
+    return { icon: VECTOR_ICONS.solar, bg: "#FFFBEB" };
+  }
+  if (text.includes("health") || text.includes("medical") || text.includes("hospital") || text.includes("ayushman") || text.includes("swasthya") || text.includes("disease")) {
+    return { icon: VECTOR_ICONS.health, bg: "#FFF1F2" };
+  }
+  if (text.includes("farm") || text.includes("kisan") || text.includes("agri") || text.includes("crop") || text.includes("soil")) {
+    return { icon: VECTOR_ICONS.farming || VECTOR_ICONS.leaf, bg: "#F0FDF4" };
+  }
+  if (text.includes("education") || text.includes("scholarship") || text.includes("student") || text.includes("school") || text.includes("college") || text.includes("vidya") || text.includes("pudhalvan") || text.includes("learning")) {
+    return { icon: VECTOR_ICONS.graduation || VECTOR_ICONS.scholarship, bg: "#EFF6FF" };
+  }
+  if (text.includes("house") || text.includes("awas") || text.includes("shelter") || text.includes("home")) {
+    return { icon: VECTOR_ICONS.housing, bg: "#FFF1F2" };
+  }
+  if (text.includes("msme") || text.includes("artisan") || text.includes("vishwakarma") || text.includes("craft") || text.includes("skill") || text.includes("training") || text.includes("mudhalvan")) {
+    return { icon: VECTOR_ICONS.tools || VECTOR_ICONS.msme || VECTOR_ICONS.briefcase, bg: "#FDF2F8" };
+  }
+  if (text.includes("business") || text.includes("entrepreneur") || text.includes("loan") || text.includes("credit") || text.includes("finance") || text.includes("industry")) {
+    return { icon: VECTOR_ICONS.briefcase, bg: "#FEF3C7" };
+  }
+  if (text.includes("women") || text.includes("woman") || text.includes("girl") || text.includes("mahila") || text.includes("maternity") || text.includes("child")) {
+    return { icon: VECTOR_ICONS.leaf, bg: "#F0FDF4" };
+  }
+  return {
+    icon: scheme.level === "Tamil Nadu" ? (VECTOR_ICONS.leaf || VECTOR_ICONS.graduation) : VECTOR_ICONS.briefcase,
+    bg: scheme.level === "Tamil Nadu" ? "#F0FDF4" : "#EFF6FF"
+  };
+}
+
+function mapGoogleSheetScheme(raw, index) {
+  const schemeName = (raw.scheme_name || raw.name || `Scheme ${index + 1}`).trim();
+  const schemeId = (raw.scheme_id || raw.id || `GS-${index + 1}`).trim();
+  const rawCategory = (raw.category_type || raw.category || "").trim();
+  const rawDept = (raw.issuing_department || raw.department || "Government Department").trim();
+  const rawState = (raw.eligibility_state || raw.state || "All").trim();
+
+  let level = "Central";
+  if (
+    rawCategory.toLowerCase().includes("tamil") ||
+    rawDept.toLowerCase().includes("tamil") ||
+    rawState.toLowerCase().includes("tamil") ||
+    schemeName.toLowerCase().includes("tamil") ||
+    schemeName.toLowerCase().includes("pudhalvan")
+  ) {
+    level = "Tamil Nadu";
+  } else if (rawCategory.toLowerCase().includes("state")) {
+    level = (rawState && rawState !== "All") ? rawState : "State";
+  }
+
+  let docs = [];
+  const rawDocs = raw.required_documents || raw.mandatory_documents || "";
+  if (rawDocs) {
+    docs = rawDocs.split(/[;,|]/).map(d => d.trim()).filter(Boolean);
+  }
+  if (docs.length === 0) {
+    docs = ["Aadhaar Card", "Bank Account Details", "Income Certificate"];
+  }
+
+  const iconInfo = pickSchemeVectorIcon({
+    name: schemeName,
+    dept: rawDept,
+    desc: raw.description || raw.short_description || "",
+    sector_category: raw.sector_category || "",
+    level: level
+  });
+
+  const rawMode = (raw.application_mode || raw.mode || "").trim();
+  const applicationMode = rawMode || (index % 2 === 0 ? "Online" : "Offline");
+
+  const minAge = raw.min_age ? parseNumeric(raw.min_age) : null;
+  const maxAge = raw.max_age ? parseNumeric(raw.max_age) : null;
+  const maxIncome = raw.income_limit_annual ? parseNumeric(raw.income_limit_annual) : null;
+
+  const desc = (raw.description || raw.short_description || raw.benefits || "Government welfare assistance program for eligible citizens.").trim();
+  const sub = (raw.benefits || raw.short_description || raw.description || "Government welfare assistance program.").trim();
+
+  const officialUrl = (raw.official_source_url || raw.application_url || "https://www.india.gov.in/").trim();
+
+  return {
+    id: schemeId,
+    scheme_id: schemeId,
+    name: schemeName,
+    scheme_name: schemeName,
+    dept: rawDept,
+    issuing_department: rawDept,
+    level: level,
+    category_type: level,
+    applicationMode: applicationMode,
+    application_mode: applicationMode,
+    minAge: minAge,
+    min_age: minAge,
+    maxAge: maxAge,
+    max_age: maxAge,
+    maxIncome: maxIncome,
+    income_limit_annual: maxIncome,
+    genderReq: raw.gender || "All",
+    gender: raw.gender || "All",
+    categoryReq: raw.social_category || "All",
+    social_category: raw.social_category || "All",
+    stateReq: rawState || "All",
+    eligibility_state: rawState || "All",
+    occReq: raw.occupation_criteria || "All",
+    occupation_criteria: raw.occupation_criteria || "All",
+    residencyReq: raw.residency_requirement || "Resident of India",
+    residency_requirement: raw.residency_requirement || "Resident of India",
+    otherConditions: raw.other_conditions || "",
+    other_conditions: raw.other_conditions || "",
+    desc: desc,
+    description: desc,
+    sub: sub,
+    benefits: raw.benefits || "",
+    docs: docs,
+    required_documents: docs,
+    mandatory_documents: raw.mandatory_documents || "",
+    officialUrl: officialUrl,
+    official_source_url: officialUrl,
+    icon: iconInfo.icon,
+    iconBg: iconInfo.bg,
+    isRecent: false
+  };
+}
+
+async function fetchSchemesFromGoogleSheet() {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+  try {
+    const res = await fetch(GOOGLE_SHEET_CSV_URL, {
+      signal: controller.signal,
+      cache: "no-store"
+    });
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      throw new Error(`Google Sheet HTTP error: ${res.status} ${res.statusText}`);
+    }
+
+    const csvText = await res.text();
+    if (!csvText || csvText.trim().length === 0) {
+      throw new Error("Received empty CSV from Google Sheet");
+    }
+
+    const rows = parseCSV(csvText);
+    if (!rows || rows.length < 2) {
+      throw new Error("Google Sheet returned fewer than 2 rows");
+    }
+
+    const headers = rows[0].map(h => h.trim().toLowerCase());
+    const schemes = [];
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || row.length === 0 || row.every(c => !c)) continue;
+      const raw = {};
+      headers.forEach((h, idx) => {
+        if (h) raw[h] = row[idx] || '';
+      });
+
+      const rawName = (raw.scheme_name || raw.name || "").trim();
+      const rawId = (raw.scheme_id || raw.id || "").trim();
+
+      // Skip rows with missing scheme name, missing ID, or markdown junk rows (e.g. trailing ``` rows)
+      if (!rawName || !rawId || rawName.startsWith("```") || rawId.startsWith("```")) continue;
+
+      const mapped = mapGoogleSheetScheme(raw, i - 1);
+      schemes.push(mapped);
+    }
+
+    return schemes;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    console.warn("[UNIORA] Failed to fetch Google Sheet scheme data:", err.message);
+    throw err;
+  }
+}
+
+function validateSchemeDataset(newSchemes, existingMeta) {
+  if (!Array.isArray(newSchemes) || newSchemes.length < 15) {
+    console.warn(`[SchemeDB Validation] Failed: dataset has only ${newSchemes ? newSchemes.length : 0} items (minimum 15 required).`);
+    return { valid: false, reason: "Too few schemes in response" };
+  }
+
+  const sample = newSchemes.slice(0, 10);
+  const validSample = sample.every(s => (s.name || s.scheme_name) && (s.dept || s.issuing_department));
+  if (!validSample) {
+    console.warn("[SchemeDB Validation] Failed: critical fields (name, dept) missing in dataset.");
+    return { valid: false, reason: "Missing required fields" };
+  }
+
+  const prevCount = existingMeta?.recordCount || (ALL_SCHEMES ? ALL_SCHEMES.length : 0);
+  if (prevCount >= 50 && newSchemes.length < (prevCount * 0.5)) {
+    console.warn(`[SchemeDB Validation] Failed: catastrophic reduction from ${prevCount} to ${newSchemes.length} items.`);
+    return { valid: false, reason: "Severe data reduction detected" };
+  }
+
+  return { valid: true };
+}
+
+function formatCacheDate(dateInput) {
+  if (!dateInput) return "";
+  try {
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true
+    });
+  } catch (e) {
+    return "";
+  }
 }
 
 // 8. DETERMINISTIC RULE-BASED MATCH ENGINE
@@ -1514,6 +2317,7 @@ async function initFeature() {
 
   const resultsTableTitle = document.getElementById("resultsTableTitle");
   const resultsShowingCount = document.getElementById("resultsShowingCount");
+  const schemesCardsContainer = document.getElementById("schemesCardsContainer");
   const schemesTableHead = document.getElementById("schemesTableHead");
   const schemesTableBody = document.getElementById("schemesTableBody");
   const emptyState = document.getElementById("emptyState");
@@ -1551,6 +2355,16 @@ async function initFeature() {
   const verifiedDocsBanner = document.getElementById("verifiedDocsBanner");
   const verifiedDocsBannerText = document.getElementById("verifiedDocsBannerText");
   const verifiedBannerIcon = document.getElementById("verifiedBannerIcon");
+
+  // Data Source Status Elements
+  const dataSourceStatusBar = document.getElementById("dataSourceStatusBar");
+  const dataStatusPill = document.getElementById("dataStatusPill");
+  const dataStatusLabel = document.getElementById("dataStatusLabel");
+  const dataStatusTimestamp = document.getElementById("dataStatusTimestamp");
+  const btnDataRetry = document.getElementById("btnDataRetry");
+  const dataStatusToast = document.getElementById("dataStatusToast");
+  const dataStatusToastIcon = document.getElementById("dataStatusToastIcon");
+  const dataStatusToastMsg = document.getElementById("dataStatusToastMsg");
 
   // Modals
   const editModal = document.getElementById("editModal");
@@ -1722,6 +2536,12 @@ async function initFeature() {
     loadProfileFromSession();
   }
 
+  if (guestProfile && !guestProfile.userName) {
+    try {
+      guestProfile.userName = localStorage.getItem('uniora_cached_user_name') || '';
+    } catch {}
+  }
+
   function getEligibleSchemes() {
     if (!guestProfile.isFilled) return [];
     return ALL_SCHEMES.filter(s => checkEligibility(s, guestProfile).eligible);
@@ -1752,8 +2572,9 @@ async function initFeature() {
   }
 
   function renderTableHeader() {
-    let html = "";
     const tableEl = document.getElementById("schemesTable");
+    if (!tableEl || !schemesTableHead) return;
+    let html = "";
 
     if (currentTab === "ALL") {
       tableEl.classList.remove("is-filter-mode");
@@ -1823,7 +2644,8 @@ async function initFeature() {
     }
 
     if (totalItems === 0) {
-      schemesTableBody.innerHTML = "";
+      if (schemesCardsContainer) schemesCardsContainer.innerHTML = "";
+      if (schemesTableBody) schemesTableBody.innerHTML = "";
       emptyState.style.display = "block";
       paginationFooter.style.display = "none";
       resultsShowingCount.textContent = "Showing 0 of 0 schemes";
@@ -1887,95 +2709,69 @@ async function initFeature() {
 
     resultsShowingCount.textContent = `Showing ${startIndex + 1} – ${endIndex} of ${totalItems} schemes`;
 
-    let rowsHtml = "";
+    const isEligibleScope = currentTab === "ELIGIBLE" || ((currentTab === "FILTER" || currentTab === "SEARCH") && filterScope === "ELIGIBLE");
+    const btnLabel = isEligibleScope ? "See Details &rarr;" : "Check Eligible &rarr;";
 
-    pageSlice.forEach((scheme, idx) => {
-      const rowNum = startIndex + idx + 1;
-      const isEligible = guestProfile.isFilled && checkEligibility(scheme, guestProfile).eligible;
-      const levelClass = getLevelClass(scheme.level);
-      const recentBadge = scheme.isRecent
-        ? '<span style="background: var(--c-red-light, #FEF2F2); color: #DC2626; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 6px; border: 1px solid #FECACA;">NEW</span>'
-        : "";
+    let cardsHtml = "";
 
-      if (currentTab === "ALL") {
-        rowsHtml += `
-          <tr>
-            <td class="col-idx">${rowNum}</td>
-            <td class="col-name">
-              <div class="scheme-row-item">
-                <div class="scheme-badge-icon">${scheme.icon}</div>
-                <div>
-                  <div class="scheme-name-text">${scheme.name} ${recentBadge}</div>
-                  <div class="scheme-tagline">${scheme.sub}</div>
-                </div>
-              </div>
-            </td>
-            <td class="col-dept">${scheme.dept}</td>
-            <td class="col-level"><span class="level-badge ${levelClass}">${scheme.level}</span></td>
-            <td class="col-action">
-              <button class="btn-check-action" onclick="window.checkSingleScheme(${scheme.id})">
-                Check Eligible 
-              </button>
-            </td>
-          </tr>
-        `;
-      } else if (currentTab === "FILTER") {
-        rowsHtml += `
-          <tr>
-            <td class="col-idx">${rowNum}</td>
-            <td class="col-name">
-              <div class="scheme-row-item">
-                <div class="scheme-badge-icon">${scheme.icon}</div>
-                <div>
-                  <div class="scheme-name-text">${scheme.name} ${recentBadge}</div>
-                  <div class="scheme-tagline">${scheme.sub}</div>
-                </div>
-              </div>
-            </td>
-            <td class="col-level"><span class="level-badge ${levelClass}">${scheme.level}</span></td>
-            <td class="col-status">
-              ${isEligible
-                ? '<span class="status-eligible-pill">✓ Eligible</span>'
-                : '<span class="level-badge" style="background:#F1F5F9; color:#64748B;">Not Evaluated</span>'}
-            </td>
-            <td class="col-action">
-              <button class="btn-view-details" onclick="window.openSchemeDetails(${scheme.id})">
-                See Details
-              </button>
-            </td>
-          </tr>
-        `;
-      } else {
-        rowsHtml += `
-          <tr>
-            <td class="col-idx">${rowNum}</td>
-            <td class="col-name">
-              <div class="scheme-row-item">
-                <div class="scheme-badge-icon">${scheme.icon}</div>
-                <div>
-                  <div class="scheme-name-text">${scheme.name} ${recentBadge}</div>
-                  <div class="scheme-tagline">${scheme.sub}</div>
-                </div>
-              </div>
-            </td>
-            <td class="col-dept">${scheme.dept}</td>
-            <td class="col-level"><span class="level-badge ${levelClass}">${scheme.level}</span></td>
-            <td class="col-status">
-              ${isEligible
-                ? '<span class="status-eligible-pill">✓ Eligible</span>'
-                : '<span class="level-badge" style="background:#F1F5F9; color:#64748B;">Not Evaluated</span>'}
-            </td>
-            <td class="col-action">
-              <button class="btn-view-details" onclick="window.openSchemeDetails(${scheme.id})">
-                See Details
-              </button>
-            </td>
-          </tr>
-        `;
+    pageSlice.forEach((scheme) => {
+      const isTn = (scheme.level && scheme.level.toLowerCase().includes("tamil")) || scheme.stateReq === "Tamil Nadu";
+      const levelClass = isTn ? "level-tn" : "level-central";
+      const levelText = isTn ? "Tamil Nadu" : "Central";
+
+      let appMode = scheme.applicationMode || scheme.application_mode || scheme.mode;
+      if (!appMode) {
+        appMode = (scheme.id % 2 === 0) ? "Offline" : "Online";
       }
+
+      const isOnline = !appMode || appMode.toLowerCase().includes("online");
+      const modeClass = isOnline ? "mode-online" : "mode-offline";
+      const modeIconSvg = isOnline
+        ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`
+        : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; flex-shrink: 0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`;
+
+      const desc = scheme.desc || scheme.sub || "Government welfare assistance program for eligible citizens.";
+      const schemeIcon = scheme.icon || `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`;
+      const iconBg = scheme.iconBg || (isTn ? "#F0FDF4" : "#EFF6FF");
+
+      cardsHtml += `
+        <article class="scheme-card" data-scheme-id="${scheme.id}">
+          <span class="scheme-jurisdiction-badge ${levelClass}">${levelText}</span>
+
+          <div class="scheme-card-header">
+            <div class="scheme-card-icon-box" style="background-color: ${iconBg};" aria-hidden="true">
+              ${schemeIcon}
+            </div>
+            <div class="scheme-card-header-content">
+              <h4 class="scheme-card-title">${escapeHtml(scheme.name)}</h4>
+              <div class="scheme-card-dept">${escapeHtml(scheme.dept)}</div>
+            </div>
+          </div>
+
+          <p class="scheme-card-desc">${escapeHtml(desc)}</p>
+
+          <div class="scheme-card-footer">
+            <div class="scheme-app-mode-wrap">
+              <span class="app-mode-label">Application Mode:</span>
+              <span class="app-mode-pill ${modeClass}">
+                ${modeIconSvg}
+                <span>${escapeHtml(appMode)}</span>
+              </span>
+            </div>
+            <button type="button" class="btn-scheme-action" onclick="window.openSchemeDetails('${escapeHtml(String(scheme.id))}')">
+              ${btnLabel}
+            </button>
+          </div>
+        </article>
+      `;
     });
 
-    schemesTableBody.innerHTML = rowsHtml;
+    if (schemesCardsContainer) {
+      schemesCardsContainer.innerHTML = cardsHtml;
+    }
+    if (schemesTableBody) {
+      schemesTableBody.innerHTML = "";
+    }
     renderPagination(totalItems);
   }
 
@@ -2442,7 +3238,7 @@ async function initFeature() {
 
   window.openSchemeDetails = function (schemeId) {
     syncDrawerOffset();
-    const scheme = ALL_SCHEMES.find(s => s.id === schemeId);
+    const scheme = ALL_SCHEMES.find(s => String(s.id) === String(schemeId) || String(s.scheme_id) === String(schemeId));
     if (!scheme) return;
 
     modalSchemeName.textContent = scheme.name;
@@ -2451,9 +3247,27 @@ async function initFeature() {
     modalSchemeLevel.className = `drawer-level-pill ${getLevelClass(scheme.level)}`;
     modalSchemeDescription.textContent = scheme.desc;
 
-    const modalSchemeSub = document.getElementById("modalSchemeSub");
-    if (modalSchemeSub) {
-      modalSchemeSub.textContent = scheme.sub || scheme.desc;
+    // Populate Application Mode & State meta box
+    const modalDrawerAppMode = document.getElementById("modalDrawerAppMode");
+    const modalDrawerState = document.getElementById("modalDrawerState");
+    if (modalDrawerAppMode) {
+      let appMode = scheme.applicationMode || scheme.application_mode || scheme.mode;
+      if (!appMode) {
+        appMode = (scheme.id % 2 === 0) ? "Offline" : "Online";
+      }
+      modalDrawerAppMode.textContent = appMode;
+    }
+    if (modalDrawerState) {
+      const isTn = (scheme.level === "Tamil Nadu" || scheme.stateReq === "Tamil Nadu" || (scheme.dept && scheme.dept.includes("Tamil Nadu")));
+      let stateDisplay = "All India";
+      if (isTn) {
+        stateDisplay = "Tamil Nadu";
+      } else if (scheme.stateReq && scheme.stateReq !== "All") {
+        stateDisplay = scheme.stateReq;
+      } else if (scheme.level === "Central") {
+        stateDisplay = "All India";
+      }
+      modalDrawerState.textContent = stateDisplay;
     }
 
     // Set the Vector Icon inside the drawer beside the Scheme title
@@ -2482,7 +3296,7 @@ async function initFeature() {
     } else {
       // 2. EVALUATED: Shows complete evaluated details and actions
       notEvaluatedView.style.display = "none";
-      evaluatedSections.style.display = "block";
+      evaluatedSections.style.display = "flex";
       drawerFooterBar.style.display = "flex";
 
       if (currentEligibilityCheck.eligible) {
@@ -2492,7 +3306,7 @@ async function initFeature() {
         modalEligibilityHero.className = "eligibility-hero-banner is-eligible";
         modalStatusIcon.textContent = "✓";
         modalStatusTitle.textContent = "Eligible";
-        modalStatusSubtitle.textContent = "You meet the requirements for this welfare scheme.";
+        modalStatusSubtitle.textContent = "You meet the requirements for this scheme.";
       } else {
         modalStatusPill.textContent = "✕ Not Eligible";
         modalStatusPill.className = "drawer-status-pill ineligible";
@@ -2500,7 +3314,17 @@ async function initFeature() {
         modalEligibilityHero.className = "eligibility-hero-banner is-not-eligible";
         modalStatusIcon.textContent = "✕";
         modalStatusTitle.textContent = "Not Eligible";
-        modalStatusSubtitle.textContent = "You do not meet the qualifications for this scheme.";
+        modalStatusSubtitle.textContent = "You do not meet the eligibility criteria for this scheme.";
+      }
+
+      // Smooth pop/scale animation for result icon and burst rays
+      if (modalStatusIcon) {
+        modalStatusIcon.classList.remove("anim-pop");
+        const burstRays = modalEligibilityHero.querySelector(".eligibility-burst-rays");
+        if (burstRays) burstRays.classList.remove("anim-pop");
+        void modalStatusIcon.offsetWidth; // Force reflow to re-trigger animation
+        modalStatusIcon.classList.add("anim-pop");
+        if (burstRays) burstRays.classList.add("anim-pop");
       }
 
       renderAccordionSummary(currentEligibilityCheck);
@@ -2528,27 +3352,57 @@ async function initFeature() {
 
       let hasMissingDocs = false;
 
+      const DOC_TYPE_CATEGORIES = {
+        "Aadhaar Card": "Identity Proof",
+        "PAN Card": "Identity Proof",
+        "Voter ID": "Identity Proof",
+        "Identity Card": "Identity Proof",
+        "Ration Card": "Address / Family Proof",
+        "Smart Family Ration Card": "Address / Family Proof",
+        "Domicile Certificate": "Residence Proof",
+        "Nativity Certificate": "Residence Proof",
+        "Community Certificate": "Social Category Proof",
+        "Income Certificate": "Financial Proof",
+        "Bank Passbook": "Bank Account Details",
+        "Bank Account Details": "Financial Proof",
+        "10th Mark Sheet": "Educational Proof",
+        "12th Mark Sheet": "Educational Proof",
+        "Degree/Diploma Certificate": "Educational Proof",
+        "Admission Proof": "College/University",
+        "College Admission Proof": "College/University",
+        "College ID Card": "College/University",
+        "Government School 6-12th Bonafide": "School Bonafide",
+        "Govt School Study Certificate (6th-12th)": "School Bonafide",
+        "Attendance & College Bonafide": "College Bonafide",
+        "Electricity Bill": "Address Proof",
+        "Electricity Consumer Bill": "Address Proof",
+        "House Ownership Document": "Property Proof",
+        "Patta / Land Record": "Property Proof"
+      };
+
       modalDocChips.innerHTML = scheme.docs
         .map(d => {
           const isVerified = isDocumentVerified(d, verifiedDocList);
-          if (isVerified) {
-            return `<span class="doc-tag-pill doc-tag-verified">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" style="margin-right: 4px;">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-              <span>${escapeHtml(d)}</span>
-              <span class="doc-verified-badge">✓ Verified in UniOra</span>
-            </span>`;
-          } else {
-            hasMissingDocs = true;
-            return `<span class="doc-tag-pill doc-tag-pending">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" style="margin-right: 4px;">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-              </svg>
-              <span>${escapeHtml(d)}</span>
-            </span>`;
-          }
+          if (!isVerified) hasMissingDocs = true;
+          const categoryName = DOC_TYPE_CATEGORIES[d] || (isVerified ? "Verified in Vault" : "Mandatory Proof");
+          const verifiedClass = isVerified ? "is-doc-verified" : "";
+
+          return `
+            <div class="drawer-doc-card ${verifiedClass}">
+              <div class="drawer-doc-icon-wrap" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+              </div>
+              <div class="drawer-doc-meta">
+                <span class="drawer-doc-title">${escapeHtml(d)}</span>
+                <span class="drawer-doc-subtitle">${escapeHtml(categoryName)}</span>
+              </div>
+            </div>
+          `;
         })
         .join("");
 
@@ -2619,11 +3473,6 @@ async function initFeature() {
   });
 
   function updateProfileUI() {
-    const verifiedBanner = document.getElementById("verifiedDocsBanner");
-    const verifiedDocsBannerText = document.getElementById("verifiedDocsBannerText");
-    const verifiedBannerIcon = document.getElementById("verifiedBannerIcon");
-    const btnBannerEdit = document.getElementById("btnBannerEdit");
-
     function setDemoValue(element, val) {
       if (!element) return;
       if (val !== null && val !== undefined && String(val).trim() !== "" && String(val).trim() !== "--") {
@@ -2635,6 +3484,7 @@ async function initFeature() {
       }
     }
 
+    // 1. Update Title with User Name if available
     const cardTitleText = document.getElementById("cardTitleText");
     if (cardTitleText) {
       if (guestProfile.userName) {
@@ -2644,147 +3494,84 @@ async function initFeature() {
       }
     }
 
-    if (!guestProfile.isFilled && !guestProfile.isPartial) {
-      // 1. NO DOCUMENTS & NO PROFILE ENTERED
-      if (emptyProfileBanner) {
-        emptyProfileBanner.classList.remove("hidden");
-        const emptyText = document.getElementById("emptyProfileText");
-        if (emptyText) {
-          emptyText.textContent = guestProfile.isFromDatabase
-            ? "No citizen profile details found. Please enter your details to check scheme eligibility."
-            : "No verified documents found. Please upload documents in Document Verification or enter your details manually before checking scheme eligibility.";
-        }
-      }
-      if (verifiedBanner) verifiedBanner.style.display = "none";
-      cardBtnText.textContent = "Enter Details";
-
-      valAge.textContent = "--";
-      valGender.textContent = "--";
-      valState.textContent = "--";
-      valDistrict.textContent = "--";
-      valResidence.textContent = "--";
-      valOccupation.textContent = "--";
-      valIncome.textContent = "--";
-      valCategory.textContent = "--";
-      valMarital.textContent = "--";
-      valFamilySize.textContent = "--";
-      valDisability.textContent = "--";
-      valEducation.textContent = "--";
-      valEmployment.textContent = "--";
-      valSpecial.textContent = "--";
-
-      document.querySelectorAll(".demo-row .value").forEach(el => el.classList.add("blank"));
-    } else if (guestProfile.isPartial) {
-      // 2. PARTIAL PROFILE FROM VERIFIED DOCUMENTS OR DATABASE
-      if (emptyProfileBanner) emptyProfileBanner.classList.add("hidden");
-
-      if (verifiedBanner) {
-        verifiedBanner.style.display = "flex";
-        verifiedBanner.classList.add("banner-partial");
-
-        if (verifiedBannerIcon) {
-          verifiedBannerIcon.innerHTML = `
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-          `;
-        }
-
-        const docNames = (guestProfile.verifiedDocTypes || []).slice(0, 3).join(", ");
-        const moreSuffix = (guestProfile.verifiedDocTypes || []).length > 3 ? " etc." : "";
-        const missingStr = (guestProfile.missingFields && guestProfile.missingFields.length > 0)
-          ? guestProfile.missingFields.join(", ")
-          : "essential fields";
-
-        if (verifiedDocsBannerText) {
-          if (guestProfile.isFromDatabase) {
-            verifiedDocsBannerText.innerHTML = `Demographics loaded from your <strong>saved citizen profile</strong>. Missing: <strong style="color: #B45309;">${missingStr}</strong>. Complete these to check scheme eligibility.`;
-          } else {
-            verifiedDocsBannerText.innerHTML = `Demographics partially extracted from <strong>${guestProfile.verifiedDocsCount} verified document(s)</strong> (${docNames}${moreSuffix}). Missing: <strong style="color: #B45309;">${missingStr}</strong>. Complete these to check scheme eligibility.`;
-          }
-        }
-
-        if (btnBannerEdit) {
-          btnBannerEdit.textContent = "Complete Details";
-        }
-      }
-
-      cardBtnText.textContent = "Complete Details";
-
-      setDemoValue(valAge, guestProfile.age);
-      setDemoValue(valGender, guestProfile.gender);
-      setDemoValue(valState, guestProfile.state);
-      setDemoValue(valDistrict, guestProfile.district);
-      setDemoValue(valResidence, guestProfile.residence);
-      setDemoValue(valOccupation, guestProfile.occupation);
-      setDemoValue(valIncome, guestProfile.incomeRange);
-      setDemoValue(valCategory, guestProfile.category);
-      setDemoValue(valMarital, guestProfile.maritalStatus);
-      setDemoValue(valFamilySize, guestProfile.familySize);
-      setDemoValue(valDisability, guestProfile.disability);
-      setDemoValue(valEducation, guestProfile.education);
-      setDemoValue(valEmployment, guestProfile.employment);
-      setDemoValue(valSpecial, guestProfile.special);
-    } else {
-      // 3. COMPLETE PROFILE
-      if (emptyProfileBanner) emptyProfileBanner.classList.add("hidden");
-
-      if (guestProfile.isFromDatabase || (guestProfile.isFromVerifiedDocs && guestProfile.verifiedDocsCount > 0)) {
-        if (verifiedBanner) {
-          verifiedBanner.style.display = "flex";
-          verifiedBanner.classList.remove("banner-partial");
-
-          if (verifiedBannerIcon) {
-            verifiedBannerIcon.innerHTML = `
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            `;
-          }
-
-          const docNames = (guestProfile.verifiedDocTypes || []).slice(0, 3).join(", ");
-          const moreSuffix = (guestProfile.verifiedDocTypes || []).length > 3 ? " etc." : "";
-
-          if (verifiedDocsBannerText) {
-            if (guestProfile.isFromDatabase && guestProfile.verifiedDocsCount > 0) {
-              verifiedDocsBannerText.innerHTML = `Demographics loaded from your <strong>saved citizen profile</strong> &amp; verified with <strong>${guestProfile.verifiedDocsCount} document(s)</strong> (${docNames}${moreSuffix}). Click <strong>Edit Details</strong> to modify.`;
-            } else if (guestProfile.isFromDatabase) {
-              verifiedDocsBannerText.innerHTML = `Demographics loaded from your <strong>saved citizen profile</strong>. Click <strong>Edit Details</strong> to modify.`;
-            } else {
-              verifiedDocsBannerText.innerHTML = `Demographics auto-calculated from your <strong>${guestProfile.verifiedDocsCount} verified documents</strong> (${docNames}${moreSuffix}). Click <strong>Edit Details</strong> to modify.`;
-            }
-          }
-
-          if (btnBannerEdit) {
-            btnBannerEdit.textContent = "Edit Details";
-          }
-        }
-      } else {
-        if (verifiedBanner) verifiedBanner.style.display = "none";
-      }
-
+    // 2. Ensure header button says "Edit Details"
+    if (cardBtnText) {
       cardBtnText.textContent = "Edit Details";
-
-      setDemoValue(valAge, guestProfile.age);
-      setDemoValue(valGender, guestProfile.gender);
-      setDemoValue(valState, guestProfile.state);
-      setDemoValue(valDistrict, guestProfile.district);
-      setDemoValue(valResidence, guestProfile.residence);
-      setDemoValue(valOccupation, guestProfile.occupation);
-      setDemoValue(valIncome, guestProfile.incomeRange);
-      setDemoValue(valCategory, guestProfile.category);
-      setDemoValue(valMarital, guestProfile.maritalStatus);
-      setDemoValue(valFamilySize, guestProfile.familySize);
-      setDemoValue(valDisability, guestProfile.disability);
-      setDemoValue(valEducation, guestProfile.education);
-      setDemoValue(valEmployment, guestProfile.employment);
-      setDemoValue(valSpecial, guestProfile.special);
     }
 
+    // 3. Simple Green Demographic Message Banner
+    const demographicMessageBanner = document.getElementById("demographicMessageBanner");
+    const demographicMessageText = document.getElementById("demographicMessageText");
+    if (demographicMessageBanner) {
+      demographicMessageBanner.style.display = "flex";
+    }
+    if (demographicMessageText) {
+      demographicMessageText.innerHTML = `Demographics loaded from your <strong>saved citizen profile</strong>.`;
+    }
+
+    // 4. Fill 3-Column Demographic Grid Values
+    setDemoValue(valAge, guestProfile.age);
+    setDemoValue(valGender, guestProfile.gender);
+    setDemoValue(valState, guestProfile.state);
+    setDemoValue(valDistrict, guestProfile.district);
+    setDemoValue(valResidence, guestProfile.residence);
+    setDemoValue(valOccupation, guestProfile.occupation);
+    setDemoValue(valIncome, guestProfile.incomeRange);
+    setDemoValue(valCategory, guestProfile.category);
+    setDemoValue(valMarital, guestProfile.maritalStatus);
+    setDemoValue(valFamilySize, guestProfile.familySize);
+    setDemoValue(valDisability, guestProfile.disability);
+    setDemoValue(valEducation, guestProfile.education);
+    setDemoValue(valEmployment, guestProfile.employment);
+    setDemoValue(valSpecial, guestProfile.special);
+
+    // 5. Update Documents Section
+    renderDocumentsBar(verifiedDocs);
+
+    // 6. Refresh Scheme Results Table & Counts
     renderTable();
   }
+
+  // Automatic real-time document synchronization with Document Verification
+  async function refreshVerificationData() {
+    try {
+      const refreshedDocs = await fetchUserVerifiedDocs();
+      verifiedDocs = refreshedDocs;
+      renderDocumentsBar(refreshedDocs);
+      if (guestProfile) {
+        guestProfile.verifiedDocsCount = refreshedDocs.length;
+        guestProfile.verifiedDocTypes = refreshedDocs.map(d => d.document_type || d.name).filter(Boolean);
+      }
+      updateProfileUI();
+    } catch (err) {
+      console.warn('[UNIORA] refreshVerificationData error:', err);
+    }
+  }
+
+  window.addEventListener("storage", (e) => {
+    if (e.key === "uniora_verified_docs") {
+      refreshVerificationData();
+    }
+  });
+
+  window.addEventListener("focus", () => {
+    refreshVerificationData();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      refreshVerificationData();
+    }
+  });
+
+  try {
+    const syncChannel = new BroadcastChannel("uniora_docs_sync");
+    syncChannel.onmessage = (e) => {
+      if (e.data && (e.data.type === "DOC_VERIFIED" || e.data.type === "DOC_UNVERIFIED")) {
+        refreshVerificationData();
+      }
+    };
+  } catch (e) {}
 
   guestProfileForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -2905,6 +3692,197 @@ async function initFeature() {
   populateFilterDropdown();
   updateProfileUI();
 
+  // =========================================================================
+  // DATA SOURCE STATUS MANAGER & PIPELINE CONTROLLER
+  // =========================================================================
+  let toastTimer = null;
+  function showDataToast(message, type = "info", duration = 4000) {
+    if (!dataStatusToast || !dataStatusToastMsg) return;
+    if (toastTimer) clearTimeout(toastTimer);
+
+    dataStatusToastMsg.textContent = message;
+    dataStatusToast.className = `data-status-toast toast-${type} show`;
+    dataStatusToast.style.display = "flex";
+
+    if (dataStatusToastIcon) {
+      if (type === "success") {
+        dataStatusToastIcon.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+      } else if (type === "warning") {
+        dataStatusToastIcon.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+      } else {
+        dataStatusToastIcon.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`;
+      }
+    }
+
+    toastTimer = setTimeout(() => {
+      dataStatusToast.classList.remove("show");
+      setTimeout(() => {
+        if (!dataStatusToast.classList.contains("show")) dataStatusToast.style.display = "none";
+      }, 300);
+    }, duration);
+  }
+
+  function updateDataSourceStatusUI(source, meta = null) {
+    if (!dataStatusPill || !dataStatusLabel) return;
+
+    if (source === "live") {
+      dataStatusPill.className = "data-status-pill status-live";
+      dataStatusLabel.textContent = "Live data";
+      if (dataStatusTimestamp) dataStatusTimestamp.style.display = "none";
+      if (btnDataRetry) btnDataRetry.style.display = "none";
+    } else if (source === "indexeddb") {
+      dataStatusPill.className = "data-status-pill status-saved";
+      dataStatusLabel.textContent = "Offline — showing saved data";
+      if (dataStatusTimestamp) {
+        const formatted = formatCacheDate(meta?.cachedAt);
+        if (formatted) {
+          dataStatusTimestamp.textContent = `Showing saved data from ${formatted}`;
+          dataStatusTimestamp.style.display = "inline-block";
+        } else {
+          dataStatusTimestamp.style.display = "none";
+        }
+      }
+      if (btnDataRetry) btnDataRetry.style.display = "inline-flex";
+    } else if (source === "fallback") {
+      dataStatusPill.className = "data-status-pill status-fallback";
+      dataStatusLabel.textContent = "Unable to load the latest scheme data. Showing limited offline data.";
+      if (dataStatusTimestamp) dataStatusTimestamp.style.display = "none";
+      if (btnDataRetry) btnDataRetry.style.display = "inline-flex";
+    } else if (source === "loading") {
+      dataStatusPill.className = "data-status-pill status-loading";
+      dataStatusLabel.textContent = "Connecting...";
+      if (dataStatusTimestamp) dataStatusTimestamp.style.display = "none";
+      if (btnDataRetry) btnDataRetry.style.display = "none";
+    }
+  }
+
+  function applySchemesDataset(schemes, source, meta = null) {
+    ALL_SCHEMES = schemes;
+    currentDataSource = source;
+    if (meta) currentCacheMeta = meta;
+
+    let addedNewDepts = false;
+    schemes.forEach(s => {
+      const d = s.dept || s.issuing_department;
+      if (d && !DEPARTMENTS.includes(d)) {
+        DEPARTMENTS.push(d);
+        addedNewDepts = true;
+      }
+    });
+
+    if (addedNewDepts && typeof populateFilterDropdown === "function") {
+      populateFilterDropdown();
+    }
+
+    updateDataSourceStatusUI(source, currentCacheMeta);
+    updateTabHighlights();
+    renderTable();
+  }
+
+  async function loadSchemesPipeline(isManualRetry = false) {
+    let initialSource = "fallback";
+
+    // 1. Stale-While-Revalidate: Try IndexedDB cache first (instant 0ms response)
+    try {
+      const cached = await getCachedSchemesFromDB();
+      if (cached && cached.schemes && cached.schemes.length > 0) {
+        const validation = validateSchemeDataset(cached.schemes, null);
+        if (validation.valid) {
+          currentCacheMeta = cached.meta;
+          initialSource = "indexeddb";
+          applySchemesDataset(cached.schemes, "indexeddb", cached.meta);
+          console.log(`[SchemeDB] Loaded ${cached.schemes.length} schemes from IndexedDB cache.`);
+        }
+      }
+    } catch (dbErr) {
+      console.warn("[SchemeDB] Cache read failed:", dbErr);
+    }
+
+    // If no valid cache was found, load FALLBACK_REAL_SCHEMES
+    if (initialSource === "fallback") {
+      applySchemesDataset(FALLBACK_REAL_SCHEMES, "fallback", null);
+    }
+
+    // If offline, stop here
+    if (!navigator.onLine) {
+      console.log("[UNIORA] Browser is offline; using cached/fallback schemes.");
+      if (initialSource === "indexeddb") {
+        updateDataSourceStatusUI("indexeddb", currentCacheMeta);
+      } else {
+        updateDataSourceStatusUI("fallback", null);
+      }
+      return;
+    }
+
+    // 2. Fetch live data from Google Sheet in background
+    if (isManualRetry) {
+      updateDataSourceStatusUI("loading");
+    }
+
+    try {
+      const liveSchemes = await fetchSchemesFromGoogleSheet();
+      const validation = validateSchemeDataset(liveSchemes, currentCacheMeta);
+
+      if (!validation.valid) {
+        console.warn(`[SchemeDB] Live dataset validation failed: ${validation.reason}. Preserving current schemes.`);
+        if (initialSource === "indexeddb") {
+          updateDataSourceStatusUI("indexeddb", currentCacheMeta);
+        } else {
+          updateDataSourceStatusUI("fallback", null);
+        }
+        return;
+      }
+
+      const newMeta = {
+        cachedAt: new Date().toISOString(),
+        recordCount: liveSchemes.length,
+        source: "GoogleSheet",
+        version: 1
+      };
+      await saveSchemesToDB(liveSchemes, newMeta);
+      currentCacheMeta = newMeta;
+
+      const wasOfflineOrFallback = (initialSource === "fallback" || isManualRetry);
+      applySchemesDataset(liveSchemes, "live", newMeta);
+      console.log(`[UNIORA] Live sync complete: loaded and cached ${liveSchemes.length} schemes.`);
+
+      if (wasOfflineOrFallback) {
+        showDataToast("Connection restored — scheme data updated.", "success");
+      }
+    } catch (fetchErr) {
+      console.warn("[UNIORA] Google Sheet fetch failed:", fetchErr.message);
+      if (initialSource === "indexeddb") {
+        updateDataSourceStatusUI("indexeddb", currentCacheMeta);
+      } else {
+        updateDataSourceStatusUI("fallback", null);
+      }
+    }
+  }
+
+  // Data Retry Button Listener
+  if (btnDataRetry) {
+    btnDataRetry.addEventListener("click", () => {
+      loadSchemesPipeline(true);
+    });
+  }
+
+  // Online / Offline Window Listeners
+  window.addEventListener("online", () => {
+    console.log("[UNIORA] Network online event received. Re-running scheme loading pipeline...");
+    loadSchemesPipeline(false);
+  });
+
+  window.addEventListener("offline", () => {
+    console.log("[UNIORA] Network offline event received.");
+    if (currentDataSource === "live" || currentDataSource === "indexeddb") {
+      updateDataSourceStatusUI("indexeddb", currentCacheMeta);
+      showDataToast("You are offline. Showing saved scheme data.", "warning");
+    } else {
+      updateDataSourceStatusUI("fallback", null);
+      showDataToast("You are offline. Showing limited fallback scheme data.", "warning");
+    }
+  });
+
   if (guestProfile.isFilled) {
     switchTab("ELIGIBLE");
     syncEvaluationWithBackend();
@@ -2912,4 +3890,7 @@ async function initFeature() {
     updateTabHighlights();
     renderTable();
   }
+
+  // Launch Stale-While-Revalidate loading pipeline
+  loadSchemesPipeline(false);
 }

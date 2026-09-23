@@ -221,6 +221,68 @@ async function initApp() {
 
     renderPending();
     renderVerified();
+
+    // 5. Check if a specific document was requested via URL query param (?doc=...)
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const requestedDoc = urlParams.get('doc') || urlParams.get('openDoc');
+        if (requestedDoc) {
+            handleRequestedDoc(requestedDoc);
+        }
+    } catch (e) {
+        console.warn('[UNIORA] Error processing requested doc parameter:', e);
+    }
+}
+
+function findCanonicalDocName(rawName) {
+    if (!rawName) return null;
+    const clean = rawName.trim().toLowerCase();
+    for (const name of Object.keys(DOCUMENT_TYPES)) {
+        if (name.toLowerCase() === clean) return name;
+    }
+    if (clean === 'ration card' || clean === 'smart ration card' || clean.includes('ration')) return 'Smart Ration Card';
+    if (clean === 'voter id' || clean === 'voter id card' || clean === 'epic card' || clean === 'epic') return 'Voter ID Card';
+    if (clean === 'aadhaar' || clean === 'aadhaar card' || clean === 'aadhar' || clean === 'aadhar card') return 'Aadhaar Card';
+    if (clean === 'pan' || clean === 'pan card') return 'PAN Card';
+    if (clean === 'income certificate' || clean === 'income') return 'Income Certificate';
+    if (clean === 'community certificate' || clean === 'community' || clean === 'caste') return 'Community Certificate';
+    if (clean === 'birth certificate' || clean === 'birth') return 'Birth Certificate';
+    if (clean === 'bank passbook' || clean === 'bank' || clean === 'passbook') return 'Bank Passbook';
+    if (clean === '10th marksheet' || clean === '10th' || clean === 'sslc') return '10th Marksheet';
+    if (clean === '12th marksheet' || clean === '12th' || clean === 'hsc') return '12th Marksheet';
+    if (clean.includes('undergraduate') || clean.includes('ug degree')) return 'Undergraduate (UG) Degree';
+    if (clean.includes('diploma')) return 'Diploma Certificate';
+    if (clean.includes('postgraduate') || clean.includes('pg degree')) return 'Postgraduate (PG) Degree';
+    if (clean.includes('driving')) return 'Driving License';
+    if (clean.includes('passport')) return 'Passport';
+    if (clean.includes('domicile')) return 'Domicile Certificate';
+    if (clean.includes('bpl')) return 'BPL Certificate';
+    if (clean.includes('udid') || clean.includes('disability')) return 'UDID Card';
+    if (clean.includes('bonafide')) return 'Bonafide Certificate';
+    if (clean.includes('land')) return 'Land Ownership Document';
+    if (clean.includes('electricity') || clean.includes('eb bill')) return 'Electricity Bill';
+    if (clean.includes('mgnrega')) return 'MGNREGA Job Card';
+    if (clean.includes('udyam')) return 'Udyam Certificate';
+    if (clean.includes('gst')) return 'GST Certificate';
+    if (clean.includes('marriage')) return 'Marriage Certificate';
+    if (clean.includes('death')) return 'Death Certificate';
+    if (clean.includes('orphan')) return 'Orphan Certificate';
+    if (clean.includes('widow')) return 'Widow Certificate';
+    return null;
+}
+
+function handleRequestedDoc(rawName) {
+    const canonicalName = findCanonicalDocName(rawName);
+    if (!canonicalName) return;
+
+    setTimeout(() => {
+        if (verifiedDocs[canonicalName]) {
+            const def = DOCUMENT_TYPES[canonicalName] || { icon: SVG.doc };
+            openVerifiedModal(canonicalName, verifiedDocs[canonicalName].data, def.icon);
+        } else if (DOCUMENT_TYPES[canonicalName]) {
+            openWizard(canonicalName);
+        }
+    }, 150);
 }
 
 // ============================================================
@@ -364,6 +426,11 @@ function moveToVerified(docName, data) {
     const stored = getStoredDocs().filter(d => d.document_type !== docName);
     stored.push({ document_type: docName, data, timestamp: new Date().toISOString() });
     saveStoredDocs(stored);
+    try {
+        const ch = new BroadcastChannel('uniora_docs_sync');
+        ch.postMessage({ type: 'DOC_VERIFIED', docName, timestamp: Date.now() });
+        ch.close();
+    } catch (e) {}
     renderPending();
     renderVerified();
 }
@@ -1154,6 +1221,11 @@ export async function unverifyCurrentDocument() {
     }
 
     // 4. Close modals and update UI
+    try {
+        const ch = new BroadcastChannel('uniora_docs_sync');
+        ch.postMessage({ type: 'DOC_UNVERIFIED', docName, timestamp: Date.now() });
+        ch.close();
+    } catch (e) {}
     closeWizardModal();
     closeVerifiedModal();
     renderPending();
