@@ -20,7 +20,7 @@
   <link rel="stylesheet" href="../../../common/css/responsive.css">
 
   <!-- Feature-Specific Stylesheet -->
-  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./style.css?v=2.5">
 
   <!-- INSTANT 0MS SYNCHRONOUS AUTH HYDRATION -->
   <script>
@@ -137,6 +137,64 @@
           <h1 class="page-title-clean">Eligible Schemes</h1>
           <p class="page-subtitle-clean">Find Central and Tamil Nadu government schemes eligible for your demographic profile.</p>
         </div>
+        <div class="data-source-status-bar" id="dataSourceStatusBar" aria-live="polite">
+          <div class="data-status-pill status-loading" id="dataStatusPill">
+            <span class="status-indicator-dot"></span>
+            <span class="status-indicator-label" id="dataStatusLabel">Connecting...</span>
+          </div>
+          <span class="data-status-timestamp" id="dataStatusTimestamp" style="display: none;"></span>
+          <button type="button" class="btn-data-retry" id="btnDataRetry" style="display: none;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/>
+            </svg>
+            <span>Try Again</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- NON-BLOCKING DATA SYNC TOAST -->
+      <div class="data-status-toast" id="dataStatusToast" role="status" aria-hidden="true" style="display: none;">
+        <span class="toast-icon" id="dataStatusToastIcon"></span>
+        <span class="toast-message" id="dataStatusToastMsg"></span>
+      </div>
+
+      <!-- DOCUMENTS HORIZONTAL SECTION (Permanent) -->
+      <section class="documents-bar-container" id="documentsBarContainer">
+        <!-- Left Title & Verified Summary Box -->
+        <div class="docs-summary-box">
+          <div class="docs-summary-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </div>
+          <div class="docs-summary-text">
+            <h3 class="docs-summary-title">Documents</h3>
+            <div class="docs-summary-status" id="docsSummaryStatus">1 document verified</div>
+          </div>
+        </div>
+
+        <!-- Scrollable Cards Container with Nav Arrows matching Scheme History -->
+        <div class="docs-scroll-wrapper">
+          <button type="button" class="btn-docs-nav btn-docs-prev" id="btnDocsScrollLeft" aria-label="Scroll left" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
+          
+          <div class="docs-cards-track" id="docsCardsTrack">
+            <!-- Document cards rendered dynamically by script.js -->
+          </div>
+
+          <button type="button" class="btn-docs-nav btn-docs-next" id="btnDocsScrollRight" aria-label="Scroll right">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </div>
       </section>
 
       <!-- GUEST TEMPORARY STORAGE ADVISORY CARD -->
@@ -176,47 +234,19 @@
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
               </svg>
             </span>
-            <span id="cardBtnText">Enter Details</span>
+            <span id="cardBtnText">Edit Details</span>
           </button>
         </div>
 
-        <!-- Initial Blank State Prompt Banner (No Documents Found) -->
-        <div class="profile-prompt-banner" id="emptyProfileBanner">
-          <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-            <span class="prompt-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="16" x2="12" y2="12"/>
-                <line x1="12" y1="8" x2="12.01" y2="8"/>
-              </svg>
-            </span>
-            <span id="emptyProfileText">No verified documents found. Please upload documents in Document Verification or enter your details manually before checking scheme eligibility.</span>
-          </div>
-          <div class="banner-actions">
-            <a href="../../03_documents_verification/frontend/index.html" class="btn-banner-action">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-              Upload Documents
-            </a>
-            <button type="button" class="btn-banner-action" id="btnBannerEnterDetails">
-              Enter Details
-            </button>
-          </div>
-        </div>
-
-        <!-- Auto-filled / Partially Filled from Verified Documents Banner -->
-        <div class="profile-prompt-banner verified-docs-banner" id="verifiedDocsBanner" style="display: none;">
-          <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-            <span class="prompt-icon" id="verifiedBannerIcon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <!-- Simple Green Demographic Message Banner -->
+        <div class="demographic-message-banner" id="demographicMessageBanner">
+          <div class="demo-msg-inner">
+            <span class="demo-msg-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
             </span>
-            <span id="verifiedDocsBannerText">Demographics auto-calculated from your <strong id="verifiedDocsCountText">verified documents</strong>. Click <strong>Edit</strong> to modify or adjust values.</span>
-          </div>
-          <div class="banner-actions">
-            <button type="button" class="btn-banner-action action-green" id="btnBannerEdit">
-              Edit Details
-            </button>
+            <span class="demo-msg-text" id="demographicMessageText">Demographics loaded from your <strong>saved citizen profile</strong>.</span>
           </div>
         </div>
 
@@ -245,51 +275,130 @@
         </div>
       </section>
 
-      <!-- 4 TABS NAVIGATION TOOLBAR -->
+      <!-- 4 TABS NAVIGATION TOOLBAR + MOST SEARCHED -->
       <section class="scheme-tabs-toolbar">
         <div class="tabs-group-shell">
-          <button type="button" class="scheme-tab-btn active" id="tabAll">
-            <span class="tab-glyph">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <line x1="16" y1="13" x2="8" y2="13"/>
-                <line x1="16" y1="17" x2="8" y2="17"/>
-              </svg>
-            </span> ALL (<span id="countAll">500</span>)
-          </button>
-          <button type="button" class="scheme-tab-btn" id="tabEligible">
-            <span class="tab-glyph">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </span> ELIGIBLE (<span id="countEligible">0</span>)
-          </button>
-          <div class="filter-popover-anchor">
-            <button type="button" class="scheme-tab-btn" id="tabFilter">
+          <div class="tabs-main-controls">
+            <button type="button" class="scheme-tab-btn active" id="tabAll">
               <span class="tab-glyph">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
                 </svg>
-              </span> FILTER <span class="caret-icon">▾</span>
+              </span> ALL (<span id="countAll">500</span>)
             </button>
-            <div class="department-popover-menu" id="filterDropdownMenu">
-              <div class="popover-heading">Select Department</div>
-              <div class="popover-options-list" id="filterOptionsList"></div>
+            <button type="button" class="scheme-tab-btn" id="tabEligible">
+              <span class="tab-glyph">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </span> ELIGIBLE (<span id="countEligible">0</span>)
+            </button>
+            <div class="filter-popover-anchor">
+              <button type="button" class="scheme-tab-btn" id="tabFilter">
+                <span class="tab-glyph">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                  </svg>
+                </span> FILTER <span class="caret-icon">▾</span>
+              </button>
+              <div class="department-popover-menu" id="filterDropdownMenu">
+                <div class="popover-heading">Select Department</div>
+                <div class="popover-options-list" id="filterOptionsList"></div>
+              </div>
+            </div>
+            <button type="button" class="scheme-tab-btn" id="tabSearch">
+              <span class="tab-glyph">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"/>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+              </span> SEARCH
+            </button>
+          </div>
+
+          <!-- MOST SEARCHED TOPICS CONTAINER (Directly beside SEARCH on the same horizontal row) -->
+          <div class="most-searched-bar" id="mostSearchedBar" style="display: none;">
+            <span class="most-searched-label">Most Searched:</span>
+            <div class="most-searched-carousel-wrapper">
+              <div class="most-searched-track" id="mostSearchedTrack">
+                <button type="button" class="topic-chip topic-agri" data-topic="Agriculture">
+                  <span class="topic-icon-wrap" aria-hidden="true">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M7 21a1 1 0 0 1-1-1v-6a5 5 0 0 1 5-5h1a1 1 0 0 1 1 1v1a5 5 0 0 1-5 5h-1v4a1 1 0 0 1-1 1zm4-9a3 3 0 0 0-3 3v0h1a3 3 0 0 0 3-3v0zm10-5a5 5 0 0 1-5 5h-1a1 1 0 0 1-1-1v-1a5 5 0 0 1 5-5h1a1 1 0 0 1 1 1v1zm-2 2a3 3 0 0 0-3-3v0a3 3 0 0 0 3 3v0z"/>
+                    </svg>
+                  </span>
+                  <span>Agriculture</span>
+                </button>
+                <button type="button" class="topic-chip topic-health" data-topic="Health">
+                  <span class="topic-icon-wrap" aria-hidden="true">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                  </span>
+                  <span>Health</span>
+                </button>
+                <button type="button" class="topic-chip topic-scholarships" data-topic="Scholarships">
+                  <span class="topic-icon-wrap" aria-hidden="true">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
+                    </svg>
+                  </span>
+                  <span>Scholarships</span>
+                </button>
+                <button type="button" class="topic-chip topic-education" data-topic="Education">
+                  <span class="topic-icon-wrap" aria-hidden="true">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
+                    </svg>
+                  </span>
+                  <span>Education</span>
+                </button>
+                <button type="button" class="topic-chip topic-women" data-topic="Women">
+                  <span class="topic-icon-wrap" aria-hidden="true">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                    </svg>
+                  </span>
+                  <span>Women</span>
+                </button>
+                <button type="button" class="topic-chip topic-housing" data-topic="Housing">
+                  <span class="topic-icon-wrap" aria-hidden="true">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                    </svg>
+                  </span>
+                  <span>Housing</span>
+                </button>
+                <button type="button" class="topic-chip topic-employment" data-topic="Employment">
+                  <span class="topic-icon-wrap" aria-hidden="true">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/>
+                    </svg>
+                  </span>
+                  <span>Employment</span>
+                </button>
+              </div>
+              <div class="most-searched-nav-btns">
+                <button type="button" class="btn-topic-nav btn-topic-prev" id="btnTopicPrev" aria-label="Scroll left">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                </button>
+                <button type="button" class="btn-topic-nav btn-topic-next" id="btnTopicNext" aria-label="Scroll right">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
-          <button type="button" class="scheme-tab-btn" id="tabSearch">
-            <span class="tab-glyph">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"/>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              </svg>
-            </span> SEARCH
-          </button>
         </div>
       </section>
 
-      <!-- SEARCH DRAWER -->
+      <!-- SEARCH DRAWER / PANEL -->
       <section class="search-inline-container" id="searchDrawer" style="display: none;">
         <div class="search-input-wrapper">
           <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -309,16 +418,25 @@
           <button type="button" class="btn-search-submit" id="btnExecuteSearch">Search</button>
         </div>
 
-        <div class="quick-tags-container">
-          <span class="quick-tags-label">Most Searched:</span>
-          <div class="tag-chips-list" id="recentTagsList">
-            <button type="button" class="tag-chip" data-query="kisan">kisan <span>✕</span></button>
-            <button type="button" class="tag-chip" data-query="scholarship">scholarship <span>✕</span></button>
-            <button type="button" class="tag-chip" data-query="education">education <span>✕</span></button>
-            <button type="button" class="tag-chip" data-query="health">health <span>✕</span></button>
-            <button type="button" class="tag-chip" data-query="women">women <span>✕</span></button>
+        <!-- RECENT SEARCHES (Carousel / Marquee matching Most Searched design) -->
+        <div class="recent-searches-bar" id="recentSearchesContainer" style="display: none;">
+          <span class="recent-searches-label">Recent Searches:</span>
+          <div class="recent-searches-carousel-wrapper">
+            <div class="recent-searches-track" id="recentTagsList"></div>
+            <div class="recent-searches-nav-btns" id="recentNavBtns" style="display: none;">
+              <button type="button" class="btn-topic-nav btn-recent-prev" id="btnRecentPrev" aria-label="Scroll left">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+              <button type="button" class="btn-topic-nav btn-recent-next" id="btnRecentNext" aria-label="Scroll right">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
           </div>
-          <button type="button" class="btn-clear-all-tags" id="btnClearAllTags">Clear All</button>
+          <button type="button" class="btn-clear-recent" id="btnClearAllTags">Clear All</button>
         </div>
       </section>
 
@@ -338,12 +456,8 @@
           <span class="table-results-counter" id="resultsShowingCount">Showing 1 – 10 of 500 schemes</span>
         </div>
 
-        <div class="table-responsive-box">
-          <table class="uniora-data-table" id="schemesTable">
-            <thead id="schemesTableHead"></thead>
-            <tbody id="schemesTableBody"></tbody>
-          </table>
-        </div>
+        <!-- Schemes 2-Column Cards Grid (1-Column on Mobile) -->
+        <div class="schemes-cards-grid" id="schemesCardsContainer"></div>
 
         <!-- Empty State View -->
         <div class="empty-state-card" id="emptyState" style="display: none;">
@@ -368,6 +482,110 @@
           <button type="button" class="page-arrow-btn" id="btnPrevPage">« Previous</button>
           <div class="page-numbers-cluster" id="pageNumbersContainer"></div>
           <button type="button" class="page-arrow-btn" id="btnNextPage">Next »</button>
+        </div>
+      </section>
+
+      <!-- 6. SCHEME HISTORY SECTION -->
+      <section class="scheme-content-card scheme-history-section" id="schemeHistorySection">
+        <div class="scheme-history-header">
+          <div class="scheme-history-header-left">
+            <div class="scheme-history-icon-box" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+                <path d="M12 7v5l4 2"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="scheme-history-title">Scheme History</h3>
+              <p class="scheme-history-subtitle">Schemes you have viewed till now.</p>
+            </div>
+          </div>
+          <button type="button" class="btn-clear-history" id="btnClearHistory" style="display: none;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              <line x1="10" y1="11" x2="10" y2="17"/>
+              <line x1="14" y1="11" x2="14" y2="17"/>
+            </svg>
+            <span>Clear History</span>
+          </button>
+        </div>
+
+        <div class="scheme-history-track-wrapper">
+          <button type="button" class="btn-history-nav btn-history-prev" id="btnHistoryPrev" aria-label="Scroll left" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <div class="scheme-history-track" id="schemeHistoryTrack"></div>
+          <button type="button" class="btn-history-nav btn-history-next" id="btnHistoryNext" aria-label="Scroll right">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <div class="scheme-history-empty" id="schemeHistoryEmpty">
+          <p>No schemes viewed yet. Open <strong>See Details</strong> or <strong>Check Eligible</strong> on any scheme to view it here.</p>
+        </div>
+      </section>
+
+      <!-- 7. NEXT STEP · READINESS CTA BANNER -->
+      <section class="readiness-cta-banner" id="readinessCtaBanner">
+        <div class="readiness-cta-content">
+
+          <div class="readiness-cta-badge">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+            </svg>
+
+            <span>NEXT STEP · READINESS</span>
+          </div>
+
+          <h3 class="readiness-cta-title">
+            Ready to check your application readiness?
+          </h3>
+
+          <p class="readiness-cta-desc">
+            Review your documents and eligibility information before applying for your chosen schemes.
+          </p>
+
+        </div>
+
+        <div class="readiness-cta-action-wrap">
+          <a
+            href="../../05_my_readiness/frontend/index.html"
+            class="btn-check-readiness-cta"
+            id="btnPageReadinessCta"
+          >
+            <span>Check Readiness</span>
+
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
         </div>
       </section>
 
@@ -430,6 +648,7 @@
               <option value="Unemployed">Unemployed</option>
               <option value="Daily Wage / Artisan">Daily Wage / Artisan</option>
               <option value="Salaried">Salaried</option>
+              <option value="Other">Other</option>
             </select>
           </div>
           <div class="form-input-group">
@@ -533,27 +752,32 @@
             </svg>
           </div>
           <div class="drawer-title-headings">
-            <div class="drawer-title-line">
-              <h3 class="drawer-title" id="modalSchemeName">Tamil Pudhalvan Scheme</h3>
-              <span class="drawer-level-pill" id="modalSchemeLevel">Tamil Nadu</span>
-              <span class="drawer-status-pill" id="modalStatusPill" style="display: none;">Not Evaluated</span>
-            </div>
+            <h3 class="drawer-title" id="modalSchemeName">Tamil Pudhalvan Scheme</h3>
             <p class="drawer-dept-text" id="modalSchemeDept">Higher Education (Tamil Nadu)</p>
-            <p class="drawer-sub-text" id="modalSchemeSub">Provides education support to eligible youth across the state.</p>
           </div>
         </div>
-        <button type="button" class="btn-drawer-close" id="btnCloseDetailsModal" aria-label="Close scheme details">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+        <div class="drawer-header-right">
+          <span class="drawer-level-pill" id="modalSchemeLevel">Tamil Nadu</span>
+          <span class="drawer-status-pill" id="modalStatusPill" style="display: none;">Not Evaluated</span>
+          <button type="button" class="btn-drawer-close" id="btnCloseDetailsModal" aria-label="Close scheme details">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <!-- Drawer Body Content -->
       <div class="drawer-body">
 
-        <!-- 1. Not Evaluated State -->
+        <!-- 1. About This Scheme Section -->
+        <section class="drawer-about-section" id="modalDrawerAboutSection">
+          <h4 class="drawer-about-heading">About this scheme</h4>
+          <p id="modalSchemeDescription" class="drawer-about-desc"></p>
+        </section>
+
+        <!-- 3. Not Evaluated State -->
         <div class="not-evaluated-view-container" id="notEvaluatedView">
           <div class="not-evaluated-hero-card">
             <div class="not-evaluated-illustration">
@@ -577,14 +801,13 @@
           </div>
         </div>
 
-        <!-- 2. Evaluated Sections (Visible when personal details are evaluated) -->
+        <!-- 4. Evaluated Sections (Visible when personal details are evaluated) -->
         <div class="evaluated-sections-container" id="evaluatedSections" style="display: none;">
           
           <!-- MAIN SHOWCASE: ELIGIBLE / NOT ELIGIBLE HERO BANNER -->
           <div class="eligibility-hero-banner is-not-eligible" id="modalEligibilityHero">
             <div class="eligibility-hero-badge-wrap">
-              <!-- Radiating festive / burst accents -->
-              <svg class="eligibility-burst-rays" width="108" height="108" viewBox="0 0 108 108" fill="none" aria-hidden="true">
+              <svg class="eligibility-burst-rays" width="104" height="104" viewBox="0 0 108 108" fill="none" aria-hidden="true">
                 <line x1="54" y1="14" x2="54" y2="4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
                 <line x1="82" y1="26" x2="89" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
                 <line x1="94" y1="54" x2="104" y2="54" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
@@ -607,8 +830,8 @@
           <!-- ELIGIBILITY CRITERIA EVALUATION SECTION -->
           <section class="drawer-card-box eligibility-evaluation-section">
             <div class="drawer-section-heading">
-              <span class="heading-icon-wrap icon-blue">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <span class="heading-icon-badge" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm-4 8H7v-2h6v2z"/>
                 </svg>
               </span>
@@ -643,32 +866,85 @@
             </div>
           </section>
 
-          <!-- REQUIRED DOCUMENTS TO APPLY SECTION -->
-          <section class="drawer-card-box documents-section">
-            <div class="drawer-section-heading">
-              <span class="heading-icon-wrap icon-blue">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm-4 8H7v-2h6v2z"/>
-                </svg>
-              </span>
-              <h4>Required Documents to Apply</h4>
+          <!-- 3. ADDITIONAL ELIGIBILITY CONDITIONS TO SELF-VERIFY -->
+          <section class="drawer-card-box additional-conditions-section" id="modalAdditionalConditionsSection" style="display: none;">
+            <div class="additional-conditions-header">
+              <div class="heading-title-group">
+                <span class="heading-icon-badge heading-icon-badge--info" aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                </span>
+                <div class="heading-text-group">
+                  <h4 class="additional-conditions-heading-title">Additional Conditions to Self-Verify</h4>
+                  <span class="self-verify-badge">Self-Declaration Required</span>
+                </div>
+              </div>
             </div>
-            <div id="modalDocReadinessContainer" style="display: none;"></div>
-            <div class="drawer-doc-cluster" id="modalDocChips"></div>
-            <div id="modalDocActionPrompt" class="drawer-doc-action-prompt" style="display: none;"></div>
+            <ul class="additional-conditions-list" id="modalAdditionalConditionsList">
+              <!-- Dynamically populated with parsed clauses from other_conditions -->
+            </ul>
+            <button type="button" class="btn-toggle-conditions" id="btnToggleMoreConditions" style="display: none;" aria-expanded="false">
+              <span id="toggleConditionsText">Read more</span>
+              <svg class="toggle-conditions-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
           </section>
 
-          <!-- BENEFITS & OVERVIEW SECTION -->
-          <section class="drawer-card-box benefits-section">
-            <div class="drawer-section-heading">
-              <span class="heading-icon-wrap icon-red">
-                <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.65-.5-.65C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1h-2V5c0-.55.45-1 1-1zM9 4c.55 0 1 .45 1 1v1H8c-.55 0-1-.45-1-1s.45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76V14h2V8.76L15.38 12 17 10.83 14.92 8H20v6z"/>
-                </svg>
-              </span>
-              <h4>Benefits &amp; Overview</h4>
+          <!-- REQUIRED DOCUMENTS TO APPLY SECTION CONTAINER (DROPDOWN ACCORDION) -->
+          <section class="documents-section" id="modalRequiredDocsSection">
+            <button
+              type="button"
+              class="documents-heading-row documents-accordion-toggle"
+              id="btnToggleRequiredDocs"
+              aria-expanded="false"
+              aria-controls="modalRequiredDocsPanel"
+            >
+              <div class="heading-title-group">
+                <span class="heading-icon-badge" aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm-4 8H7v-2h6v2z"/>
+                  </svg>
+                </span>
+                <div class="heading-text-group">
+                  <h4 class="documents-heading-title">Required Documents to Apply</h4>
+                  <span class="documents-count-badge" id="modalDocsCountBadge">0 documents</span>
+                </div>
+              </div>
+              <div class="btn-view-required-docs" id="btnDocsToggleAction" aria-hidden="true">
+                <span id="modalDocsToggleText">View</span>
+                <span class="nav-arrow criteria-tab-caret">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </span>
+              </div>
+            </button>
+
+            <!-- Collapsible Documents Dropdown Panel (Template matching scheme recommendation page) -->
+            <div class="documents-expanded-panel" id="modalRequiredDocsPanel" hidden>
+              <div class="documents-expanded-inner">
+                <div class="modal__section modal__section--docs">
+                  <h5 class="modal__docs-title">Documents to keep ready</h5>
+                  <ul class="modal__chips modal__docs-list" id="modalRequiredDocsList">
+                    <!-- Populated dynamically with the scheme's required documents -->
+                  </ul>
+                  <div class="modal__docs-empty" id="modalRequiredDocsEmpty" hidden>
+                    <p>No specific documents listed for this scheme. Standard proof of identity and residence may be required.</p>
+                  </div>
+                </div>
+
+                <div class="documents-panel-footer">
+                  <a href="../../01_scheme_recommendation/frontend/index.html" class="btn-goto-scheme-page" id="btnDrawerViewDocs"  rel="noopener noreferrer">
+                    <span>Open full details in Schemes page</span>
+                    <span class="nav-arrow" aria-hidden="true">&rarr;</span>
+                  </a>
+                </div>
+              </div>
             </div>
-            <p id="modalSchemeDescription" class="drawer-text-desc"></p>
           </section>
 
         </div>
@@ -677,8 +953,9 @@
 
       <!-- Footer Bar -->
       <div class="drawer-footer" id="drawerFooterBar">
-        <button type="button" class="btn-drawer-cancel" id="btnDismissDetails">Close</button>
-        <a href="#" target="_blank" rel="noopener noreferrer" class="btn-drawer-primary" id="modalOfficialLink">Official Portal ↗</a>
+        <button type="button" class="btn-drawer-close-action" id="btnDismissDetails">Close</button>
+        <a href="../../03_documents_verification/frontend/index.html" class="btn-drawer-verify-docs" id="btnDrawerVerifyDocs">Upload Documents</a>
+        <button type="button" class="btn-drawer-readiness" id="btnDrawerCheckReadiness">Check Readiness</button>
       </div>
 
     </aside>

@@ -970,6 +970,76 @@ function wireRetry() {
 }
 
 /* ------------------------------------------------------------------
+   DEEP LINKING / DRAWER AUTO-OPEN
+------------------------------------------------------------------- */
+function checkDeepLinkScheme() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const targetSchemeId = params.get('schemeId') || params.get('id');
+    const targetSchemeName = params.get('schemeName') || params.get('name') || params.get('search');
+    const shouldOpenDrawer = params.get('openDrawer') === 'true' || params.has('schemeId') || params.has('schemeName');
+
+    let storedScheme = null;
+    try {
+      const stored = sessionStorage.getItem('uniora_selected_scheme') || localStorage.getItem('uniora_selected_scheme');
+      if (stored) storedScheme = JSON.parse(stored);
+    } catch (e) {
+      // Ignore JSON parse error
+    }
+
+    const schemeToMatchId = targetSchemeId || storedScheme?.id || storedScheme?.scheme_id;
+    const schemeToMatchName = targetSchemeName || storedScheme?.name || storedScheme?.scheme_name;
+
+    if (!schemeToMatchId && !schemeToMatchName) return;
+
+    let matchedScheme = null;
+
+    // 1. Try matching by scheme_id or id
+    if (schemeToMatchId && Array.isArray(state.allSchemes)) {
+      const targetIdStr = String(schemeToMatchId).trim().toLowerCase();
+      matchedScheme = state.allSchemes.find((s) => {
+        const sid = String(s.scheme_id || s.id || '').trim().toLowerCase();
+        return sid === targetIdStr;
+      });
+    }
+
+    // 2. Try exact name match
+    if (!matchedScheme && schemeToMatchName && Array.isArray(state.allSchemes)) {
+      const targetNameNorm = String(schemeToMatchName).trim().toLowerCase();
+      matchedScheme = state.allSchemes.find((s) => {
+        const sName = String(s.scheme_name || s.name || '').trim().toLowerCase();
+        return sName === targetNameNorm;
+      });
+    }
+
+    // 3. Try partial name match
+    if (!matchedScheme && schemeToMatchName && Array.isArray(state.allSchemes)) {
+      const targetNameNorm = String(schemeToMatchName).trim().toLowerCase();
+      matchedScheme = state.allSchemes.find((s) => {
+        const sName = String(s.scheme_name || s.name || '').trim().toLowerCase();
+        return sName.includes(targetNameNorm) || targetNameNorm.includes(sName);
+      });
+    }
+
+    if (matchedScheme) {
+      if (dom.searchInput && (matchedScheme.scheme_name || schemeToMatchName)) {
+        dom.searchInput.value = matchedScheme.scheme_name || schemeToMatchName;
+        state.search = dom.searchInput.value;
+        applyFiltersAndSearch();
+      }
+
+      if (shouldOpenDrawer) {
+        requestAnimationFrame(() => {
+          openModal(matchedScheme);
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('[UNIORA] Failed to process deep link scheme:', err);
+  }
+}
+
+/* ------------------------------------------------------------------
    INIT
 ------------------------------------------------------------------- */
 async function init() {
@@ -980,6 +1050,7 @@ async function init() {
 
   await initNavbarAuth();
   await loadSchemes({ resetPage: true });
+  checkDeepLinkScheme();
 }
 
 init();
