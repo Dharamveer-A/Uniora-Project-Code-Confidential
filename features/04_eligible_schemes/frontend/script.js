@@ -4554,10 +4554,11 @@ async function initFeature() {
   });
 
   // =========================================================================
-  // SCHEME HISTORY & READINESS CTA (PAGE LEVEL)
+  // SCHEME HISTORY — Supabase (logged-in) + sessionStorage (guest fallback)
   // =========================================================================
   const SCHEME_HISTORY_KEY = "uniora_scheme_view_history";
 
+  // ── sessionStorage helpers (guest fallback / instant local cache) ──────────
   function loadSchemeHistory() {
     try {
       const data = sessionStorage.getItem(SCHEME_HISTORY_KEY);
@@ -4578,6 +4579,109 @@ async function initFeature() {
       console.warn("[SchemeHistory] Failed to save to sessionStorage:", e);
     }
   }
+
+  // ── Supabase helpers ────────────────────────────────────────────────────────
+  /**
+   * Fetch the user's sids[] from Supabase scheme_history table.
+   * Returns an array of enriched history objects (same shape addSchemeToHistory uses).
+   * Falls back to [] silently if table doesn't exist yet.
+   */
+  async function fetchSchemeHistoryFromSupabase(uid) {
+    try {
+      if (!supabase || !uid) return null;
+      const { data, error } = await supabase
+        .from("scheme_history")
+        .select("sids, sources, updated_at")
+        .eq("uid", uid)
+        .maybeSingle();
+
+      if (error) {
+        // Table might not exist yet — silent fail
+        console.warn("[SchemeHistory] Supabase fetch notice:", error.message);
+        return null;
+      }
+
+      if (!data || !Array.isArray(data.sids) || data.sids.length === 0) {
+        return [];
+      }
+
+      const sourcesArr = Array.isArray(data.sources) ? data.sources : [];
+
+      // Enrich sids[] with full scheme metadata from ALL_SCHEMES
+      const enriched = data.sids
+        .map((sid, idx) => {
+          const scheme = ALL_SCHEMES.find(
+            s => String(s.id) === String(sid) || String(s.scheme_id) === String(sid)
+          );
+          if (!scheme) return null;
+          const source = sourcesArr[idx] || "ALL";
+          const isEligible = source === "ELIGIBLE";
+          return {
+            id: scheme.id,
+            name: scheme.name,
+            dept: scheme.dept,
+            level: scheme.level,
+            source: source,
+            sourceLabel: isEligible ? "(Viewed from Eligible)" : "(Viewed from All)",
+            icon: scheme.icon || null,
+            iconBg: scheme.iconBg || null
+          };
+        })
+        .filter(Boolean)
+        .slice(0, 20);
+
+      return enriched;
+    } catch (e) {
+      console.warn("[SchemeHistory] Supabase fetch error:", e);
+      return null;
+    }
+  }
+
+  /**
+   * Upsert the current schemeHistory sids[] to Supabase in the background.
+   * Non-blocking — does not affect UI responsiveness.
+   */
+  async function syncSchemeHistoryToSupabase(uid, historyList) {
+    try {
+      if (!supabase || !uid) return;
+      const sids = historyList.map(h => String(h.id));
+      const sources = historyList.map(h => h.source || "ALL");
+      const { error } = await supabase
+        .from("scheme_history")
+        .upsert(
+          { uid, sids, sources, updated_at: new Date().toISOString() },
+          { onConflict: "uid" }
+        );
+      if (error) {
+        console.warn("[SchemeHistory] Supabase upsert notice:", error.message);
+      }
+    } catch (e) {
+      console.warn("[SchemeHistory] Supabase upsert error:", e);
+    }
+  }
+
+  /**
+   * Clear the user's scheme_history row in Supabase (reset sids to empty).
+   */
+  async function clearSchemeHistoryInSupabase(uid) {
+    try {
+      if (!supabase || !uid) return;
+      const { error } = await supabase
+        .from("scheme_history")
+        .upsert(
+          { uid, sids: [], sources: [], updated_at: new Date().toISOString() },
+          { onConflict: "uid" }
+        );
+      if (error) {
+        console.warn("[SchemeHistory] Supabase clear notice:", error.message);
+      }
+    } catch (e) {
+      console.warn("[SchemeHistory] Supabase clear error:", e);
+    }
+  }
+
+  // Current logged-in uid (set during initFeature Supabase auth block)
+  let _historyUid = null;
 
   let schemeHistory = loadSchemeHistory();
 
@@ -4741,13 +4845,21 @@ async function initFeature() {
       schemeHistory = schemeHistory.slice(0, 20);
     }
 
+    // Save locally (instant) — then sync to Supabase in background
     saveSchemeHistory(schemeHistory);
+    if (_historyUid) {
+      syncSchemeHistoryToSupabase(_historyUid, schemeHistory);
+    }
     renderSchemeHistory();
   }
 
   function clearAllSchemeHistory() {
     schemeHistory = [];
     saveSchemeHistory([]);
+    // Clear in Supabase too (background)
+    if (_historyUid) {
+      clearSchemeHistoryInSupabase(_historyUid);
+    }
     renderSchemeHistory();
   }
 
@@ -5211,7 +5323,26 @@ async function initFeature() {
 
   initMostSearchedCarousel();
   setupRecentCarouselEvents();
-  renderSchemeHistory();
+
+  // Load Scheme History — Supabase for logged-in users, sessionStorage for guests
+  (async () => {
+    try {
+      const session = await getCurrentSession();
+      if (session && session.user && session.user.id) {
+        _historyUid = session.user.id;
+        const remoteHistory = await fetchSchemeHistoryFromSupabase(_historyUid);
+        if (remoteHistory !== null) {
+          // Supabase data is authoritative for logged-in users
+          schemeHistory = remoteHistory;
+          saveSchemeHistory(schemeHistory); // sync to sessionStorage as local cache
+        }
+        // if remoteHistory === null (table not yet created), keep sessionStorage data
+      }
+    } catch (e) {
+      console.warn("[SchemeHistory] Auth check at init failed:", e);
+    }
+    renderSchemeHistory();
+  })();
 
   if (guestProfile.isFilled) {
     switchTab("ELIGIBLE");
