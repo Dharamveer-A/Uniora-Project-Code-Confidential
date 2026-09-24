@@ -177,10 +177,10 @@
           </div>
         </div>
 
-        <!-- Scrollable Cards Container with Nav Arrows -->
+        <!-- Scrollable Cards Container with Nav Arrows matching Scheme History -->
         <div class="docs-scroll-wrapper">
-          <button type="button" class="docs-arrow-btn docs-arrow-left" id="btnDocsScrollLeft" aria-label="Scroll left" style="display: none;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <button type="button" class="btn-docs-nav btn-docs-prev" id="btnDocsScrollLeft" aria-label="Scroll left" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="15 18 9 12 15 6"/>
             </svg>
           </button>
@@ -189,8 +189,8 @@
             <!-- Document cards rendered dynamically by script.js -->
           </div>
 
-          <button type="button" class="docs-arrow-btn docs-arrow-right" id="btnDocsScrollRight" aria-label="Scroll right">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <button type="button" class="btn-docs-nav btn-docs-next" id="btnDocsScrollRight" aria-label="Scroll right">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="9 18 15 12 9 6"/>
             </svg>
           </button>
@@ -418,11 +418,23 @@
           <button type="button" class="btn-search-submit" id="btnExecuteSearch">Search</button>
         </div>
 
-        <!-- RECENT SEARCHES (Hidden until user completes their first search) -->
+        <!-- RECENT SEARCHES (Carousel / Marquee matching Most Searched design) -->
         <div class="recent-searches-bar" id="recentSearchesContainer" style="display: none;">
-          <div class="recent-searches-left">
-            <span class="recent-searches-label">Recent Searches:</span>
-            <div class="recent-tags-list" id="recentTagsList"></div>
+          <span class="recent-searches-label">Recent Searches:</span>
+          <div class="recent-searches-carousel-wrapper">
+            <div class="recent-searches-track" id="recentTagsList"></div>
+            <div class="recent-searches-nav-btns" id="recentNavBtns" style="display: none;">
+              <button type="button" class="btn-topic-nav btn-recent-prev" id="btnRecentPrev" aria-label="Scroll left">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+              <button type="button" class="btn-topic-nav btn-recent-next" id="btnRecentNext" aria-label="Scroll right">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
           </div>
           <button type="button" class="btn-clear-recent" id="btnClearAllTags">Clear All</button>
         </div>
@@ -636,6 +648,7 @@
               <option value="Unemployed">Unemployed</option>
               <option value="Daily Wage / Artisan">Daily Wage / Artisan</option>
               <option value="Salaried">Salaried</option>
+              <option value="Other">Other</option>
             </select>
           </div>
           <div class="form-input-group">
@@ -851,6 +864,34 @@
             <div class="criteria-expanded-panel" id="criteriaAccordionContent" hidden>
               <div class="criteria-expanded-list" id="criteriaAccordionContentInner"></div>
             </div>
+          </section>
+
+          <!-- 3. ADDITIONAL ELIGIBILITY CONDITIONS TO SELF-VERIFY -->
+          <section class="drawer-card-box additional-conditions-section" id="modalAdditionalConditionsSection" style="display: none;">
+            <div class="additional-conditions-header">
+              <div class="heading-title-group">
+                <span class="heading-icon-badge heading-icon-badge--info" aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                </span>
+                <div class="heading-text-group">
+                  <h4 class="additional-conditions-heading-title">Additional Conditions to Self-Verify</h4>
+                  <span class="self-verify-badge">Self-Declaration Required</span>
+                </div>
+              </div>
+            </div>
+            <ul class="additional-conditions-list" id="modalAdditionalConditionsList">
+              <!-- Dynamically populated with parsed clauses from other_conditions -->
+            </ul>
+            <button type="button" class="btn-toggle-conditions" id="btnToggleMoreConditions" style="display: none;" aria-expanded="false">
+              <span id="toggleConditionsText">Read more</span>
+              <svg class="toggle-conditions-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
           </section>
 
           <!-- REQUIRED DOCUMENTS TO APPLY SECTION CONTAINER (DROPDOWN ACCORDION) -->

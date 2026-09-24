@@ -554,31 +554,117 @@ function renderDocumentsBar(verifiedDocsList = []) {
     track.appendChild(card);
   });
 
-  const updateScrollArrows = () => {
-    if (!track) return;
-    const maxScroll = track.scrollWidth - track.clientWidth;
-    if (btnLeft) {
-      btnLeft.style.display = track.scrollLeft > 10 ? 'flex' : 'none';
-    }
-    if (btnRight) {
-      btnRight.style.display = (maxScroll > 10 && track.scrollLeft < maxScroll - 10) ? 'flex' : 'none';
-    }
+  const handleDocsLayout = () => {
+    updateDocsTrackSizing();
+    updateDocsNavButtons();
   };
 
-  track.onscroll = updateScrollArrows;
-  window.addEventListener('resize', updateScrollArrows);
-  setTimeout(updateScrollArrows, 100);
+  handleDocsLayout();
+
+  track.onscroll = updateDocsNavButtons;
 
   if (btnLeft) {
-    btnLeft.onclick = () => {
-      track.scrollBy({ left: -260, behavior: 'smooth' });
-    };
+    btnLeft.onclick = () => scrollDocsByStep('prev');
   }
   if (btnRight) {
-    btnRight.onclick = () => {
-      track.scrollBy({ left: 260, behavior: 'smooth' });
-    };
+    btnRight.onclick = () => scrollDocsByStep('next');
   }
+
+  if (typeof ResizeObserver !== 'undefined' && !track.dataset.hasResizeObserver) {
+    track.dataset.hasResizeObserver = 'true';
+    const ro = new ResizeObserver(() => {
+      handleDocsLayout();
+    });
+    ro.observe(track);
+  }
+
+  window.addEventListener('resize', handleDocsLayout);
+  requestAnimationFrame(handleDocsLayout);
+  setTimeout(handleDocsLayout, 100);
+}
+
+function updateDocsTrackSizing() {
+  const track = document.getElementById('docsCardsTrack');
+  if (!track || track.offsetParent === null) return;
+
+  const gap = 12;
+  const targetMinCardWidth = 120;
+  const availableWidth = track.clientWidth;
+  if (availableWidth <= 0) return;
+
+  const count = Math.max(1, Math.floor((availableWidth + gap) / (targetMinCardWidth + gap)));
+  track.style.setProperty('--docs-per-view', count);
+}
+
+function updateDocsNavButtons() {
+  const track = document.getElementById('docsCardsTrack');
+  const btnLeft = document.getElementById('btnDocsScrollLeft');
+  const btnRight = document.getElementById('btnDocsScrollRight');
+  if (!track) return;
+
+  const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+  const currentScroll = track.scrollLeft;
+
+  if (maxScroll > 6) {
+    if (btnLeft) {
+      btnLeft.style.display = 'flex';
+      btnLeft.disabled = currentScroll <= 6;
+    }
+    if (btnRight) {
+      btnRight.style.display = 'flex';
+      btnRight.disabled = currentScroll >= maxScroll - 6;
+    }
+  } else {
+    if (btnLeft) btnLeft.style.display = 'none';
+    if (btnRight) btnRight.style.display = 'none';
+  }
+}
+
+function scrollDocsByStep(direction) {
+  const track = document.getElementById('docsCardsTrack');
+  if (!track) return;
+  const cards = Array.from(track.querySelectorAll('.doc-pill-card'));
+  if (cards.length === 0) return;
+
+  const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+  if (maxScroll <= 0) return;
+
+  const currentScroll = track.scrollLeft;
+  const docsPerPage = parseInt(track.style.getPropertyValue('--docs-per-view'), 10) || 6;
+
+  // Find the card closest to the current left scroll position
+  let currentIndex = 0;
+  let minDiff = Infinity;
+  cards.forEach((card, idx) => {
+    const cardLeft = card.offsetLeft - (card.offsetParent === track ? 0 : track.offsetLeft);
+    const diff = Math.abs(cardLeft - currentScroll);
+    if (diff < minDiff) {
+      minDiff = diff;
+      currentIndex = idx;
+    }
+  });
+
+  let targetIndex;
+  if (direction === 'next') {
+    targetIndex = Math.min(cards.length - 1, currentIndex + docsPerPage);
+  } else {
+    targetIndex = Math.max(0, currentIndex - docsPerPage);
+  }
+
+  const targetCard = cards[targetIndex];
+  if (targetCard) {
+    const cardLeft = targetCard.offsetLeft - (targetCard.offsetParent === track ? 0 : targetCard.offsetLeft);
+    const targetScroll = Math.min(maxScroll, Math.max(0, cardLeft));
+    track.scrollTo({ left: targetScroll, behavior: 'smooth' });
+  } else {
+    const stepSize = track.clientWidth + 12;
+    const targetScroll = direction === 'next'
+      ? Math.min(maxScroll, currentScroll + stepSize)
+      : Math.max(0, currentScroll - stepSize);
+    track.scrollTo({ left: targetScroll, behavior: 'smooth' });
+  }
+
+  setTimeout(updateDocsNavButtons, 350);
 }
 
 function extractAgeFromDob(dobStr) {
@@ -674,9 +760,10 @@ function normalizeOccupation(raw) {
   if (s.includes("self") || s.includes("business")) return "Self-Employed";
   if (s.includes("govt") || s.includes("government") || s.includes("private") || s.includes("salaried") || s.includes("employee")) return "Salaried";
   if (s.includes("unemployed") || s.includes("looking") || s.includes("retired") || s.includes("homemaker")) return "Unemployed";
-  const valid = ["Student", "Farmer", "Self-Employed", "Unemployed", "Daily Wage / Artisan", "Salaried"];
+  if (s.includes("other")) return "Other";
+  const valid = ["Student", "Farmer", "Self-Employed", "Unemployed", "Daily Wage / Artisan", "Salaried", "Other"];
   const matched = valid.find(v => v.toLowerCase() === s);
-  return matched || raw;
+  return matched || "Other";
 }
 
 function normalizeEducationLevel(raw) {
@@ -1385,6 +1472,7 @@ const RECENT_REAL_SCHEMES = [
     stateReq: "All",
     occReq: "All",
     docs: ["Ration Card", "Identity Card"],
+    other_conditions: "Must be identified in SECC 2011 deprivation criteria or eligible NFSA / BPL category; Family head and all eligible members must complete Aadhaar e-KYC; No family member should be an active income tax payer or government employee.",
     desc: "Provides ₹5 lakh cashless health cover per family per year for eligible beneficiaries, ensuring access to quality healthcare services across India."
   },
   {
@@ -1405,6 +1493,7 @@ const RECENT_REAL_SCHEMES = [
     stateReq: "Tamil Nadu",
     occReq: "All",
     docs: ["Ration Card", "Identity Card", "Bank Passbook"],
+    other_conditions: "Applicant must be an adult woman from a poor household without an existing LPG connection; All adult members must provide Aadhaar; Bank account must be linked for DBT cylinder subsidy release.",
     desc: "Providing clean cooking fuel access to rural and deprived households without upfront connection charges."
   },
   {
@@ -1425,6 +1514,7 @@ const RECENT_REAL_SCHEMES = [
     stateReq: "Tamil Nadu",
     occReq: "Student",
     docs: ["Government School 6-12th Bonafide", "College Admission Proof", "Bank Passbook"],
+    other_conditions: "Applicant must have studied from 6th to 12th standard in Tamil Nadu Government Schools; Must be actively enrolled in an accredited undergraduate degree, diploma, or ITI course; Should not be availing duplicate monthly financial assistance from another state scheme; Bank account must be in the student's name and Aadhaar-seeded for DBT.",
     desc: "Provides ₹1,000 monthly education stipend for male students pursuing higher education in Tamil Nadu to support their academic dreams."
   },
   {
@@ -1445,6 +1535,7 @@ const RECENT_REAL_SCHEMES = [
     stateReq: "Tamil Nadu",
     occReq: "Student",
     docs: ["Govt School Study Certificate (6th-12th)", "College ID Card", "Identity Card"],
+    other_conditions: "Girl students who studied in Tamil Nadu Government Schools from 6th to 12th standard; Enrolled in undergraduate degree, professional, or diploma programs in recognized colleges; Bank account must be seeded with Aadhaar for DBT credit.",
     desc: "Financial assistance of ₹1,000/month for girl students from government schools pursuing degree or diploma courses."
   },
   {
@@ -1465,6 +1556,7 @@ const RECENT_REAL_SCHEMES = [
     stateReq: "All",
     occReq: "All",
     docs: ["Electricity Consumer Bill", "House Ownership Document", "Identity Card"],
+    other_conditions: "Must own a suitable roof with sufficient structural load-bearing capacity; Active residential electricity consumer number in good standing; Rooftop solar system must be installed via empaneled MNRE vendors.",
     desc: "Provides financial assistance to install rooftop solar panels in residential households. Eligible households can get up to 300 units of free electricity every month."
   },
   {
@@ -1485,6 +1577,7 @@ const RECENT_REAL_SCHEMES = [
     stateReq: "All",
     occReq: "Daily Wage / Artisan",
     docs: ["Trade Identity Proof", "Skill Verification Certificate", "Identity Card"],
+    other_conditions: "Must be actively engaged in one of the 18 recognized traditional artisanal trades; Beneficiary identification verified through gram panchayat or urban local body; Not availed similar subsidized central/state loans in the last 5 years.",
     desc: "Provides financial and skill support to traditional artisans and craftspeople. Helps in skill upgradation, toolkits, credit support and market linkages."
   },
   {
@@ -1505,6 +1598,7 @@ const RECENT_REAL_SCHEMES = [
     stateReq: "Tamil Nadu",
     occReq: "Student",
     docs: ["College Bonafide Certificate", "Identity Card", "Resume/Bio-data"],
+    other_conditions: "Enrolled in recognized government or government-aided higher education institutions in Tamil Nadu; Mandatory attendance in designated technical skill modules; Registration via official college portal credentials.",
     desc: "Industry-aligned skill development and job placement program for youth in Tamil Nadu. Helps students gain skills, certifications and employment opportunities."
   },
   {
@@ -1525,6 +1619,7 @@ const RECENT_REAL_SCHEMES = [
     stateReq: "All",
     occReq: "All",
     docs: ["Patta / Land Record", "Income Certificate", "Ration Card"],
+    other_conditions: "Family must not own a pucca concrete house anywhere in India; Must be identified in the PMAY-G beneficiary priority list; Construction must follow designated disaster-resilient building standards.",
     desc: "Provides financial assistance for construction of pucca houses in rural areas, ensuring a safe and secure living environment for eligible households."
   },
   {
@@ -1545,6 +1640,7 @@ const RECENT_REAL_SCHEMES = [
     stateReq: "All",
     occReq: "Farmer",
     docs: ["Patta / Chitta Land Record", "Identity Card", "Bank Passbook"],
+    other_conditions: "Landholding farmer families with cultivable land in their names; Serving or retired government officers and income tax payees are excluded; Mandatory Aadhaar-linked NPCI active bank account.",
     desc: "Provides income support of ₹6,000 per year to eligible farmer families in three equal installments."
   },
   {
@@ -1565,6 +1661,7 @@ const RECENT_REAL_SCHEMES = [
     stateReq: "All",
     occReq: "All",
     docs: ["Bank Account Details", "Aadhaar Card"],
+    other_conditions: "Must hold an active savings bank or post office account; Not a member of any statutory social security scheme; Not an income tax payer as per Government of India guidelines.",
     desc: "A pension scheme for unorganized sector workers, providing a guaranteed pension after 60 years of age."
   },
   {
@@ -1585,6 +1682,7 @@ const RECENT_REAL_SCHEMES = [
     stateReq: "All",
     occReq: "Farmer", // Seed with Farmer so demoing Student shows 1 Condition Not Satisfied matching reference!
     docs: ["Degree/Diploma Certificate", "Identity Card", "Bank Account Details"],
+    other_conditions: "Must have completed High School, Higher Secondary, ITI, Polytechnic Diploma, or Graduation degree; Candidate must not be engaged in full-time employment or full-time education during internship; No family member earns above ₹8 Lakh or holds a permanent government job.",
     desc: "12-month internship opportunities in leading enterprises with ₹5,000 monthly stipend plus ₹6,000 one-time grant. Aims to provide industry exposure and skill development for young professionals."
   },
   {
@@ -1605,6 +1703,7 @@ const RECENT_REAL_SCHEMES = [
     stateReq: "Tamil Nadu",
     occReq: "All",
     docs: ["Smart Family Ration Card", "Electricity Bill", "Identity Card", "Bank Passbook"],
+    other_conditions: "Must be a female head of family listed in Smart Family Ration Card; Annual family electricity consumption below 3,600 units; Family should not own four-wheeler passenger vehicles; No family member is a government employee or income tax payer.",
     desc: "Monthly financial entitlement of ₹1,000 to eligible women heads of households meeting economic criteria."
   },
   {
@@ -1625,6 +1724,7 @@ const RECENT_REAL_SCHEMES = [
     stateReq: "Tamil Nadu",
     occReq: "All",
     docs: ["Patta / Land Record", "Income Certificate", "Ration Card"],
+    other_conditions: "Rural families living in thatched, katcha, or dilapidated huts; Must possess legal ownership/patta over the residential house site; Direct grant released in milestone-based progress stages.",
     desc: "State housing program providing unit subsidies to transform huts and katcha houses into permanent concrete homes."
   },
   {
@@ -1645,6 +1745,7 @@ const RECENT_REAL_SCHEMES = [
     stateReq: "Tamil Nadu",
     occReq: "Student",
     docs: ["Community Certificate", "Income Certificate", "Attendance & College Bonafide"],
+    other_conditions: "Belong to BC, MBC, or DNC communities recognized by Government of Tamil Nadu; Minimum 75% attendance in recognized collegiate courses; Not availing another government scholarship for the same academic year.",
     desc: "Full tuition waiver and maintenance allowances for eligible BC/MBC students in recognized colleges."
   }
 ];
@@ -1953,6 +2054,8 @@ function mapGoogleSheetScheme(raw, index) {
     eligibility_state: rawState || "All",
     occReq: raw.occupation_criteria || "All",
     occupation_criteria: raw.occupation_criteria || "All",
+    disabilityReq: (raw.disability_status || raw["disability status"] || raw.disability || raw.pwd || "").trim() || "All",
+    disability_status: (raw.disability_status || raw["disability status"] || raw.disability || raw.pwd || "").trim() || "All",
     residencyReq: raw.residency_requirement || "Resident of India",
     residency_requirement: raw.residency_requirement || "Resident of India",
     otherConditions: raw.other_conditions || "",
@@ -2090,6 +2193,64 @@ function textMatches(actual, required) {
   return normalizeText(actual) === normalizeText(required);
 }
 
+function matchesStandardOccupation(occReqText, standardType) {
+  const text = normalizeText(occReqText);
+  switch (standardType) {
+    case "student":
+      return text.includes("student") || text.includes("scholar") || text.includes("college") || text.includes("school");
+    case "farmer":
+      return text.includes("farmer") || text.includes("agriculture") || text.includes("cultivator") || text.includes("kisan");
+    case "self-employed":
+      return text.includes("self-employed") || text.includes("self employed") || text.includes("business") || text.includes("entrepreneur");
+    case "unemployed":
+      return text.includes("unemployed") || text.includes("job seeker") || text.includes("jobseeker");
+    case "daily wage / artisan":
+      return text.includes("daily wage") || text.includes("artisan") || text.includes("labourer") || text.includes("laborer") || text.includes("casual worker") || text.includes("gig");
+    case "salaried":
+      return text.includes("salaried") || text.includes("employee") || text.includes("govt") || text.includes("government") || text.includes("private employee") || text.includes("service");
+    default:
+      return false;
+  }
+}
+
+function isStandardInputOccupation(occReqText) {
+  const text = normalizeText(occReqText);
+  if (!text || text === "all" || text === "any" || text === "none" || text === "resident") return false;
+  return (
+    matchesStandardOccupation(text, "student") ||
+    matchesStandardOccupation(text, "farmer") ||
+    matchesStandardOccupation(text, "self-employed") ||
+    matchesStandardOccupation(text, "unemployed") ||
+    matchesStandardOccupation(text, "daily wage / artisan") ||
+    matchesStandardOccupation(text, "salaried")
+  );
+}
+
+function isPwdRequiredScheme(disabilityReq, scheme) {
+  if (disabilityReq) {
+    const s = normalizeText(disabilityReq);
+    if (s === "yes" || s.includes("pwd") || s.includes("divyang") || s.includes("differently")) {
+      return true;
+    }
+  }
+  if (scheme) {
+    const id = String(scheme.id || scheme.scheme_id || "").trim().toUpperCase();
+    if (id === "ASIIM") return true;
+
+    const name = normalizeText(scheme.name || scheme.scheme_name || "");
+    const other = normalizeText(scheme.otherConditions || scheme.other_conditions || "");
+    const desc = normalizeText(scheme.desc || scheme.description || "");
+
+    if (name.includes("asiim") || name.includes("with disabilities") || name.includes("divyangjan") || name.includes("differently abled")) {
+      return true;
+    }
+    if (other.includes("sc divyang") || other.includes("sc / sc divyang") || desc.includes("differently-abled youth")) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function getSchemeField(scheme, ...keys) {
   for (const key of keys) {
     if (scheme[key] !== undefined && scheme[key] !== null && String(scheme[key]).trim() !== "") {
@@ -2124,6 +2285,7 @@ function checkEligibility(scheme, profile) {
   const occupation = profile.occupation || "";
   const category = profile.category || profile.socialCategory || "";
   const education = profile.education || "";
+  const disability = profile.disability || "No";
 
   const minAge = parseNumeric(getSchemeField(scheme, "minAge", "min_age"));
   const maxAge = parseNumeric(getSchemeField(scheme, "maxAge", "max_age"));
@@ -2133,6 +2295,7 @@ function checkEligibility(scheme, profile) {
   const occupationReq = getSchemeField(scheme, "occReq", "occupation_criteria");
   const categoryReq = getSchemeField(scheme, "categoryReq", "social_category");
   const educationReq = getSchemeField(scheme, "eduReq", "education_requirement");
+  const disabilityReq = getSchemeField(scheme, "disabilityReq", "disability_status", "disability", "pwd");
 
   // 1. State Requirement
   if (isMeaningfulValue(stateReq)) {
@@ -2195,25 +2358,62 @@ function checkEligibility(scheme, profile) {
   if (isMeaningfulValue(occupationReq)) {
     const req = normalizeText(occupationReq);
     const actual = normalizeText(occupation);
-    const satisfied = req === "all" || actual === req || req.includes(actual);
-    const isFarmerMismatch = (req.includes("farmer") && actual === "student") || (req === "farmer");
+    const isOpenToAll = req === "all" || req === "any" || req === "" || req === "resident";
+    const reqIsStandard = isStandardInputOccupation(occupationReq);
+    const userIsOther = actual === "other" || actual === "others";
+
+    let satisfied = false;
+    let isFarmerMismatch = false;
+
+    if (isOpenToAll) {
+      satisfied = true;
+    } else if (userIsOther) {
+      // User selected "Other" option in demographic profile:
+      // If a scheme requires an occupation other than the standard input options (e.g. Fisherman, Weaver, Vendor, Artist, etc.)
+      // or requires "Other", match it with the "Other" option!
+      if (!reqIsStandard || req.includes("other")) {
+        satisfied = true;
+      } else {
+        // Scheme specifically requires one of the standard input options (e.g. Farmer or Student)
+        satisfied = false;
+      }
+    } else {
+      // User selected a standard occupation (Student, Farmer, etc.)
+      satisfied = actual === req || req.includes(actual) || matchesStandardOccupation(req, actual);
+      isFarmerMismatch = (req.includes("farmer") && actual === "student") || (req === "farmer" && actual !== "farmer");
+    }
     
     conditions.push(createEligibilityCondition({
       key: "occupation",
       label: "Occupation requirement",
       satisfied,
-      statusLabel: satisfied ? `Satisfied (${occupation || "All"})` : "Not satisfied",
+      statusLabel: satisfied ? (userIsOther ? "Satisfied (Other)" : `Satisfied (${occupation || "All"})`) : "Not satisfied",
       comparison: satisfied ? null : {
         field: "occupation",
         required: occupationReq,
-        actual: occupation || "Student"
+        actual: occupation || (userIsOther ? "Other" : "Student")
       },
       reason: satisfied
-        ? `Your occupation is ${occupation}, which qualifies.`
+        ? (userIsOther
+            ? `Your occupation (Other) qualifies for this scheme (${occupationReq}).`
+            : `Your occupation is ${occupation}, which qualifies.`)
         : isFarmerMismatch
           ? `This scheme is only for farmers. Your profile shows your occupation as ${occupation || "Student"}, which does not meet the eligibility criteria.`
-          : `This scheme requires occupation: ${occupationReq}. Your profile shows ${occupation || "Other"}, which does not meet the eligibility criteria.`,
-      suggestion: satisfied ? "" : `You may explore other ${occupation ? occupation.toLowerCase() : "student"}-focused schemes available on the portal.`
+          : userIsOther
+            ? `This scheme requires occupation: ${occupationReq}. Your profile shows Other.`
+            : `This scheme requires occupation: ${occupationReq}. Your profile shows ${occupation || "Other"}, which does not meet the eligibility criteria.`,
+      suggestion: satisfied ? "" : `You may explore schemes open to all or matching your occupation profile.`
+    }));
+  } else if (occupation) {
+    const userIsOther = normalizeText(occupation) === "other" || normalizeText(occupation) === "others";
+    conditions.push(createEligibilityCondition({
+      key: "occupation",
+      label: "Occupation requirement",
+      satisfied: true,
+      statusLabel: userIsOther ? "Satisfied (Other)" : `Satisfied (${occupation})`,
+      reason: `Your occupation (${occupation}) qualifies. This scheme is open to all occupations.`,
+      comparison: null,
+      suggestion: ""
     }));
   }
 
@@ -2303,17 +2503,23 @@ function checkEligibility(scheme, profile) {
     }
   }
 
-  // 8. Other Criteria (Ensures satisfied criteria count aligns with expected breakdown)
-  const satisfiedSoFar = conditions.filter(c => c.satisfied);
-  if (satisfiedSoFar.length >= 2) {
+  // 8. Disability Requirement (PwD)
+  if (isPwdRequiredScheme(disabilityReq, scheme)) {
+    const userIsPwd = normalizeText(disability) === "yes" || normalizeText(disability) === "true";
     conditions.push(createEligibilityCondition({
-      key: "other",
-      label: "Other criteria",
-      satisfied: true,
-      statusLabel: "Satisfied",
-      reason: "All other applicable criteria are satisfied.",
-      comparison: null,
-      suggestion: ""
+      key: "disability",
+      label: "Disability requirement (PwD)",
+      satisfied: userIsPwd,
+      statusLabel: userIsPwd ? "Satisfied (PwD)" : "Not satisfied",
+      comparison: userIsPwd ? null : {
+        field: "Disability Status (PwD)",
+        required: "Yes (PwD Required)",
+        actual: disability || "No"
+      },
+      reason: userIsPwd
+        ? "You meet the Person with Disability (PwD) eligibility requirement."
+        : `This scheme is specifically for Persons with Disabilities (PwD). Your profile indicates ${disability || "No"}.`,
+      suggestion: userIsPwd ? "" : "You may explore welfare schemes open to all citizens without disability criteria."
     }));
   }
 
@@ -2370,6 +2576,9 @@ async function initFeature() {
   const recentTagsList = document.getElementById("recentTagsList");
   const btnClearAllTags = document.getElementById("btnClearAllTags");
   const recentSearchesContainer = document.getElementById("recentSearchesContainer");
+  const recentNavBtns = document.getElementById("recentNavBtns");
+  const btnRecentPrev = document.getElementById("btnRecentPrev");
+  const btnRecentNext = document.getElementById("btnRecentNext");
 
   const mostSearchedBar = document.getElementById("mostSearchedBar");
   const mostSearchedTrack = document.getElementById("mostSearchedTrack");
@@ -3121,9 +3330,119 @@ async function initFeature() {
 
   // =========================================================================
   // RECENT SEARCHES STATE & MANAGEMENT
-  // =========================================================================
-  let recentSearches = [];
-  let lastSearchedTerm = null;
+  const RECENT_SEARCHES_STORAGE_KEY = "uniora_recent_searches_v1";
+
+  function loadRecentSearches() {
+    try {
+      const raw = localStorage.getItem(RECENT_SEARCHES_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          return parsed.filter(item => typeof item === "string" && item.trim().length > 0);
+        }
+      }
+    } catch (e) {
+      console.warn("[RecentSearches] Failed to read from localStorage:", e);
+    }
+    return [];
+  }
+
+  function saveRecentSearches(list) {
+    try {
+      localStorage.setItem(RECENT_SEARCHES_STORAGE_KEY, JSON.stringify(list));
+    } catch (e) {
+      console.warn("[RecentSearches] Failed to save to localStorage:", e);
+    }
+  }
+
+  let recentSearches = loadRecentSearches();
+  let isRecentCarouselPaused = false;
+  let recentPauseResumeTimeout = null;
+  let isDraggingRecentCarousel = false;
+  let dragRecentStartX = 0;
+  let dragRecentStartScrollLeft = 0;
+  let hasDraggedRecentCarousel = false;
+  let recentCarouselSubpixelScroll = 0;
+  let recentSingleSetWidth = 0;
+  let recentOriginalChipsCount = 0;
+  let isRecentCarouselListening = false;
+
+  function pauseRecentCarousel(durationMs = 2500) {
+    isRecentCarouselPaused = true;
+    if (recentPauseResumeTimeout) clearTimeout(recentPauseResumeTimeout);
+    recentPauseResumeTimeout = setTimeout(() => {
+      isRecentCarouselPaused = false;
+    }, durationMs);
+  }
+
+  function getRecentSetWidth() {
+    if (recentSingleSetWidth > 0) return recentSingleSetWidth;
+    if (!recentTagsList || recentTagsList.offsetParent === null) return 0;
+    if (recentOriginalChipsCount > 0 && recentTagsList.children.length > recentOriginalChipsCount) {
+      const firstChild = recentTagsList.children[0];
+      const cloneChild = recentTagsList.children[recentOriginalChipsCount];
+      if (firstChild && cloneChild) {
+        const dist = cloneChild.offsetLeft - firstChild.offsetLeft;
+        if (dist > 10) {
+          recentSingleSetWidth = dist;
+          return recentSingleSetWidth;
+        }
+        const rectDist = cloneChild.getBoundingClientRect().left - firstChild.getBoundingClientRect().left;
+        if (rectDist > 10) {
+          recentSingleSetWidth = rectDist;
+          return recentSingleSetWidth;
+        }
+      }
+    }
+    return 0;
+  }
+
+  function normalizeRecentScroll() {
+    const w = getRecentSetWidth();
+    if (w > 0) {
+      let s = recentTagsList.scrollLeft % w;
+      if (s < 0) s += w;
+      recentTagsList.scrollLeft = s;
+      recentCarouselSubpixelScroll = s;
+    } else {
+      recentCarouselSubpixelScroll = recentTagsList.scrollLeft;
+    }
+  }
+
+  function checkAndInitRecentCarousel() {
+    if (!recentSearchesContainer || !recentTagsList) return;
+    if (!recentSearches || recentSearches.length === 0) return;
+    if (recentTagsList.offsetParent === null || recentTagsList.clientWidth === 0) return;
+
+    const isOverflowing = recentTagsList.scrollWidth > recentTagsList.clientWidth + 5;
+
+    if (isOverflowing) {
+      if (recentNavBtns) recentNavBtns.style.display = "inline-flex";
+      recentOriginalChipsCount = recentSearches.length;
+
+      // Duplicate chips for circular marquee loop (2 duplicate sets)
+      const originalChips = Array.from(recentTagsList.querySelectorAll(".recent-chip"));
+      for (let c = 0; c < 2; c++) {
+        originalChips.forEach(chip => {
+          const clone = chip.cloneNode(true);
+          clone.setAttribute("aria-hidden", "true");
+          recentTagsList.appendChild(clone);
+        });
+      }
+
+      recentSingleSetWidth = 0;
+      recentCarouselSubpixelScroll = 0;
+      recentTagsList.scrollLeft = 0;
+      isRecentCarouselPaused = false;
+    } else {
+      if (recentNavBtns) recentNavBtns.style.display = "none";
+      recentOriginalChipsCount = 0;
+      recentSingleSetWidth = 0;
+      recentCarouselSubpixelScroll = 0;
+      recentTagsList.scrollLeft = 0;
+      isRecentCarouselPaused = true;
+    }
+  }
 
   function renderRecentSearches() {
     if (!recentSearchesContainer || !recentTagsList) return;
@@ -3131,6 +3450,11 @@ async function initFeature() {
     if (!recentSearches || recentSearches.length === 0) {
       recentSearchesContainer.style.display = "none";
       recentTagsList.innerHTML = "";
+      if (recentNavBtns) recentNavBtns.style.display = "none";
+      recentOriginalChipsCount = 0;
+      recentSingleSetWidth = 0;
+      recentCarouselSubpixelScroll = 0;
+      isRecentCarouselPaused = true;
       return;
     }
 
@@ -3154,18 +3478,173 @@ async function initFeature() {
 
       chip.appendChild(labelSpan);
       chip.appendChild(removeSpan);
-
-      chip.addEventListener("click", (e) => {
-        if (e.target === removeSpan || removeSpan.contains(e.target)) {
-          e.stopPropagation();
-          removeRecentSearch(term);
-          return;
-        }
-        executeSearch(term, true);
-      });
-
       recentTagsList.appendChild(chip);
     });
+
+    recentTagsList.scrollLeft = 0;
+    recentCarouselSubpixelScroll = 0;
+    recentSingleSetWidth = 0;
+
+    setupRecentCarouselEvents();
+
+    requestAnimationFrame(() => {
+      checkAndInitRecentCarousel();
+    });
+  }
+
+  function setupRecentCarouselEvents() {
+    if (isRecentCarouselListening) return;
+    isRecentCarouselListening = true;
+
+    if (btnRecentPrev) {
+      btnRecentPrev.addEventListener("click", () => {
+        pauseRecentCarousel(3000);
+        const w = getRecentSetWidth();
+        if (w > 0 && recentTagsList.scrollLeft < 150) {
+          recentTagsList.scrollLeft += w;
+          recentCarouselSubpixelScroll = recentTagsList.scrollLeft;
+        }
+        recentTagsList.scrollBy({ left: -150, behavior: "smooth" });
+        setTimeout(normalizeRecentScroll, 400);
+      });
+    }
+
+    if (btnRecentNext) {
+      btnRecentNext.addEventListener("click", () => {
+        pauseRecentCarousel(3000);
+        const w = getRecentSetWidth();
+        if (w > 0 && recentTagsList.scrollLeft > w) {
+          recentTagsList.scrollLeft -= w;
+          recentCarouselSubpixelScroll = recentTagsList.scrollLeft;
+        }
+        recentTagsList.scrollBy({ left: 150, behavior: "smooth" });
+        setTimeout(normalizeRecentScroll, 400);
+      });
+    }
+
+    if (recentTagsList) {
+      recentTagsList.addEventListener("mouseenter", () => {
+        isRecentCarouselPaused = true;
+        if (recentPauseResumeTimeout) clearTimeout(recentPauseResumeTimeout);
+      });
+
+      recentTagsList.addEventListener("mouseleave", () => {
+        if (!isDraggingRecentCarousel && recentOriginalChipsCount > 0) {
+          pauseRecentCarousel(800);
+        }
+      });
+
+      recentTagsList.addEventListener("touchstart", () => {
+        isRecentCarouselPaused = true;
+        if (recentPauseResumeTimeout) clearTimeout(recentPauseResumeTimeout);
+      }, { passive: true });
+
+      recentTagsList.addEventListener("touchend", () => {
+        normalizeRecentScroll();
+        if (recentOriginalChipsCount > 0) {
+          pauseRecentCarousel(1800);
+        }
+      }, { passive: true });
+
+      recentTagsList.addEventListener("wheel", () => {
+        normalizeRecentScroll();
+        if (recentOriginalChipsCount > 0) {
+          pauseRecentCarousel(1800);
+        }
+      }, { passive: true });
+
+      recentTagsList.addEventListener("mousedown", (e) => {
+        if (e.button !== 0) return;
+        isDraggingRecentCarousel = true;
+        hasDraggedRecentCarousel = false;
+        dragRecentStartX = e.pageX - recentTagsList.offsetLeft;
+        dragRecentStartScrollLeft = recentTagsList.scrollLeft;
+        isRecentCarouselPaused = true;
+        if (recentPauseResumeTimeout) clearTimeout(recentPauseResumeTimeout);
+      });
+
+      recentTagsList.addEventListener("click", (e) => {
+        if (hasDraggedRecentCarousel) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+
+        const removeBtn = e.target.closest(".chip-remove");
+        if (removeBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          const chip = removeBtn.closest(".recent-chip");
+          const term = chip ? chip.getAttribute("data-query") : null;
+          if (term) {
+            removeRecentSearch(term);
+          }
+          return;
+        }
+
+        const chip = e.target.closest(".recent-chip");
+        if (chip) {
+          const query = chip.getAttribute("data-query");
+          if (query) {
+            executeSearch(query, true);
+          }
+        }
+      });
+    }
+
+    window.addEventListener("mousemove", (e) => {
+      if (!isDraggingRecentCarousel || !recentTagsList) return;
+      const currentX = e.pageX - recentTagsList.offsetLeft;
+      const walk = currentX - dragRecentStartX;
+      if (Math.abs(walk) > 4) {
+        hasDraggedRecentCarousel = true;
+      }
+      recentTagsList.scrollLeft = dragRecentStartScrollLeft - walk;
+      recentCarouselSubpixelScroll = recentTagsList.scrollLeft;
+    });
+
+    window.addEventListener("mouseup", () => {
+      if (isDraggingRecentCarousel) {
+        isDraggingRecentCarousel = false;
+        normalizeRecentScroll();
+        if (recentOriginalChipsCount > 0) {
+          pauseRecentCarousel(1200);
+        }
+      }
+    });
+
+    let recentLastTime = performance.now();
+    const RECENT_SCROLL_SPEED_PX_PER_SEC = 20;
+
+    function recentAutoScrollStep(currentTime) {
+      const deltaMs = currentTime - recentLastTime;
+      recentLastTime = currentTime;
+
+      if (
+        currentTab === "SEARCH" &&
+        !isRecentCarouselPaused &&
+        !isDraggingRecentCarousel &&
+        recentOriginalChipsCount > 0 &&
+        recentTagsList &&
+        recentTagsList.offsetParent !== null
+      ) {
+        const setWidth = getRecentSetWidth();
+        if (setWidth > 20) {
+          const pxToScroll = (RECENT_SCROLL_SPEED_PX_PER_SEC * deltaMs) / 1000;
+          recentCarouselSubpixelScroll += pxToScroll;
+
+          if (recentCarouselSubpixelScroll >= setWidth) {
+            recentCarouselSubpixelScroll -= setWidth;
+          }
+
+          recentTagsList.scrollLeft = recentCarouselSubpixelScroll;
+        }
+      }
+
+      requestAnimationFrame(recentAutoScrollStep);
+    }
+
+    requestAnimationFrame(recentAutoScrollStep);
   }
 
   function commitSearchToRecent(term) {
@@ -3174,61 +3653,40 @@ async function initFeature() {
 
     const cleanLower = cleanTerm.toLowerCase();
 
-    // Check if the searched term is already present in the recent searches
-    const existingIndex = recentSearches.findIndex(
-      item => item.toLowerCase() === cleanLower
+    // 1. Remove term if already present (deduplicate case-insensitively)
+    recentSearches = recentSearches.filter(
+      item => item.toLowerCase() !== cleanLower
     );
 
-    if (existingIndex !== -1) {
-      // If the user searches a word that is ALREADY present in recent searches,
-      // bring that word to the first place inside the recent search container
-      const [existingItem] = recentSearches.splice(existingIndex, 1);
+    // 2. Prepend immediately to index 0 (front of recent searches)
+    recentSearches.unshift(cleanTerm);
 
-      // Also commit the previous search term if it was different and not already added
-      if (
-        lastSearchedTerm &&
-        lastSearchedTerm.toLowerCase() !== cleanLower
-      ) {
-        recentSearches = recentSearches.filter(
-          item => item.toLowerCase() !== lastSearchedTerm.toLowerCase()
-        );
-        recentSearches.unshift(lastSearchedTerm);
-      }
-
-      // Bring existingItem to the very first place
-      recentSearches.unshift(existingItem);
-    } else {
-      // New search not yet in recent searches.
-      // Commit the PREVIOUS search term into recent searches now
-      if (lastSearchedTerm && lastSearchedTerm.toLowerCase() !== cleanLower) {
-        recentSearches = recentSearches.filter(
-          item => item.toLowerCase() !== lastSearchedTerm.toLowerCase()
-        );
-        recentSearches.unshift(lastSearchedTerm);
-      }
+    // 3. Keep up to 10 recent searches
+    if (recentSearches.length > 10) {
+      recentSearches = recentSearches.slice(0, 10);
     }
 
-    lastSearchedTerm = cleanTerm;
+    // 4. Save immediately to localStorage
+    saveRecentSearches(recentSearches);
 
-    if (recentSearches.length > 8) {
-      recentSearches = recentSearches.slice(0, 8);
-    }
-
+    // 5. Render immediately on screen
     renderRecentSearches();
   }
 
   function removeRecentSearch(term) {
     const cleanTerm = String(term || "").trim().toLowerCase();
     recentSearches = recentSearches.filter(item => item.toLowerCase() !== cleanTerm);
-    if (lastSearchedTerm && lastSearchedTerm.toLowerCase() === cleanTerm) {
-      lastSearchedTerm = null;
-    }
+    saveRecentSearches(recentSearches);
     renderRecentSearches();
   }
 
   function clearAllRecentSearches() {
     recentSearches = [];
-    lastSearchedTerm = null;
+    try {
+      localStorage.removeItem(RECENT_SEARCHES_STORAGE_KEY);
+    } catch (e) {
+      console.warn("[RecentSearches] Failed to clear localStorage:", e);
+    }
     renderRecentSearches();
   }
 
@@ -3784,6 +4242,76 @@ async function initFeature() {
     setRequiredDocsAccordion(false);
   }
 
+  function extractAdditionalConditions(scheme) {
+    if (!scheme) return [];
+    const raw = scheme.other_conditions || scheme.otherConditions || "";
+    if (!raw || typeof raw !== "string") return [];
+    const trimmed = raw.trim();
+    if (!trimmed || trimmed.toLowerCase() === "none" || trimmed === "-" || trimmed.toLowerCase() === "n/a") {
+      return [];
+    }
+
+    return trimmed
+      .split(/\s*[;\n•|]\s*/)
+      .map(part => part.replace(/^\s*[-–*•]+\s*/, '').trim())
+      .filter(part => part.length > 2 && part.toLowerCase() !== "none");
+  }
+
+  let isAdditionalConditionsExpanded = false;
+
+  function renderAdditionalConditions(scheme) {
+    const section = document.getElementById("modalAdditionalConditionsSection");
+    const list = document.getElementById("modalAdditionalConditionsList");
+    const btnToggle = document.getElementById("btnToggleMoreConditions");
+    const toggleText = document.getElementById("toggleConditionsText");
+    if (!section || !list) return;
+
+    const conditions = extractAdditionalConditions(scheme);
+
+    if (conditions.length === 0) {
+      section.style.display = "none";
+      list.innerHTML = "";
+      if (btnToggle) btnToggle.style.display = "none";
+      return;
+    }
+
+    // Reset expanded state to false when rendering new scheme
+    isAdditionalConditionsExpanded = false;
+    if (btnToggle) {
+      btnToggle.classList.remove("is-expanded");
+      btnToggle.setAttribute("aria-expanded", "false");
+    }
+
+    const maxInitial = 4;
+    const hasMore = conditions.length > maxInitial;
+
+    list.innerHTML = conditions.map((item, idx) => {
+      const isExtra = idx >= maxInitial;
+      return `
+        <li class="additional-condition-item ${isExtra ? "is-extra-condition" : ""}" style="${isExtra ? "display: none;" : ""}">
+          <span class="condition-item-icon" aria-hidden="true">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </span>
+          <span class="condition-item-text">${escapeHtml(item)}</span>
+        </li>
+      `;
+    }).join("");
+
+    if (btnToggle && toggleText) {
+      if (hasMore) {
+        const remaining = conditions.length - maxInitial;
+        toggleText.textContent = `Read more (+${remaining} more)`;
+        btnToggle.style.display = "inline-flex";
+      } else {
+        btnToggle.style.display = "none";
+      }
+    }
+
+    section.style.display = "flex";
+  }
+
   window.openSchemeDetails = function (schemeId) {
     syncDrawerOffset();
     const scheme = ALL_SCHEMES.find(s => String(s.id) === String(schemeId) || String(s.scheme_id) === String(schemeId));
@@ -3879,6 +4407,9 @@ async function initFeature() {
 
       renderAccordionSummary(currentEligibilityCheck);
 
+      // Populate Additional Conditions to Self-Verify with dynamic data
+      renderAdditionalConditions(scheme);
+
       // Populate Required Documents dropdown list with scheme data
       renderRequiredDocsDropdown(scheme);
 
@@ -3913,6 +4444,14 @@ async function initFeature() {
       syncDrawerOffset();
       updateCardReadMoreVisibility();
       singleSetWidth = 0;
+      recentSingleSetWidth = 0;
+      if (currentTab === "SEARCH" && recentSearches && recentSearches.length > 0) {
+        renderRecentSearches();
+      }
+      if (typeof updateDocsTrackSizing === "function") {
+        updateDocsTrackSizing();
+        updateDocsNavButtons();
+      }
     }
   );
 
@@ -3935,6 +4474,9 @@ async function initFeature() {
     openCriteriaGroup = null;
     criteriaAccordionContent.hidden = true;
     setRequiredDocsAccordion(false);
+    const addlSection = document.getElementById("modalAdditionalConditionsSection");
+    if (addlSection) addlSection.style.display = "none";
+    isAdditionalConditionsExpanded = false;
   }
 
   btnSatisfiedAccordion.addEventListener("click", () => setCriteriaAccordion("satisfied"));
@@ -3947,6 +4489,31 @@ async function initFeature() {
   if (btnToggleRequiredDocs) {
     btnToggleRequiredDocs.addEventListener("click", () => {
       setRequiredDocsAccordion(!isRequiredDocsOpen);
+    });
+  }
+
+  const btnToggleMoreConditions = document.getElementById("btnToggleMoreConditions");
+  const toggleConditionsText = document.getElementById("toggleConditionsText");
+
+  if (btnToggleMoreConditions) {
+    btnToggleMoreConditions.addEventListener("click", () => {
+      isAdditionalConditionsExpanded = !isAdditionalConditionsExpanded;
+      btnToggleMoreConditions.classList.toggle("is-expanded", isAdditionalConditionsExpanded);
+      btnToggleMoreConditions.setAttribute("aria-expanded", String(isAdditionalConditionsExpanded));
+
+      const extraItems = document.querySelectorAll("#modalAdditionalConditionsList .is-extra-condition");
+      extraItems.forEach(item => {
+        item.style.display = isAdditionalConditionsExpanded ? "flex" : "none";
+      });
+
+      if (toggleConditionsText) {
+        if (isAdditionalConditionsExpanded) {
+          toggleConditionsText.textContent = "Read less";
+        } else {
+          const count = extraItems.length;
+          toggleConditionsText.textContent = `Read more (+${count} more)`;
+        }
+      }
     });
   }
 
@@ -4643,6 +5210,7 @@ async function initFeature() {
   });
 
   initMostSearchedCarousel();
+  setupRecentCarouselEvents();
   renderSchemeHistory();
 
   if (guestProfile.isFilled) {
