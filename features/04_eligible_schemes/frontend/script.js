@@ -1310,6 +1310,61 @@ const DEPARTMENTS = [
   "Ministry of Finance"
 ];
 
+function normalizeDepartmentName(name) {
+  if (!name) return "";
+  return String(name).replace(/\s+/g, " ").trim();
+}
+
+function parseDepartmentNames(deptString) {
+  if (!deptString) return [];
+  return String(deptString)
+    .split(";")
+    .map(d => normalizeDepartmentName(d))
+    .filter(d => Boolean(d) && /[a-zA-Z]/.test(d));
+}
+
+function getSchemeDepartments(scheme) {
+  if (!scheme) return [];
+  const rawDept = scheme.dept || scheme.issuing_department || "";
+  return parseDepartmentNames(rawDept);
+}
+
+function schemeMatchesDepartment(scheme, selectedDept) {
+  if (!selectedDept) return true;
+  const target = normalizeDepartmentName(selectedDept).toLowerCase();
+  const schemeDepts = getSchemeDepartments(scheme);
+  return schemeDepts.some(d => {
+    const dLower = d.toLowerCase();
+    return dLower === target || dLower.includes(target);
+  });
+}
+
+function getUniqueDepartments() {
+  const map = new Map();
+
+  function addDept(raw) {
+    if (!raw) return;
+    parseDepartmentNames(raw).forEach(name => {
+      const key = name.toLowerCase();
+      if (!map.has(key)) {
+        map.set(key, name);
+      }
+    });
+  }
+
+  if (Array.isArray(DEPARTMENTS)) {
+    DEPARTMENTS.forEach(addDept);
+  }
+
+  if (typeof ALL_SCHEMES !== "undefined" && Array.isArray(ALL_SCHEMES)) {
+    ALL_SCHEMES.forEach(s => {
+      addDept(s.dept || s.issuing_department);
+    });
+  }
+
+  return Array.from(map.values()).sort((a, b) => a.localeCompare(b));
+}
+
 // 6. REAL SCHEMES DATASET (Finalized 10 Schemes matching Target Design & Pool)
 const RECENT_REAL_SCHEMES = [
   {
@@ -2309,6 +2364,12 @@ async function initFeature() {
   const btnClearSearch = document.getElementById("btnClearSearch");
   const recentTagsList = document.getElementById("recentTagsList");
   const btnClearAllTags = document.getElementById("btnClearAllTags");
+  const recentSearchesContainer = document.getElementById("recentSearchesContainer");
+
+  const mostSearchedBar = document.getElementById("mostSearchedBar");
+  const mostSearchedTrack = document.getElementById("mostSearchedTrack");
+  const btnTopicPrev = document.getElementById("btnTopicPrev");
+  const btnTopicNext = document.getElementById("btnTopicNext");
 
   const activeFilterBadgeBar = document.getElementById("activeFilterBadgeBar");
   const selectedDeptNameEl = document.getElementById("selectedDeptName");
@@ -2329,6 +2390,14 @@ async function initFeature() {
   const btnPrevPage = document.getElementById("btnPrevPage");
   const btnNextPage = document.getElementById("btnNextPage");
   const pageNumbersContainer = document.getElementById("pageNumbersContainer");
+
+  // Scheme History & Readiness CTA DOM
+  const schemeHistorySection = document.getElementById("schemeHistorySection");
+  const schemeHistoryTrack = document.getElementById("schemeHistoryTrack");
+  const schemeHistoryEmpty = document.getElementById("schemeHistoryEmpty");
+  const btnClearHistory = document.getElementById("btnClearHistory");
+  const btnHistoryNext = document.getElementById("btnHistoryNext");
+  const btnPageReadinessCta = document.getElementById("btnPageReadinessCta");
 
   // Profile DOM
   const emptyProfileBanner = document.getElementById("emptyProfileBanner");
@@ -2391,6 +2460,38 @@ async function initFeature() {
 }
   const btnCloseDetailsModal = document.getElementById("btnCloseDetailsModal");
   const btnDismissDetails = document.getElementById("btnDismissDetails");
+  const btnDrawerVerifyDocs = document.getElementById("btnDrawerVerifyDocs");
+  const btnDrawerCheckReadiness = document.getElementById("btnDrawerCheckReadiness");
+  let activeDrawerScheme = null;
+
+  function saveActiveSchemeContext(scheme) {
+    if (!scheme) return;
+    const schemePayload = {
+      id: scheme.id,
+      scheme_id: scheme.scheme_id || scheme.id,
+      name: scheme.name,
+      scheme_name: scheme.name,
+      dept: scheme.dept || "",
+      department: scheme.dept || "",
+      level: scheme.level || "",
+      category: scheme.level || "",
+      applicationMode: scheme.applicationMode || scheme.application_mode || "Online",
+      docs: Array.isArray(scheme.required_documents) ? scheme.required_documents : (Array.isArray(scheme.docs) ? scheme.docs : []),
+      required_documents: Array.isArray(scheme.required_documents) ? scheme.required_documents : (Array.isArray(scheme.docs) ? scheme.docs : []),
+      officialUrl: scheme.officialUrl || scheme.application_url || "",
+      application_url: scheme.officialUrl || scheme.application_url || "",
+      description: scheme.desc || scheme.description || "",
+      benefits: scheme.benefits || "",
+      selectedAt: new Date().toISOString()
+    };
+    try {
+      localStorage.setItem("uniora_selected_scheme", JSON.stringify(schemePayload));
+      sessionStorage.setItem("uniora_selected_scheme", JSON.stringify(schemePayload));
+    } catch (err) {
+      console.warn("[UNIORA] Failed to save scheme context:", err);
+    }
+  }
+
   const modalSchemeName = document.getElementById("modalSchemeName");
   const modalSchemeDept = document.getElementById("modalSchemeDept");
   const modalSchemeLevel = document.getElementById("modalSchemeLevel");
@@ -2413,8 +2514,7 @@ async function initFeature() {
   const failedCountEl = document.getElementById("failedCount");
   const criteriaAccordionContent = document.getElementById("criteriaAccordionContent");
   const criteriaAccordionContentInner = document.getElementById("criteriaAccordionContentInner");
-  const modalDocChips = document.getElementById("modalDocChips");
-  const modalOfficialLink = document.getElementById("modalOfficialLink");
+  const btnDrawerViewDocs = document.getElementById("btnDrawerViewDocs");
   const modalSchemeDescription = document.getElementById("modalSchemeDescription");
 
   // 1. Fetch & populate State & District dropdowns
@@ -2554,18 +2654,28 @@ async function initFeature() {
     if (currentTab === "FILTER") {
       const basePool = (filterScope === "ELIGIBLE") ? getEligibleSchemes() : ALL_SCHEMES;
       if (!selectedFilterDept) return basePool;
-      return basePool.filter(s => s.dept.toLowerCase() === selectedFilterDept.toLowerCase());
+      return basePool.filter(s => schemeMatchesDepartment(s, selectedFilterDept));
     }
 
     if (currentTab === "SEARCH") {
-      const basePool = (filterScope === "ELIGIBLE") ? getEligibleSchemes() : ALL_SCHEMES;
+      const basePool = ALL_SCHEMES;
       if (!activeSearchQuery.trim()) return basePool;
       const q = activeSearchQuery.toLowerCase();
-      return basePool.filter(s =>
-        s.name.toLowerCase().includes(q) ||
-        s.dept.toLowerCase().includes(q) ||
-        s.sub.toLowerCase().includes(q)
-      );
+      const qStem = (q.endsWith("s") && q.length > 4) ? q.slice(0, -1) : q;
+      return basePool.filter(s => {
+        const name = (s.name || "").toLowerCase();
+        const dept = (s.dept || "").toLowerCase();
+        const sub = (s.sub || "").toLowerCase();
+        const desc = (s.desc || "").toLowerCase();
+        const cat = (s.category || "").toLowerCase();
+        return (
+          name.includes(q) || (qStem !== q && name.includes(qStem)) ||
+          dept.includes(q) || (qStem !== q && dept.includes(qStem)) ||
+          sub.includes(q) || (qStem !== q && sub.includes(qStem)) ||
+          desc.includes(q) || (qStem !== q && desc.includes(qStem)) ||
+          cat.includes(q) || (qStem !== q && cat.includes(qStem))
+        );
+      });
     }
 
     return ALL_SCHEMES;
@@ -2637,9 +2747,8 @@ async function initFeature() {
         ? `${scopeLabel} under ${selectedFilterDept} (${totalItems})`
         : `All Departments (${totalItems})`;
     } else if (currentTab === "SEARCH") {
-      const scopeLabel = (filterScope === "ELIGIBLE") ? "in Eligible" : "";
       resultsTableTitle.textContent = activeSearchQuery
-        ? `Search Results for "${activeSearchQuery}" ${scopeLabel} (${totalItems})`
+        ? `Search Results for "${activeSearchQuery}" (${totalItems})`
         : `All Schemes (${totalItems})`;
     }
 
@@ -2683,11 +2792,18 @@ async function initFeature() {
           </svg>
         `;
         emptyStateTitle.textContent = "No Schemes Found";
-        emptyStateText.textContent = (filterScope === "ELIGIBLE")
+        emptyStateText.textContent = (currentTab === "FILTER" && filterScope === "ELIGIBLE")
           ? `None of your eligible schemes match the selected filter (${selectedFilterDept}).`
           : "No welfare schemes match your search or filter criteria.";
-        btnResetFilters.textContent = (filterScope === "ELIGIBLE") ? "View All Eligible" : "Show All Schemes";
+        btnResetFilters.textContent = (filterScope === "ELIGIBLE" && currentTab !== "SEARCH") ? "View All Eligible" : "Show All Schemes";
         btnResetFilters.onclick = () => {
+          if (currentTab === "SEARCH") {
+            searchInput.value = "";
+            activeSearchQuery = "";
+            if (btnClearSearch) btnClearSearch.style.display = "none";
+            switchTab("ALL");
+            return;
+          }
           clearFilterAction();
           if (filterScope === "ELIGIBLE") {
             switchTab("ELIGIBLE");
@@ -2709,7 +2825,7 @@ async function initFeature() {
 
     resultsShowingCount.textContent = `Showing ${startIndex + 1} – ${endIndex} of ${totalItems} schemes`;
 
-    const isEligibleScope = currentTab === "ELIGIBLE" || ((currentTab === "FILTER" || currentTab === "SEARCH") && filterScope === "ELIGIBLE");
+    const isEligibleScope = currentTab === "ELIGIBLE" || (currentTab === "FILTER" && filterScope === "ELIGIBLE");
     const btnLabel = isEligibleScope ? "See Details &rarr;" : "Check Eligible &rarr;";
 
     let cardsHtml = "";
@@ -2734,6 +2850,12 @@ async function initFeature() {
       const schemeIcon = scheme.icon || `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`;
       const iconBg = scheme.iconBg || (isTn ? "#F0FDF4" : "#EFF6FF");
 
+      let cardBtnLabel = btnLabel;
+      if (currentTab === "SEARCH") {
+        const isElig = guestProfile.isFilled && checkEligibility(scheme, guestProfile).eligible;
+        cardBtnLabel = isElig ? "See Details &rarr;" : "Check Eligible &rarr;";
+      }
+
       cardsHtml += `
         <article class="scheme-card" data-scheme-id="${scheme.id}">
           <span class="scheme-jurisdiction-badge ${levelClass}">${levelText}</span>
@@ -2748,7 +2870,12 @@ async function initFeature() {
             </div>
           </div>
 
-          <p class="scheme-card-desc">${escapeHtml(desc)}</p>
+          <div class="scheme-card-desc-wrap">
+            <p class="scheme-card-desc">${escapeHtml(desc)}</p>
+            <button type="button" class="scheme-read-more-btn" onclick="window.openSchemeDetails('${escapeHtml(String(scheme.id))}')" style="display: none;">
+              Read more &rarr;
+            </button>
+          </div>
 
           <div class="scheme-card-footer">
             <div class="scheme-app-mode-wrap">
@@ -2759,7 +2886,7 @@ async function initFeature() {
               </span>
             </div>
             <button type="button" class="btn-scheme-action" onclick="window.openSchemeDetails('${escapeHtml(String(scheme.id))}')">
-              ${btnLabel}
+              ${cardBtnLabel}
             </button>
           </div>
         </article>
@@ -2768,11 +2895,31 @@ async function initFeature() {
 
     if (schemesCardsContainer) {
       schemesCardsContainer.innerHTML = cardsHtml;
+      updateCardReadMoreVisibility();
+      requestAnimationFrame(updateCardReadMoreVisibility);
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(updateCardReadMoreVisibility);
+      }
     }
     if (schemesTableBody) {
       schemesTableBody.innerHTML = "";
     }
     renderPagination(totalItems);
+  }
+
+  function updateCardReadMoreVisibility() {
+    if (!schemesCardsContainer) return;
+    const cards = schemesCardsContainer.querySelectorAll(".scheme-card");
+    cards.forEach(card => {
+      const descEl = card.querySelector(".scheme-card-desc");
+      const readMoreBtn = card.querySelector(".scheme-read-more-btn");
+      if (descEl && readMoreBtn) {
+        if (descEl.clientHeight > 0) {
+          const isOverflowing = descEl.scrollHeight > (descEl.clientHeight + 2);
+          readMoreBtn.style.display = isOverflowing ? "inline-flex" : "none";
+        }
+      }
+    });
   }
 
   function renderPagination(totalItems) {
@@ -2786,12 +2933,25 @@ async function initFeature() {
     if (totalPages <= 7) {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {
-      if (currentPage <= 4) {
-        pages = [1, 2, 3, 4, 5, "...", totalPages];
-      } else if (currentPage >= totalPages - 3) {
-        pages = [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-      } else {
-        pages = [1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages];
+      const rangeStart = Math.max(1, currentPage - 3);
+      const rangeEnd = Math.min(totalPages, currentPage + 3);
+
+      if (rangeStart > 1) {
+        pages.push(1);
+        if (rangeStart > 2) {
+          pages.push("...");
+        }
+      }
+
+      for (let i = rangeStart; i <= rangeEnd; i++) {
+        pages.push(i);
+      }
+
+      if (rangeEnd < totalPages) {
+        if (rangeEnd < totalPages - 1) {
+          pages.push("...");
+        }
+        pages.push(totalPages);
       }
     }
 
@@ -2873,6 +3033,12 @@ async function initFeature() {
     currentPage = 1;
 
     searchDrawer.style.display = tab === "SEARCH" ? "block" : "none";
+    if (mostSearchedBar) {
+      mostSearchedBar.style.display = tab === "SEARCH" ? "inline-flex" : "none";
+    }
+    if (tab === "SEARCH") {
+      renderRecentSearches();
+    }
     filterDropdownMenu.classList.remove("open");
 
     if (tab === "FILTER" && selectedFilterDept) {
@@ -2895,10 +3061,12 @@ async function initFeature() {
 
   function populateFilterDropdown() {
     filterOptionsList.innerHTML = "";
+    const departmentList = getUniqueDepartments();
 
-    DEPARTMENTS.forEach(dept => {
+    departmentList.forEach(dept => {
       const btn = document.createElement("button");
-      btn.className = `popover-opt-btn ${selectedFilterDept === dept ? "active" : ""}`;
+      const isSelected = Boolean(selectedFilterDept && selectedFilterDept.toLowerCase() === dept.toLowerCase());
+      btn.className = `popover-opt-btn ${isSelected ? "active" : ""}`;
       btn.textContent = dept;
       btn.addEventListener("click", () => {
         selectedFilterDept = dept;
@@ -2940,14 +3108,133 @@ async function initFeature() {
   btnClearFilterText.addEventListener("click", clearFilterAction);
 
   // =========================================================================
+  // RECENT SEARCHES STATE & MANAGEMENT
+  // =========================================================================
+  let recentSearches = [];
+  let lastSearchedTerm = null;
+
+  function renderRecentSearches() {
+    if (!recentSearchesContainer || !recentTagsList) return;
+
+    if (!recentSearches || recentSearches.length === 0) {
+      recentSearchesContainer.style.display = "none";
+      recentTagsList.innerHTML = "";
+      return;
+    }
+
+    recentSearchesContainer.style.display = "flex";
+    recentTagsList.innerHTML = "";
+
+    recentSearches.forEach(term => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "recent-chip";
+      chip.setAttribute("data-query", term);
+
+      const labelSpan = document.createElement("span");
+      labelSpan.textContent = term;
+
+      const removeSpan = document.createElement("span");
+      removeSpan.className = "chip-remove";
+      removeSpan.textContent = "×";
+      removeSpan.title = "Remove";
+      removeSpan.setAttribute("aria-label", `Remove ${term}`);
+
+      chip.appendChild(labelSpan);
+      chip.appendChild(removeSpan);
+
+      chip.addEventListener("click", (e) => {
+        if (e.target === removeSpan || removeSpan.contains(e.target)) {
+          e.stopPropagation();
+          removeRecentSearch(term);
+          return;
+        }
+        executeSearch(term, true);
+      });
+
+      recentTagsList.appendChild(chip);
+    });
+  }
+
+  function commitSearchToRecent(term) {
+    const cleanTerm = String(term || "").trim();
+    if (!cleanTerm) return;
+
+    const cleanLower = cleanTerm.toLowerCase();
+
+    // Check if the searched term is already present in the recent searches
+    const existingIndex = recentSearches.findIndex(
+      item => item.toLowerCase() === cleanLower
+    );
+
+    if (existingIndex !== -1) {
+      // If the user searches a word that is ALREADY present in recent searches,
+      // bring that word to the first place inside the recent search container
+      const [existingItem] = recentSearches.splice(existingIndex, 1);
+
+      // Also commit the previous search term if it was different and not already added
+      if (
+        lastSearchedTerm &&
+        lastSearchedTerm.toLowerCase() !== cleanLower
+      ) {
+        recentSearches = recentSearches.filter(
+          item => item.toLowerCase() !== lastSearchedTerm.toLowerCase()
+        );
+        recentSearches.unshift(lastSearchedTerm);
+      }
+
+      // Bring existingItem to the very first place
+      recentSearches.unshift(existingItem);
+    } else {
+      // New search not yet in recent searches.
+      // Commit the PREVIOUS search term into recent searches now
+      if (lastSearchedTerm && lastSearchedTerm.toLowerCase() !== cleanLower) {
+        recentSearches = recentSearches.filter(
+          item => item.toLowerCase() !== lastSearchedTerm.toLowerCase()
+        );
+        recentSearches.unshift(lastSearchedTerm);
+      }
+    }
+
+    lastSearchedTerm = cleanTerm;
+
+    if (recentSearches.length > 8) {
+      recentSearches = recentSearches.slice(0, 8);
+    }
+
+    renderRecentSearches();
+  }
+
+  function removeRecentSearch(term) {
+    const cleanTerm = String(term || "").trim().toLowerCase();
+    recentSearches = recentSearches.filter(item => item.toLowerCase() !== cleanTerm);
+    if (lastSearchedTerm && lastSearchedTerm.toLowerCase() === cleanTerm) {
+      lastSearchedTerm = null;
+    }
+    renderRecentSearches();
+  }
+
+  function clearAllRecentSearches() {
+    recentSearches = [];
+    lastSearchedTerm = null;
+    renderRecentSearches();
+  }
+
+  // =========================================================================
   // EXPLICIT SEARCH LOGIC
   // =========================================================================
-  function executeSearch(query) {
+  function executeSearch(query, addToRecent = false) {
     activeSearchQuery = String(query || "").trim();
     searchInput.value = activeSearchQuery;
 
     if (btnClearSearch) {
       btnClearSearch.style.display = activeSearchQuery ? "flex" : "none";
+    }
+
+    if (addToRecent && activeSearchQuery) {
+      commitSearchToRecent(activeSearchQuery);
+    } else {
+      renderRecentSearches();
     }
 
     currentPage = 1;
@@ -2961,42 +3248,228 @@ async function initFeature() {
   });
 
   btnExecuteSearch.addEventListener("click", () => {
-    executeSearch(searchInput.value);
+    executeSearch(searchInput.value, true);
   });
 
   searchInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      executeSearch(searchInput.value);
+      executeSearch(searchInput.value, true);
       searchInput.blur();
     }
   });
 
   btnClearSearch.addEventListener("click", () => {
     searchInput.value = "";
-    executeSearch("");
+    executeSearch("", false);
     searchInput.focus();
   });
 
-  recentTagsList.querySelectorAll(".tag-chip").forEach(chip => {
-    chip.addEventListener("click", (event) => {
+  if (btnClearAllTags) {
+    btnClearAllTags.addEventListener("click", clearAllRecentSearches);
+  }
 
-      // If the X is clicked, remove this search chip
-      if (event.target.tagName === "SPAN") {
-        event.stopPropagation();
-        chip.remove();
+  // =========================================================================
+  // =========================================================================
+  // MOST SEARCHED CAROUSEL & CIRCULAR INFINITE AUTO-SCROLL
+  // =========================================================================
+  let isCarouselPaused = false;
+  let pauseResumeTimeout = null;
+  let isDraggingCarousel = false;
+  let dragStartX = 0;
+  let dragStartScrollLeft = 0;
+  let hasDraggedCarousel = false;
+  let carouselSubpixelScroll = 0;
+  let singleSetWidth = 0;
+  let originalChipsCount = 0;
+
+  function pauseCarousel(durationMs = 2500) {
+    isCarouselPaused = true;
+    if (pauseResumeTimeout) clearTimeout(pauseResumeTimeout);
+    pauseResumeTimeout = setTimeout(() => {
+      isCarouselPaused = false;
+    }, durationMs);
+  }
+
+  function getSetWidth() {
+    if (singleSetWidth > 0) return singleSetWidth;
+    if (!mostSearchedTrack || mostSearchedTrack.offsetParent === null) return 0;
+    if (originalChipsCount > 0 && mostSearchedTrack.children.length > originalChipsCount) {
+      const firstChild = mostSearchedTrack.children[0];
+      const cloneChild = mostSearchedTrack.children[originalChipsCount];
+      const dist = cloneChild.offsetLeft - firstChild.offsetLeft;
+      if (dist > 10) {
+        singleSetWidth = dist;
+        return singleSetWidth;
+      }
+    }
+    return 0;
+  }
+
+  function normalizeScroll() {
+    const w = getSetWidth();
+    if (w > 0) {
+      let s = mostSearchedTrack.scrollLeft % w;
+      if (s < 0) s += w;
+      mostSearchedTrack.scrollLeft = s;
+      carouselSubpixelScroll = s;
+    } else {
+      carouselSubpixelScroll = mostSearchedTrack.scrollLeft;
+    }
+  }
+
+  function initMostSearchedCarousel() {
+    if (!mostSearchedTrack) return;
+    if (mostSearchedTrack.dataset.carouselInitialized === "true") return;
+    mostSearchedTrack.dataset.carouselInitialized = "true";
+
+    const originalChips = Array.from(mostSearchedTrack.querySelectorAll(".topic-chip"));
+    originalChipsCount = originalChips.length;
+    if (originalChipsCount === 0) return;
+
+    // Clone chips to create an infinite circular loop (2 clone sets so there is always seamless continuity)
+    for (let c = 0; c < 2; c++) {
+      originalChips.forEach(chip => {
+        const clone = chip.cloneNode(true);
+        clone.setAttribute("aria-hidden", "true");
+        mostSearchedTrack.appendChild(clone);
+      });
+    }
+
+    // Smooth navigation buttons: manual interruption and scroll
+    if (btnTopicPrev) {
+      btnTopicPrev.addEventListener("click", () => {
+        pauseCarousel(3000);
+        const w = getSetWidth();
+        if (w > 0 && mostSearchedTrack.scrollLeft < 150) {
+          mostSearchedTrack.scrollLeft += w;
+          carouselSubpixelScroll = mostSearchedTrack.scrollLeft;
+        }
+        mostSearchedTrack.scrollBy({ left: -150, behavior: "smooth" });
+        setTimeout(normalizeScroll, 400);
+      });
+    }
+
+    if (btnTopicNext) {
+      btnTopicNext.addEventListener("click", () => {
+        pauseCarousel(3000);
+        const w = getSetWidth();
+        if (w > 0 && mostSearchedTrack.scrollLeft > w) {
+          mostSearchedTrack.scrollLeft -= w;
+          carouselSubpixelScroll = mostSearchedTrack.scrollLeft;
+        }
+        mostSearchedTrack.scrollBy({ left: 150, behavior: "smooth" });
+        setTimeout(normalizeScroll, 400);
+      });
+    }
+
+    // Hover pause and resume: stops running while user hovers
+    mostSearchedTrack.addEventListener("mouseenter", () => {
+      isCarouselPaused = true;
+      if (pauseResumeTimeout) clearTimeout(pauseResumeTimeout);
+    });
+
+    mostSearchedTrack.addEventListener("mouseleave", () => {
+      if (!isDraggingCarousel) {
+        pauseCarousel(800);
+      }
+    });
+
+    // Touch events for mobile/tablet devices
+    mostSearchedTrack.addEventListener("touchstart", () => {
+      isCarouselPaused = true;
+      if (pauseResumeTimeout) clearTimeout(pauseResumeTimeout);
+    }, { passive: true });
+
+    mostSearchedTrack.addEventListener("touchend", () => {
+      normalizeScroll();
+      pauseCarousel(1800);
+    }, { passive: true });
+
+    // Wheel event (trackpad or mouse wheel horizontal scroll)
+    mostSearchedTrack.addEventListener("wheel", () => {
+      normalizeScroll();
+      pauseCarousel(1800);
+    }, { passive: true });
+
+    // Drag-to-scroll support with interruption
+    mostSearchedTrack.addEventListener("mousedown", (e) => {
+      if (e.button !== 0) return;
+      isDraggingCarousel = true;
+      hasDraggedCarousel = false;
+      dragStartX = e.pageX - mostSearchedTrack.offsetLeft;
+      dragStartScrollLeft = mostSearchedTrack.scrollLeft;
+      isCarouselPaused = true;
+      if (pauseResumeTimeout) clearTimeout(pauseResumeTimeout);
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      if (!isDraggingCarousel) return;
+      const currentX = e.pageX - mostSearchedTrack.offsetLeft;
+      const walk = currentX - dragStartX;
+      if (Math.abs(walk) > 4) {
+        hasDraggedCarousel = true;
+      }
+      mostSearchedTrack.scrollLeft = dragStartScrollLeft - walk;
+      carouselSubpixelScroll = mostSearchedTrack.scrollLeft;
+    });
+
+    window.addEventListener("mouseup", () => {
+      if (isDraggingCarousel) {
+        isDraggingCarousel = false;
+        normalizeScroll();
+        pauseCarousel(1200);
+      }
+    });
+
+    // Topic chips click delegation for both original and cloned chips
+    mostSearchedTrack.addEventListener("click", (e) => {
+      if (hasDraggedCarousel) {
+        e.preventDefault();
+        e.stopPropagation();
         return;
       }
-
-      // Otherwise, clicking the word performs the search
-      const q = chip.getAttribute("data-query");
-      executeSearch(q);
+      const chip = e.target.closest(".topic-chip");
+      if (!chip) return;
+      const topic = chip.getAttribute("data-topic") || chip.textContent.trim();
+      if (topic) {
+        executeSearch(topic, true);
+      }
     });
-  });
 
-  btnClearAllTags.addEventListener("click", () => {
-    recentTagsList.innerHTML = "";
-  });
+    // Continuous right-to-left circular loop auto-scroll
+    let lastTime = performance.now();
+    const SCROLL_SPEED_PX_PER_SEC = 20; // slow, gentle circular loop
+
+    function autoScrollStep(currentTime) {
+      const deltaMs = currentTime - lastTime;
+      lastTime = currentTime;
+
+      if (
+        currentTab === "SEARCH" &&
+        !isCarouselPaused &&
+        !isDraggingCarousel &&
+        mostSearchedTrack.offsetParent !== null
+      ) {
+        const setWidth = getSetWidth();
+        if (setWidth > 20) {
+          const pxToScroll = (SCROLL_SPEED_PX_PER_SEC * deltaMs) / 1000;
+          carouselSubpixelScroll += pxToScroll;
+
+          // Seamless circular loop reset: when Set 1 ends, loop to the duplicate Set
+          if (carouselSubpixelScroll >= setWidth) {
+            carouselSubpixelScroll -= setWidth;
+          }
+
+          mostSearchedTrack.scrollLeft = carouselSubpixelScroll;
+        }
+      }
+
+      requestAnimationFrame(autoScrollStep);
+    }
+
+    requestAnimationFrame(autoScrollStep);
+  }
 
   function openEditModal() {
     modalFormHeading.textContent = guestProfile.isFilled
@@ -3235,11 +3708,17 @@ async function initFeature() {
       setCriteriaAccordion("satisfied");
     }
   }
-
   window.openSchemeDetails = function (schemeId) {
     syncDrawerOffset();
     const scheme = ALL_SCHEMES.find(s => String(s.id) === String(schemeId) || String(s.scheme_id) === String(schemeId));
-    if (!scheme) return;
+    activeDrawerScheme = scheme;
+
+    // Record viewed scheme in Scheme History
+    const isEligibleSource = (currentTab === "ELIGIBLE") || (currentTab === "FILTER" && filterScope === "ELIGIBLE");
+    const historySource = isEligibleSource ? "ELIGIBLE" : "ALL";
+    if (typeof addSchemeToHistory === "function") {
+      addSchemeToHistory(scheme, historySource);
+    }
 
     modalSchemeName.textContent = scheme.name;
     modalSchemeDept.textContent = scheme.dept;
@@ -3288,16 +3767,11 @@ async function initFeature() {
       notEvaluatedView.style.display = "flex";
       evaluatedSections.style.display = "none";
       drawerFooterBar.style.display = "none";
-
-      const docReadinessContainer = document.getElementById("modalDocReadinessContainer");
-      if (docReadinessContainer) {
-        docReadinessContainer.style.display = "none";
-      }
     } else {
       // 2. EVALUATED: Shows complete evaluated details and actions
       notEvaluatedView.style.display = "none";
       evaluatedSections.style.display = "flex";
-      drawerFooterBar.style.display = "flex";
+      drawerFooterBar.style.display = "";
 
       if (currentEligibilityCheck.eligible) {
         modalStatusPill.textContent = "✓ Eligible";
@@ -3329,102 +3803,17 @@ async function initFeature() {
 
       renderAccordionSummary(currentEligibilityCheck);
 
-      const verifiedDocList = getStoredVerifiedDocs();
-      const docReadiness = computeSchemeDocReadiness(scheme, verifiedDocList);
-      const docReadinessContainer = document.getElementById("modalDocReadinessContainer");
-      if (docReadinessContainer) {
-        docReadinessContainer.style.display = "block";
-        docReadinessContainer.innerHTML = `
-          <div class="doc-readiness-card">
-            <div class="doc-readiness-header">
-              <span class="doc-readiness-label">Document Readiness</span>
-              <span class="doc-readiness-score">${docReadiness.percentage}% Ready</span>
-            </div>
-            <div class="doc-readiness-track">
-              <div class="doc-readiness-bar" style="width: ${docReadiness.percentage}%;"></div>
-            </div>
-            <div class="doc-readiness-subtext">
-              ${docReadiness.verified} of ${docReadiness.total} required documents verified in your UniOra vault
-            </div>
-          </div>
-        `;
-      }
-
-      let hasMissingDocs = false;
-
-      const DOC_TYPE_CATEGORIES = {
-        "Aadhaar Card": "Identity Proof",
-        "PAN Card": "Identity Proof",
-        "Voter ID": "Identity Proof",
-        "Identity Card": "Identity Proof",
-        "Ration Card": "Address / Family Proof",
-        "Smart Family Ration Card": "Address / Family Proof",
-        "Domicile Certificate": "Residence Proof",
-        "Nativity Certificate": "Residence Proof",
-        "Community Certificate": "Social Category Proof",
-        "Income Certificate": "Financial Proof",
-        "Bank Passbook": "Bank Account Details",
-        "Bank Account Details": "Financial Proof",
-        "10th Mark Sheet": "Educational Proof",
-        "12th Mark Sheet": "Educational Proof",
-        "Degree/Diploma Certificate": "Educational Proof",
-        "Admission Proof": "College/University",
-        "College Admission Proof": "College/University",
-        "College ID Card": "College/University",
-        "Government School 6-12th Bonafide": "School Bonafide",
-        "Govt School Study Certificate (6th-12th)": "School Bonafide",
-        "Attendance & College Bonafide": "College Bonafide",
-        "Electricity Bill": "Address Proof",
-        "Electricity Consumer Bill": "Address Proof",
-        "House Ownership Document": "Property Proof",
-        "Patta / Land Record": "Property Proof"
-      };
-
-      modalDocChips.innerHTML = scheme.docs
-        .map(d => {
-          const isVerified = isDocumentVerified(d, verifiedDocList);
-          if (!isVerified) hasMissingDocs = true;
-          const categoryName = DOC_TYPE_CATEGORIES[d] || (isVerified ? "Verified in Vault" : "Mandatory Proof");
-          const verifiedClass = isVerified ? "is-doc-verified" : "";
-
-          return `
-            <div class="drawer-doc-card ${verifiedClass}">
-              <div class="drawer-doc-icon-wrap" aria-hidden="true">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                  <line x1="16" y1="13" x2="8" y2="13"/>
-                  <line x1="16" y1="17" x2="8" y2="17"/>
-                </svg>
-              </div>
-              <div class="drawer-doc-meta">
-                <span class="drawer-doc-title">${escapeHtml(d)}</span>
-                <span class="drawer-doc-subtitle">${escapeHtml(categoryName)}</span>
-              </div>
-            </div>
-          `;
-        })
-        .join("");
-
-      const docActionPrompt = document.getElementById("modalDocActionPrompt");
-      if (docActionPrompt) {
-        if (hasMissingDocs) {
-          docActionPrompt.style.display = "block";
-          docActionPrompt.innerHTML = `
-            <a href="../../03_documents_verification/frontend/index.html" class="btn-verify-missing-docs">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-              <span>Upload &amp; Verify Requisite Documents</span>
-            </a>
-          `;
-        } else {
-          docActionPrompt.style.display = "none";
+      if (btnDrawerViewDocs) {
+        const schemeId = scheme.id || scheme.scheme_id || "";
+        const schemeName = scheme.name || scheme.scheme_name || "";
+        const targetUrl = `../../01_scheme_recommendation/frontend/index.html?schemeId=${encodeURIComponent(schemeId)}&schemeName=${encodeURIComponent(schemeName)}&openDrawer=true`;
+        btnDrawerViewDocs.href = targetUrl;
+        btnDrawerViewDocs.setAttribute("data-scheme-id", schemeId);
+        btnDrawerViewDocs.setAttribute("data-scheme-name", schemeName);
+        if (scheme.officialUrl) {
+          btnDrawerViewDocs.setAttribute("data-official-url", scheme.officialUrl);
         }
       }
-
-      modalOfficialLink.href = scheme.officialUrl || "#";
-      modalOfficialLink.onclick = (event) => {
-        if (!scheme.officialUrl) event.preventDefault();
-      };
     }
 
     // Slide-in drawer
@@ -3441,8 +3830,19 @@ async function initFeature() {
 
   window.addEventListener(
     "resize",
-    syncDrawerOffset
+    () => {
+      syncDrawerOffset();
+      updateCardReadMoreVisibility();
+      singleSetWidth = 0;
+    }
   );
+
+  if (typeof ResizeObserver !== "undefined" && schemesCardsContainer) {
+    const cardResizeObserver = new ResizeObserver(() => {
+      updateCardReadMoreVisibility();
+    });
+    cardResizeObserver.observe(schemesCardsContainer);
+  }
 
   // Direct drawer opening when clicking Check Eligible
   window.checkSingleScheme = function (schemeId) {
@@ -3460,7 +3860,35 @@ async function initFeature() {
   btnSatisfiedAccordion.addEventListener("click", () => setCriteriaAccordion("satisfied"));
   btnFailedAccordion.addEventListener("click", () => setCriteriaAccordion("failed"));
   btnCloseDetailsModal.addEventListener("click", closeDetailsModal);
-  btnDismissDetails.addEventListener("click", closeDetailsModal);
+  if (btnDismissDetails) {
+    btnDismissDetails.addEventListener("click", closeDetailsModal);
+  }
+
+  if (btnDrawerViewDocs) {
+    btnDrawerViewDocs.addEventListener("click", () => {
+      if (activeDrawerScheme) {
+        saveActiveSchemeContext(activeDrawerScheme);
+      }
+    });
+  }
+
+  if (btnDrawerVerifyDocs) {
+    btnDrawerVerifyDocs.addEventListener("click", () => {
+      if (activeDrawerScheme) {
+        saveActiveSchemeContext(activeDrawerScheme);
+        btnDrawerVerifyDocs.href = `../../03_documents_verification/frontend/index.html?schemeId=${encodeURIComponent(activeDrawerScheme.id)}&schemeName=${encodeURIComponent(activeDrawerScheme.name)}`;
+      }
+    });
+  }
+
+  if (btnDrawerCheckReadiness) {
+    btnDrawerCheckReadiness.addEventListener("click", () => {
+      if (!activeDrawerScheme) return;
+      saveActiveSchemeContext(activeDrawerScheme);
+      const targetUrl = `../../05_my_readiness/frontend/index.html?schemeId=${encodeURIComponent(activeDrawerScheme.id)}&schemeName=${encodeURIComponent(activeDrawerScheme.name)}`;
+      window.location.href = targetUrl;
+    });
+  }
 
   detailsModal.addEventListener("click", (e) => {
     if (e.target === detailsModal) closeDetailsModal();
@@ -3471,6 +3899,166 @@ async function initFeature() {
       closeDetailsModal();
     }
   });
+
+  // =========================================================================
+  // SCHEME HISTORY & READINESS CTA (PAGE LEVEL)
+  // =========================================================================
+  const SCHEME_HISTORY_KEY = "uniora_scheme_view_history";
+
+  function loadSchemeHistory() {
+    try {
+      const data = sessionStorage.getItem(SCHEME_HISTORY_KEY);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {
+      console.warn("[SchemeHistory] Failed to read from sessionStorage:", e);
+    }
+    return [];
+  }
+
+  function saveSchemeHistory(history) {
+    try {
+      sessionStorage.setItem(SCHEME_HISTORY_KEY, JSON.stringify(history));
+    } catch (e) {
+      console.warn("[SchemeHistory] Failed to save to sessionStorage:", e);
+    }
+  }
+
+  let schemeHistory = loadSchemeHistory();
+
+  function getSchemeCategoryIcon(scheme) {
+    if (scheme && scheme.icon) return scheme.icon;
+    const text = (((scheme && scheme.name) || "") + " " + ((scheme && scheme.dept) || "")).toLowerCase();
+
+    if (text.includes("agri") || text.includes("kisan") || text.includes("farm") || text.includes("crop")) {
+      return `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M7 21a1 1 0 0 1-1-1v-6a5 5 0 0 1 5-5h1a1 1 0 0 1 1 1v1a5 5 0 0 1-5 5h-1v4a1 1 0 0 1-1 1zm4-9a3 3 0 0 0-3 3v0h1a3 3 0 0 0 3-3v0zm10-5a5 5 0 0 1-5 5h-1a1 1 0 0 1-1-1v-1a5 5 0 0 1 5-5h1a1 1 0 0 1 1 1v1zm-2 2a3 3 0 0 0-3-3v0a3 3 0 0 0 3 3v0z"/></svg>`;
+    }
+    if (text.includes("health") || text.includes("ayushman") || text.includes("medic") || text.includes("arogya")) {
+      return `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
+    }
+    if (text.includes("scholar") || text.includes("matric") || text.includes("vidya") || text.includes("educat") || text.includes("student")) {
+      return `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>`;
+    }
+    if (text.includes("awas") || text.includes("hous") || text.includes("shelter")) {
+      return `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>`;
+    }
+    if (text.includes("skill") || text.includes("employ") || text.includes("mission") || text.includes("rozgar") || text.includes("job")) {
+      return `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>`;
+    }
+    return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`;
+  }
+
+  function renderSchemeHistory() {
+    if (!schemeHistoryTrack || !schemeHistoryEmpty) return;
+
+    if (!schemeHistory || schemeHistory.length === 0) {
+      schemeHistoryTrack.innerHTML = "";
+      schemeHistoryEmpty.style.display = "block";
+      if (btnClearHistory) btnClearHistory.style.display = "none";
+      if (btnHistoryNext) btnHistoryNext.style.display = "none";
+      return;
+    }
+
+    schemeHistoryEmpty.style.display = "none";
+    if (btnClearHistory) btnClearHistory.style.display = "inline-flex";
+    schemeHistoryTrack.innerHTML = "";
+
+    schemeHistory.forEach(item => {
+      const isEligible = item.source === "ELIGIBLE";
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = `history-chip ${isEligible ? "is-eligible" : ""}`;
+      chip.setAttribute("data-scheme-id", item.id);
+      chip.setAttribute("title", `View details for ${item.name}`);
+
+      const iconWrap = document.createElement("div");
+      iconWrap.className = "history-chip-icon";
+      iconWrap.setAttribute("aria-hidden", "true");
+      iconWrap.innerHTML = getSchemeCategoryIcon(item);
+
+      const nameEl = document.createElement("span");
+      nameEl.className = "history-chip-name";
+      nameEl.textContent = item.name;
+
+      chip.appendChild(iconWrap);
+      chip.appendChild(nameEl);
+
+      chip.addEventListener("click", () => {
+        window.openSchemeDetails(item.id);
+      });
+
+      schemeHistoryTrack.appendChild(chip);
+    });
+
+    if (btnHistoryNext) {
+      const isScrollable = schemeHistoryTrack.scrollWidth > schemeHistoryTrack.clientWidth + 10;
+      btnHistoryNext.style.display = isScrollable ? "flex" : "none";
+    }
+  }
+
+  function addSchemeToHistory(scheme, source) {
+    if (!scheme || !scheme.id) return;
+    const isEligible = source === "ELIGIBLE";
+    const sourceLabel = isEligible ? "(Viewed from Eligible)" : "(Viewed from All)";
+
+    // Remove existing entry for this scheme to avoid duplicates
+    schemeHistory = schemeHistory.filter(h => String(h.id) !== String(scheme.id));
+
+    // Prepend to front (most recently viewed)
+    schemeHistory.unshift({
+      id: scheme.id,
+      name: scheme.name,
+      dept: scheme.dept,
+      level: scheme.level,
+      source: isEligible ? "ELIGIBLE" : "ALL",
+      sourceLabel: sourceLabel,
+      icon: scheme.icon || null,
+      iconBg: scheme.iconBg || null
+    });
+
+    if (schemeHistory.length > 20) {
+      schemeHistory = schemeHistory.slice(0, 20);
+    }
+
+    saveSchemeHistory(schemeHistory);
+    renderSchemeHistory();
+  }
+
+  function clearAllSchemeHistory() {
+    schemeHistory = [];
+    saveSchemeHistory([]);
+    renderSchemeHistory();
+  }
+
+  if (btnClearHistory) {
+    btnClearHistory.addEventListener("click", clearAllSchemeHistory);
+  }
+
+  if (btnHistoryNext && schemeHistoryTrack) {
+    btnHistoryNext.addEventListener("click", () => {
+      schemeHistoryTrack.scrollBy({ left: 260, behavior: "smooth" });
+    });
+  }
+
+  if (btnPageReadinessCta) {
+    btnPageReadinessCta.addEventListener("click", (e) => {
+      e.preventDefault();
+      let targetScheme = activeDrawerScheme;
+      if (!targetScheme && schemeHistory && schemeHistory.length > 0) {
+        const recentId = schemeHistory[0].id;
+        targetScheme = ALL_SCHEMES.find(s => String(s.id) === String(recentId));
+      }
+
+      if (targetScheme) {
+        saveActiveSchemeContext(targetScheme);
+        window.location.href = `../../05_my_readiness/frontend/index.html?schemeId=${encodeURIComponent(targetScheme.id)}&schemeName=${encodeURIComponent(targetScheme.name)}`;
+      } else {
+        window.location.href = `../../05_my_readiness/frontend/index.html`;
+      }
+    });
+  }
 
   function updateProfileUI() {
     function setDemoValue(element, val) {
@@ -3763,14 +4351,17 @@ async function initFeature() {
 
     let addedNewDepts = false;
     schemes.forEach(s => {
-      const d = s.dept || s.issuing_department;
-      if (d && !DEPARTMENTS.includes(d)) {
-        DEPARTMENTS.push(d);
-        addedNewDepts = true;
-      }
+      const rawD = s.dept || s.issuing_department;
+      parseDepartmentNames(rawD).forEach(d => {
+        const dLower = d.toLowerCase();
+        if (!DEPARTMENTS.some(existing => existing.toLowerCase() === dLower)) {
+          DEPARTMENTS.push(d);
+          addedNewDepts = true;
+        }
+      });
     });
 
-    if (addedNewDepts && typeof populateFilterDropdown === "function") {
+    if (typeof populateFilterDropdown === "function") {
       populateFilterDropdown();
     }
 
@@ -3882,6 +4473,9 @@ async function initFeature() {
       showDataToast("You are offline. Showing limited fallback scheme data.", "warning");
     }
   });
+
+  initMostSearchedCarousel();
+  renderSchemeHistory();
 
   if (guestProfile.isFilled) {
     switchTab("ELIGIBLE");
