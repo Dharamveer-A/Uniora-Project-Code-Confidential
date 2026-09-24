@@ -1899,7 +1899,10 @@ function mapGoogleSheetScheme(raw, index) {
   let docs = [];
   const rawDocs = raw.required_documents || raw.mandatory_documents || "";
   if (rawDocs) {
-    docs = rawDocs.split(/[;,|]/).map(d => d.trim()).filter(Boolean);
+    docs = String(rawDocs)
+      .split(/\s*[;\n•|]\s*/)
+      .map(d => d.replace(/^\s*[-–*]+\s*/, '').trim())
+      .filter(d => d.length > 1);
   }
   if (docs.length === 0) {
     docs = ["Aadhaar Card", "Bank Account Details", "Income Certificate"];
@@ -1960,6 +1963,8 @@ function mapGoogleSheetScheme(raw, index) {
     benefits: raw.benefits || "",
     docs: docs,
     required_documents: docs,
+    raw_required_documents: rawDocs,
+    rawRequiredDocuments: rawDocs,
     mandatory_documents: raw.mandatory_documents || "",
     officialUrl: officialUrl,
     official_source_url: officialUrl,
@@ -2397,6 +2402,7 @@ async function initFeature() {
   const schemeHistoryEmpty = document.getElementById("schemeHistoryEmpty");
   const btnClearHistory = document.getElementById("btnClearHistory");
   const btnHistoryNext = document.getElementById("btnHistoryNext");
+  const btnHistoryPrev = document.getElementById("btnHistoryPrev");
   const btnPageReadinessCta = document.getElementById("btnPageReadinessCta");
 
   // Profile DOM
@@ -2515,6 +2521,12 @@ async function initFeature() {
   const criteriaAccordionContent = document.getElementById("criteriaAccordionContent");
   const criteriaAccordionContentInner = document.getElementById("criteriaAccordionContentInner");
   const btnDrawerViewDocs = document.getElementById("btnDrawerViewDocs");
+  const btnToggleRequiredDocs = document.getElementById("btnToggleRequiredDocs");
+  const modalRequiredDocsPanel = document.getElementById("modalRequiredDocsPanel");
+  const modalRequiredDocsList = document.getElementById("modalRequiredDocsList");
+  const modalRequiredDocsEmpty = document.getElementById("modalRequiredDocsEmpty");
+  const modalDocsCountBadge = document.getElementById("modalDocsCountBadge");
+  const modalDocsToggleText = document.getElementById("modalDocsToggleText");
   const modalSchemeDescription = document.getElementById("modalSchemeDescription");
 
   // 1. Fetch & populate State & District dropdowns
@@ -3708,6 +3720,70 @@ async function initFeature() {
       setCriteriaAccordion("satisfied");
     }
   }
+
+  function extractSchemeDocuments(scheme) {
+    if (!scheme) return [];
+    const raw = scheme.raw_required_documents || scheme.rawRequiredDocuments || scheme.required_documents || scheme.mandatory_documents || scheme.docs;
+    if (!raw) return [];
+    if (typeof raw === "string") {
+      return raw
+        .split(/\s*[;\n•|]\s*/)
+        .map(part => part.replace(/^\s*[-–*]+\s*/, '').trim())
+        .filter(part => part.length > 1);
+    }
+    if (Array.isArray(raw)) {
+      const list = [];
+      raw.forEach(item => {
+        if (typeof item === "string") {
+          item
+            .split(/\s*[;\n•|]\s*/)
+            .map(part => part.replace(/^\s*[-–*]+\s*/, '').trim())
+            .filter(part => part.length > 1)
+            .forEach(p => list.push(p));
+        }
+      });
+      return list.length ? list : raw.map(s => String(s).trim()).filter(Boolean);
+    }
+    return [];
+  }
+
+  let isRequiredDocsOpen = false;
+
+  function setRequiredDocsAccordion(isOpen) {
+    isRequiredDocsOpen = isOpen;
+    if (!modalRequiredDocsPanel || !btnToggleRequiredDocs) return;
+
+    modalRequiredDocsPanel.hidden = !isOpen;
+    btnToggleRequiredDocs.setAttribute("aria-expanded", String(isOpen));
+    btnToggleRequiredDocs.classList.toggle("is-open", isOpen);
+
+    if (modalDocsToggleText) {
+      modalDocsToggleText.textContent = isOpen ? "Hide" : "View";
+    }
+  }
+
+  function renderRequiredDocsDropdown(scheme) {
+    if (!modalRequiredDocsList) return;
+    const docs = extractSchemeDocuments(scheme);
+
+    if (modalDocsCountBadge) {
+      modalDocsCountBadge.textContent = `${docs.length} ${docs.length === 1 ? "document" : "documents"}`;
+    }
+
+    if (docs.length > 0) {
+      modalRequiredDocsList.innerHTML = docs.map(doc => `<li>${escapeHtml(doc)}</li>`).join("");
+      modalRequiredDocsList.hidden = false;
+      if (modalRequiredDocsEmpty) modalRequiredDocsEmpty.hidden = true;
+    } else {
+      modalRequiredDocsList.innerHTML = "";
+      modalRequiredDocsList.hidden = true;
+      if (modalRequiredDocsEmpty) modalRequiredDocsEmpty.hidden = false;
+    }
+
+    // Default to closed state when opening a scheme
+    setRequiredDocsAccordion(false);
+  }
+
   window.openSchemeDetails = function (schemeId) {
     syncDrawerOffset();
     const scheme = ALL_SCHEMES.find(s => String(s.id) === String(schemeId) || String(s.scheme_id) === String(schemeId));
@@ -3803,6 +3879,9 @@ async function initFeature() {
 
       renderAccordionSummary(currentEligibilityCheck);
 
+      // Populate Required Documents dropdown list with scheme data
+      renderRequiredDocsDropdown(scheme);
+
       if (btnDrawerViewDocs) {
         const schemeId = scheme.id || scheme.scheme_id || "";
         const schemeName = scheme.name || scheme.scheme_name || "";
@@ -3855,6 +3934,7 @@ async function initFeature() {
     document.body.classList.remove("details-drawer-open");
     openCriteriaGroup = null;
     criteriaAccordionContent.hidden = true;
+    setRequiredDocsAccordion(false);
   }
 
   btnSatisfiedAccordion.addEventListener("click", () => setCriteriaAccordion("satisfied"));
@@ -3862,6 +3942,12 @@ async function initFeature() {
   btnCloseDetailsModal.addEventListener("click", closeDetailsModal);
   if (btnDismissDetails) {
     btnDismissDetails.addEventListener("click", closeDetailsModal);
+  }
+
+  if (btnToggleRequiredDocs) {
+    btnToggleRequiredDocs.addEventListener("click", () => {
+      setRequiredDocsAccordion(!isRequiredDocsOpen);
+    });
   }
 
   if (btnDrawerViewDocs) {
@@ -3950,6 +4036,72 @@ async function initFeature() {
     return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`;
   }
 
+  function updateHistoryNavButtons() {
+    if (!schemeHistoryTrack) return;
+    const maxScroll = Math.max(0, schemeHistoryTrack.scrollWidth - schemeHistoryTrack.clientWidth);
+    const currentScroll = schemeHistoryTrack.scrollLeft;
+
+    if (maxScroll > 6) {
+      if (btnHistoryPrev) {
+        btnHistoryPrev.style.display = "flex";
+        btnHistoryPrev.disabled = currentScroll <= 6;
+      }
+      if (btnHistoryNext) {
+        btnHistoryNext.style.display = "flex";
+        btnHistoryNext.disabled = currentScroll >= maxScroll - 6;
+      }
+    } else {
+      if (btnHistoryPrev) btnHistoryPrev.style.display = "none";
+      if (btnHistoryNext) btnHistoryNext.style.display = "none";
+    }
+  }
+
+  function scrollHistoryByStep(direction) {
+    if (!schemeHistoryTrack) return;
+    const chips = Array.from(schemeHistoryTrack.querySelectorAll(".history-chip"));
+    if (chips.length === 0) return;
+
+    const maxScroll = Math.max(0, schemeHistoryTrack.scrollWidth - schemeHistoryTrack.clientWidth);
+    if (maxScroll <= 0) return;
+
+    const currentScroll = schemeHistoryTrack.scrollLeft;
+    const chipsPerPage = window.innerWidth <= 640 ? 1 : (window.innerWidth <= 1024 ? 2 : 3);
+
+    // Find the chip closest to the current left scroll position
+    let currentIndex = 0;
+    let minDiff = Infinity;
+    chips.forEach((chip, idx) => {
+      const chipLeft = chip.offsetLeft - (chip.offsetParent === schemeHistoryTrack ? 0 : schemeHistoryTrack.offsetLeft);
+      const diff = Math.abs(chipLeft - currentScroll);
+      if (diff < minDiff) {
+        minDiff = diff;
+        currentIndex = idx;
+      }
+    });
+
+    let targetIndex;
+    if (direction === "next") {
+      targetIndex = Math.min(chips.length - 1, currentIndex + chipsPerPage);
+    } else {
+      targetIndex = Math.max(0, currentIndex - chipsPerPage);
+    }
+
+    const targetChip = chips[targetIndex];
+    if (targetChip) {
+      const chipLeft = targetChip.offsetLeft - (targetChip.offsetParent === schemeHistoryTrack ? 0 : schemeHistoryTrack.offsetLeft);
+      const targetScroll = Math.min(maxScroll, Math.max(0, chipLeft));
+      schemeHistoryTrack.scrollTo({ left: targetScroll, behavior: "smooth" });
+    } else {
+      const stepSize = schemeHistoryTrack.clientWidth + 12;
+      const targetScroll = direction === "next"
+        ? Math.min(maxScroll, currentScroll + stepSize)
+        : Math.max(0, currentScroll - stepSize);
+      schemeHistoryTrack.scrollTo({ left: targetScroll, behavior: "smooth" });
+    }
+
+    setTimeout(updateHistoryNavButtons, 350);
+  }
+
   function renderSchemeHistory() {
     if (!schemeHistoryTrack || !schemeHistoryEmpty) return;
 
@@ -3957,6 +4109,7 @@ async function initFeature() {
       schemeHistoryTrack.innerHTML = "";
       schemeHistoryEmpty.style.display = "block";
       if (btnClearHistory) btnClearHistory.style.display = "none";
+      if (btnHistoryPrev) btnHistoryPrev.style.display = "none";
       if (btnHistoryNext) btnHistoryNext.style.display = "none";
       return;
     }
@@ -3992,10 +4145,9 @@ async function initFeature() {
       schemeHistoryTrack.appendChild(chip);
     });
 
-    if (btnHistoryNext) {
-      const isScrollable = schemeHistoryTrack.scrollWidth > schemeHistoryTrack.clientWidth + 10;
-      btnHistoryNext.style.display = isScrollable ? "flex" : "none";
-    }
+    updateHistoryNavButtons();
+    requestAnimationFrame(updateHistoryNavButtons);
+    setTimeout(updateHistoryNavButtons, 80);
   }
 
   function addSchemeToHistory(scheme, source) {
@@ -4036,11 +4188,27 @@ async function initFeature() {
     btnClearHistory.addEventListener("click", clearAllSchemeHistory);
   }
 
-  if (btnHistoryNext && schemeHistoryTrack) {
+  if (btnHistoryNext) {
     btnHistoryNext.addEventListener("click", () => {
-      schemeHistoryTrack.scrollBy({ left: 260, behavior: "smooth" });
+      scrollHistoryByStep("next");
     });
   }
+
+  if (btnHistoryPrev) {
+    btnHistoryPrev.addEventListener("click", () => {
+      scrollHistoryByStep("prev");
+    });
+  }
+
+  if (schemeHistoryTrack) {
+    schemeHistoryTrack.addEventListener("scroll", () => {
+      updateHistoryNavButtons();
+    });
+  }
+
+  window.addEventListener("resize", () => {
+    updateHistoryNavButtons();
+  });
 
   if (btnPageReadinessCta) {
     btnPageReadinessCta.addEventListener("click", (e) => {

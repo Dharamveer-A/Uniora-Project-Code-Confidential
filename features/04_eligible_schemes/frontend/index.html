@@ -501,8 +501,13 @@
         </div>
 
         <div class="scheme-history-track-wrapper">
+          <button type="button" class="btn-history-nav btn-history-prev" id="btnHistoryPrev" aria-label="Scroll left" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
           <div class="scheme-history-track" id="schemeHistoryTrack"></div>
-          <button type="button" class="btn-history-nav btn-history-next" id="btnHistoryNext" aria-label="Scroll right" style="display: none;">
+          <button type="button" class="btn-history-nav btn-history-next" id="btnHistoryNext" aria-label="Scroll right">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
@@ -848,21 +853,56 @@
             </div>
           </section>
 
-          <!-- REQUIRED DOCUMENTS TO APPLY SECTION CONTAINER -->
+          <!-- REQUIRED DOCUMENTS TO APPLY SECTION CONTAINER (DROPDOWN ACCORDION) -->
           <section class="documents-section" id="modalRequiredDocsSection">
-            <div class="documents-heading-row" style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 16px;">
-              <div class="heading-title-group" style="display: inline-flex; flex-direction: row; align-items: center; gap: 10px; min-width: 0;">
+            <button
+              type="button"
+              class="documents-heading-row documents-accordion-toggle"
+              id="btnToggleRequiredDocs"
+              aria-expanded="false"
+              aria-controls="modalRequiredDocsPanel"
+            >
+              <div class="heading-title-group">
                 <span class="heading-icon-badge" aria-hidden="true">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm-4 8H7v-2h6v2z"/>
                   </svg>
                 </span>
-                <h4 class="documents-heading-title" style="margin: 0; white-space: nowrap;">Required Documents to Apply</h4>
+                <div class="heading-text-group">
+                  <h4 class="documents-heading-title">Required Documents to Apply</h4>
+                  <span class="documents-count-badge" id="modalDocsCountBadge">0 documents</span>
+                </div>
               </div>
-              <a href="../../01_scheme_recommendation/frontend/index.html" class="btn-view-required-docs" id="btnDrawerViewDocs">
-                <span>View</span>
-                <span class="nav-arrow" aria-hidden="true">&rarr;</span>
-              </a>
+              <div class="btn-view-required-docs" id="btnDocsToggleAction" aria-hidden="true">
+                <span id="modalDocsToggleText">View</span>
+                <span class="nav-arrow criteria-tab-caret">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </span>
+              </div>
+            </button>
+
+            <!-- Collapsible Documents Dropdown Panel (Template matching scheme recommendation page) -->
+            <div class="documents-expanded-panel" id="modalRequiredDocsPanel" hidden>
+              <div class="documents-expanded-inner">
+                <div class="modal__section modal__section--docs">
+                  <h5 class="modal__docs-title">Documents to keep ready</h5>
+                  <ul class="modal__chips modal__docs-list" id="modalRequiredDocsList">
+                    <!-- Populated dynamically with the scheme's required documents -->
+                  </ul>
+                  <div class="modal__docs-empty" id="modalRequiredDocsEmpty" hidden>
+                    <p>No specific documents listed for this scheme. Standard proof of identity and residence may be required.</p>
+                  </div>
+                </div>
+
+                <div class="documents-panel-footer">
+                  <a href="../../01_scheme_recommendation/frontend/index.html" class="btn-goto-scheme-page" id="btnDrawerViewDocs"  rel="noopener noreferrer">
+                    <span>Open full details in Schemes page</span>
+                    <span class="nav-arrow" aria-hidden="true">&rarr;</span>
+                  </a>
+                </div>
+              </div>
             </div>
           </section>
 
