@@ -277,6 +277,396 @@ function getStoredVerifiedDocs() {
   }
 }
 
+function normalizeDocName(rawName) {
+  if (!rawName) return '';
+  const clean = rawName.trim().toLowerCase();
+  if (clean === 'ration card' || clean === 'smart ration card' || clean.includes('ration')) return 'Smart Ration Card';
+  if (clean === 'voter id' || clean === 'voter id card' || clean === 'epic card' || clean === 'epic') return 'Voter ID Card';
+  if (clean === 'aadhaar' || clean === 'aadhaar card' || clean === 'aadhar' || clean === 'aadhar card') return 'Aadhaar Card';
+  if (clean === 'pan' || clean === 'pan card') return 'PAN Card';
+  if (clean === 'income certificate' || clean === 'income') return 'Income Certificate';
+  if (clean === 'community certificate' || clean === 'community' || clean === 'caste') return 'Community Certificate';
+  if (clean === 'birth certificate' || clean === 'birth') return 'Birth Certificate';
+  if (clean === 'bank passbook' || clean === 'bank' || clean === 'passbook') return 'Bank Passbook';
+  if (clean === '10th marksheet' || clean === '10th' || clean === 'sslc') return '10th Marksheet';
+  if (clean === '12th marksheet' || clean === '12th' || clean === 'hsc') return '12th Marksheet';
+  if (clean.includes('undergraduate') || clean.includes('ug degree')) return 'Undergraduate (UG) Degree';
+  if (clean.includes('diploma')) return 'Diploma Certificate';
+  if (clean.includes('postgraduate') || clean.includes('pg degree')) return 'Postgraduate (PG) Degree';
+  if (clean.includes('driving')) return 'Driving License';
+  if (clean.includes('passport')) return 'Passport';
+  if (clean.includes('domicile')) return 'Domicile Certificate';
+  if (clean.includes('bpl')) return 'BPL Certificate';
+  if (clean.includes('udid') || clean.includes('disability')) return 'UDID Card';
+  if (clean.includes('bonafide')) return 'Bonafide Certificate';
+  if (clean.includes('land')) return 'Land Ownership Document';
+  if (clean.includes('electricity') || clean.includes('eb bill')) return 'Electricity Bill';
+  if (clean.includes('mgnrega')) return 'MGNREGA Job Card';
+  if (clean.includes('udyam')) return 'Udyam Certificate';
+  if (clean.includes('gst')) return 'GST Certificate';
+  if (clean.includes('marriage')) return 'Marriage Certificate';
+  if (clean.includes('death')) return 'Death Certificate';
+  if (clean.includes('orphan')) return 'Orphan Certificate';
+  if (clean.includes('widow')) return 'Widow Certificate';
+  return rawName.trim();
+}
+
+const PERMANENT_DOCS_CATALOG = [
+  {
+    displayName: 'Aadhaar Card',
+    canonicalName: 'Aadhaar Card',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="2"/><path d="M15 8h2M15 12h2"/></svg>`
+  },
+  {
+    displayName: 'PAN Card',
+    canonicalName: 'PAN Card',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>`
+  },
+  {
+    displayName: 'Voter ID',
+    canonicalName: 'Voter ID Card',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`
+  },
+  {
+    displayName: 'Ration Card',
+    canonicalName: 'Smart Ration Card',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`
+  },
+  {
+    displayName: 'Birth Certificate',
+    canonicalName: 'Birth Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`
+  },
+  {
+    displayName: 'Income Certificate',
+    canonicalName: 'Income Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 8h12M6 13l7 8M6 13h4a4 4 0 0 0 0-8"/></svg>`
+  },
+  {
+    displayName: 'Community Certificate',
+    canonicalName: 'Community Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>`
+  },
+  {
+    displayName: 'Bank Passbook',
+    canonicalName: 'Bank Passbook',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 2 7 22 7"/></svg>`
+  },
+  {
+    displayName: '10th Marksheet',
+    canonicalName: '10th Marksheet',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`
+  },
+  {
+    displayName: '12th Marksheet',
+    canonicalName: '12th Marksheet',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polygon points="12 12 13.5 15 17 15.5 14.5 18 15 21.5 12 19.5 9 21.5 9.5 18 7 15.5 10.5 15 12 12"/></svg>`
+  },
+  {
+    displayName: 'UG Degree',
+    canonicalName: 'Undergraduate (UG) Degree',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`
+  },
+  {
+    displayName: 'Diploma Certificate',
+    canonicalName: 'Diploma Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>`
+  },
+  {
+    displayName: 'PG Degree',
+    canonicalName: 'Postgraduate (PG) Degree',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/><circle cx="12" cy="18" r="2"/></svg>`
+  },
+  {
+    displayName: 'Driving License',
+    canonicalName: 'Driving License',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v5h-3M7 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0M15 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0"/></svg>`
+  },
+  {
+    displayName: 'Passport',
+    canonicalName: 'Passport',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="12" cy="11" r="3"/><path d="M9 21h6M9 7h6"/></svg>`
+  },
+  {
+    displayName: 'Domicile Certificate',
+    canonicalName: 'Domicile Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`
+  },
+  {
+    displayName: 'BPL Certificate',
+    canonicalName: 'BPL Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>`
+  },
+  {
+    displayName: 'UDID Card',
+    canonicalName: 'UDID Card',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>`
+  },
+  {
+    displayName: 'Bonafide Certificate',
+    canonicalName: 'Bonafide Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M15 8h2M15 12h2M7 16h10"/></svg>`
+  },
+  {
+    displayName: 'Land Ownership',
+    canonicalName: 'Land Ownership Document',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 12 2 21 11 21 22 3 22"/><line x1="9" y1="22" x2="9" y2="14"/><line x1="15" y1="22" x2="15" y2="14"/></svg>`
+  },
+  {
+    displayName: 'Electricity Bill',
+    canonicalName: 'Electricity Bill',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`
+  },
+  {
+    displayName: 'MGNREGA Job Card',
+    canonicalName: 'MGNREGA Job Card',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a9 9 0 1 0 9-9"/><path d="M3 9H1M3 9V7"/></svg>`
+  },
+  {
+    displayName: 'Udyam Certificate',
+    canonicalName: 'Udyam Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>`
+  },
+  {
+    displayName: 'GST Certificate',
+    canonicalName: 'GST Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`
+  },
+  {
+    displayName: 'Marriage Certificate',
+    canonicalName: 'Marriage Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`
+  },
+  {
+    displayName: 'Death Certificate',
+    canonicalName: 'Death Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>`
+  },
+  {
+    displayName: 'Orphan Certificate',
+    canonicalName: 'Orphan Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>`
+  },
+  {
+    displayName: 'Widow Certificate',
+    canonicalName: 'Widow Certificate',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>`
+  }
+];
+
+async function fetchUserVerifiedDocs() {
+  let docs = getStoredVerifiedDocs();
+  try {
+    const session = await getCurrentSession();
+    if (session && session.user && supabase) {
+      const { data: userDocs, error } = await supabase
+        .from('user_documents')
+        .select('*')
+        .eq('uid', session.user.id);
+
+      if (!error && Array.isArray(userDocs)) {
+        const remoteFormatted = userDocs
+          .filter(d => (d.is_verified === true) || (d.verification_status === 'verified') || (d.is_verified === undefined && d.verification_status === undefined))
+          .map(d => ({
+            document_type: d.document_type,
+            data: d.extracted_data || {}
+          }));
+
+        const existingTypes = new Set(docs.map(d => normalizeDocName(d.document_type)));
+        remoteFormatted.forEach(rd => {
+          if (!existingTypes.has(normalizeDocName(rd.document_type))) {
+            docs.push(rd);
+          }
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('[UNIORA] fetchUserVerifiedDocs notice:', err);
+  }
+  return docs;
+}
+
+function renderDocumentsBar(verifiedDocsList = []) {
+  const track = document.getElementById('docsCardsTrack');
+  const summaryStatus = document.getElementById('docsSummaryStatus');
+  const btnLeft = document.getElementById('btnDocsScrollLeft');
+  const btnRight = document.getElementById('btnDocsScrollRight');
+  if (!track) return;
+
+  const verifiedMap = new Map();
+  (verifiedDocsList || []).forEach(doc => {
+    const rawName = doc.document_type || doc.document_name || doc.name;
+    if (rawName) {
+      const canonical = normalizeDocName(rawName);
+      verifiedMap.set(canonical, doc);
+    }
+  });
+
+  const verifiedCount = verifiedMap.size;
+  if (summaryStatus) {
+    summaryStatus.textContent = verifiedCount === 1 ? '1 document verified' : `${verifiedCount} documents verified`;
+  }
+
+  const catalogDocs = [...PERMANENT_DOCS_CATALOG];
+  const catalogCanonicals = new Set(catalogDocs.map(d => d.canonicalName));
+
+  verifiedMap.forEach((docData, canonical) => {
+    if (!catalogCanonicals.has(canonical)) {
+      catalogDocs.push({
+        displayName: canonical,
+        canonicalName: canonical,
+        icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>`
+      });
+    }
+  });
+
+  track.innerHTML = '';
+
+  catalogDocs.forEach(doc => {
+    const isVerified = verifiedMap.has(doc.canonicalName);
+    const card = document.createElement('div');
+    card.className = `doc-pill-card ${isVerified ? 'is-verified' : 'is-pending'}`;
+    card.title = `${doc.displayName} (${isVerified ? 'Verified' : 'Pending'}) — Click to open in Document Verification`;
+
+    const iconHtml = isVerified
+      ? `<div class="doc-card-icon-circle"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>`
+      : `<div class="doc-card-icon-circle">${doc.icon}</div>`;
+
+    const statusHtml = isVerified
+      ? `<span class="doc-card-status">Verified</span>`
+      : `<span class="doc-card-status">Pending</span>`;
+
+    const indicatorHtml = isVerified
+      ? `<div class="doc-accent-indicator"></div>`
+      : '';
+
+    card.innerHTML = `
+      ${iconHtml}
+      <div class="doc-card-name">${doc.displayName}</div>
+      ${statusHtml}
+      ${indicatorHtml}
+    `;
+
+    card.addEventListener('click', () => {
+      window.location.href = `../../03_documents_verification/frontend/index.html?doc=${encodeURIComponent(doc.canonicalName)}`;
+    });
+
+    track.appendChild(card);
+  });
+
+  const handleDocsLayout = () => {
+    updateDocsTrackSizing();
+    updateDocsNavButtons();
+  };
+
+  handleDocsLayout();
+
+  track.onscroll = updateDocsNavButtons;
+
+  if (btnLeft) {
+    btnLeft.onclick = () => scrollDocsByStep('prev');
+  }
+  if (btnRight) {
+    btnRight.onclick = () => scrollDocsByStep('next');
+  }
+
+  if (typeof ResizeObserver !== 'undefined' && !track.dataset.hasResizeObserver) {
+    track.dataset.hasResizeObserver = 'true';
+    const ro = new ResizeObserver(() => {
+      handleDocsLayout();
+    });
+    ro.observe(track);
+  }
+
+  window.addEventListener('resize', handleDocsLayout);
+  requestAnimationFrame(handleDocsLayout);
+  setTimeout(handleDocsLayout, 100);
+}
+
+function updateDocsTrackSizing() {
+  const track = document.getElementById('docsCardsTrack');
+  if (!track || track.offsetParent === null) return;
+
+  const gap = 12;
+  const targetMinCardWidth = 120;
+  const availableWidth = track.clientWidth;
+  if (availableWidth <= 0) return;
+
+  const count = Math.max(1, Math.floor((availableWidth + gap) / (targetMinCardWidth + gap)));
+  track.style.setProperty('--docs-per-view', count);
+}
+
+function updateDocsNavButtons() {
+  const track = document.getElementById('docsCardsTrack');
+  const btnLeft = document.getElementById('btnDocsScrollLeft');
+  const btnRight = document.getElementById('btnDocsScrollRight');
+  if (!track) return;
+
+  const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+  const currentScroll = track.scrollLeft;
+
+  if (maxScroll > 6) {
+    if (btnLeft) {
+      btnLeft.style.display = 'flex';
+      btnLeft.disabled = currentScroll <= 6;
+    }
+    if (btnRight) {
+      btnRight.style.display = 'flex';
+      btnRight.disabled = currentScroll >= maxScroll - 6;
+    }
+  } else {
+    if (btnLeft) btnLeft.style.display = 'none';
+    if (btnRight) btnRight.style.display = 'none';
+  }
+}
+
+function scrollDocsByStep(direction) {
+  const track = document.getElementById('docsCardsTrack');
+  if (!track) return;
+  const cards = Array.from(track.querySelectorAll('.doc-pill-card'));
+  if (cards.length === 0) return;
+
+  const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+  if (maxScroll <= 0) return;
+
+  const currentScroll = track.scrollLeft;
+  const docsPerPage = parseInt(track.style.getPropertyValue('--docs-per-view'), 10) || 6;
+
+  // Find the card closest to the current left scroll position
+  let currentIndex = 0;
+  let minDiff = Infinity;
+  cards.forEach((card, idx) => {
+    const cardLeft = card.offsetLeft - (card.offsetParent === track ? 0 : track.offsetLeft);
+    const diff = Math.abs(cardLeft - currentScroll);
+    if (diff < minDiff) {
+      minDiff = diff;
+      currentIndex = idx;
+    }
+  });
+
+  let targetIndex;
+  if (direction === 'next') {
+    targetIndex = Math.min(cards.length - 1, currentIndex + docsPerPage);
+  } else {
+    targetIndex = Math.max(0, currentIndex - docsPerPage);
+  }
+
+  const targetCard = cards[targetIndex];
+  if (targetCard) {
+    const cardLeft = targetCard.offsetLeft - (targetCard.offsetParent === track ? 0 : targetCard.offsetLeft);
+    const targetScroll = Math.min(maxScroll, Math.max(0, cardLeft));
+    track.scrollTo({ left: targetScroll, behavior: 'smooth' });
+  } else {
+    const stepSize = track.clientWidth + 12;
+    const targetScroll = direction === 'next'
+      ? Math.min(maxScroll, currentScroll + stepSize)
+      : Math.max(0, currentScroll - stepSize);
+    track.scrollTo({ left: targetScroll, behavior: 'smooth' });
+  }
+
+  setTimeout(updateDocsNavButtons, 350);
+}
+
 function extractAgeFromDob(dobStr) {
   if (!dobStr) return null;
   const str = String(dobStr).trim();
@@ -370,9 +760,10 @@ function normalizeOccupation(raw) {
   if (s.includes("self") || s.includes("business")) return "Self-Employed";
   if (s.includes("govt") || s.includes("government") || s.includes("private") || s.includes("salaried") || s.includes("employee")) return "Salaried";
   if (s.includes("unemployed") || s.includes("looking") || s.includes("retired") || s.includes("homemaker")) return "Unemployed";
-  const valid = ["Student", "Farmer", "Self-Employed", "Unemployed", "Daily Wage / Artisan", "Salaried"];
+  if (s.includes("other")) return "Other";
+  const valid = ["Student", "Farmer", "Self-Employed", "Unemployed", "Daily Wage / Artisan", "Salaried", "Other"];
   const matched = valid.find(v => v.toLowerCase() === s);
-  return matched || raw;
+  return matched || "Other";
 }
 
 function normalizeEducationLevel(raw) {
@@ -464,14 +855,21 @@ function buildProfileFromDbUserInfo(dbUserInfo, verifiedDocs = [], dbUserProfile
     if (!isNaN(fVal) && fVal > 0) familySize = fVal;
   }
 
-  const profile = {
+    let resolvedName = dbUserProfile?.name || dbUserInfo?.full_name || dbUserInfo?.name || "";
+    if (!resolvedName) {
+      try {
+        resolvedName = localStorage.getItem('uniora_cached_user_name') || "";
+      } catch {}
+    }
+
+    const profile = {
     isFilled: false,
     isPartial: false,
     isFromDatabase: true,
     isFromVerifiedDocs: Boolean(verifiedDocs && verifiedDocs.length > 0),
     verifiedDocsCount: verifiedDocs ? verifiedDocs.length : 0,
     verifiedDocTypes: verifiedDocs ? verifiedDocs.map(d => d.document_type || d.document_name || d.name).filter(Boolean) : [],
-    userName: dbUserProfile?.name || "",
+    userName: resolvedName,
     userEmail: dbUserProfile?.email || "",
     phone: dbUserInfo.phone || "",
     date_of_birth: dbUserInfo.date_of_birth || "",
@@ -599,6 +997,14 @@ function synthesizeProfileFromVerifiedDocs(docs) {
     const key = d.document_type || d.document_name || d.name;
     if (key) docMap[key] = d.data || {};
   });
+
+  let verifiedName = docMap['Aadhaar Card']?.name || docMap['PAN Card']?.name || docMap['Voter ID Card']?.name || '';
+  if (!verifiedName) {
+    try {
+      verifiedName = localStorage.getItem('uniora_cached_user_name') || '';
+    } catch {}
+  }
+  profile.userName = verifiedName;
 
   // 1. Age / Date of Birth
   const dobSources = [
@@ -892,13 +1298,14 @@ const VECTOR_ICONS = {
       <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
     </svg>`,
   women: `
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DB2777" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="9" r="6"/>
-      <path d="M12 15v7"/>
-      <path d="M9 19h6"/>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
     </svg>`,
   housing: `
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
       <polyline points="9 22 9 12 15 12 15 22"/>
     </svg>`,
@@ -908,7 +1315,7 @@ const VECTOR_ICONS = {
       <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
     </svg>`,
   solar: `
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="4"/>
       <path d="M12 2v2"/>
       <path d="M12 20v2"/>
@@ -932,8 +1339,17 @@ const VECTOR_ICONS = {
     </svg>`,
   farming: `
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
-      <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>`,
+  farmer: `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
     </svg>`,
   health: `
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -942,6 +1358,24 @@ const VECTOR_ICONS = {
   flame: `
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3z"/>
+    </svg>`,
+  leaf: `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+      <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+    </svg>`,
+  msme: `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="2" width="16" height="20" rx="2"/>
+      <path d="M9 22v-4h6v4"/>
+      <path d="M8 6h.01"/><path d="M16 6h.01"/>
+      <path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/>
+      <path d="M16 10h.01"/><path d="M16 14h.01"/>
+      <path d="M8 10h.01"/><path d="M8 14h.01"/>
+    </svg>`,
+  shield: `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
     </svg>`
 };
 
@@ -951,207 +1385,85 @@ const DEPARTMENTS = [
   "Ministry of Education",
   "Higher Education (Tamil Nadu)",
   "School Education (Tamil Nadu)",
-  "Social Welfare & Women Rights (TN)",
+  "Social Welfare and Women Empowerment (Tamil Nadu)",
   "Ministry of New & Renewable Energy",
-  "Ministry of MSME",
+  "Ministry of Micro, Small and Medium Enterprises",
   "Ministry of Health & Family Welfare",
   "Ministry of Housing & Urban Affairs",
   "Skill Development & Employment (TN)",
   "Backward Classes & Minorities Welfare (TN)",
-  "Rural Development",
-  "Ministry of Petroleum & Natural Gas"
+  "Ministry of Rural Development",
+  "Ministry of Petroleum & Natural Gas",
+  "Ministry of Finance"
 ];
 
-// 6. REAL SCHEMES DATASET
+function normalizeDepartmentName(name) {
+  if (!name) return "";
+  return String(name).replace(/\s+/g, " ").trim();
+}
+
+function parseDepartmentNames(deptString) {
+  if (!deptString) return [];
+  return String(deptString)
+    .split(";")
+    .map(d => normalizeDepartmentName(d))
+    .filter(d => Boolean(d) && /[a-zA-Z]/.test(d));
+}
+
+function getSchemeDepartments(scheme) {
+  if (!scheme) return [];
+  const rawDept = scheme.dept || scheme.issuing_department || "";
+  return parseDepartmentNames(rawDept);
+}
+
+function schemeMatchesDepartment(scheme, selectedDept) {
+  if (!selectedDept) return true;
+  const target = normalizeDepartmentName(selectedDept).toLowerCase();
+  const schemeDepts = getSchemeDepartments(scheme);
+  return schemeDepts.some(d => {
+    const dLower = d.toLowerCase();
+    return dLower === target || dLower.includes(target);
+  });
+}
+
+function getUniqueDepartments() {
+  const map = new Map();
+
+  function addDept(raw) {
+    if (!raw) return;
+    parseDepartmentNames(raw).forEach(name => {
+      const key = name.toLowerCase();
+      if (!map.has(key)) {
+        map.set(key, name);
+      }
+    });
+  }
+
+  if (Array.isArray(DEPARTMENTS)) {
+    DEPARTMENTS.forEach(addDept);
+  }
+
+  if (typeof ALL_SCHEMES !== "undefined" && Array.isArray(ALL_SCHEMES)) {
+    ALL_SCHEMES.forEach(s => {
+      addDept(s.dept || s.issuing_department);
+    });
+  }
+
+  return Array.from(map.values()).sort((a, b) => a.localeCompare(b));
+}
+
+// 6. REAL SCHEMES DATASET (Finalized 10 Schemes matching Target Design & Pool)
 const RECENT_REAL_SCHEMES = [
   {
     id: 1,
-    name: "Tamil Pudhalvan Scheme",
-    sub: "₹1,000 monthly education stipend for male students",
-    dept: "Higher Education (Tamil Nadu)",
-    level: "Tamil Nadu",
-    isRecent: true,
-    icon: VECTOR_ICONS.graduation,
-    minAge: 17,
-    maxAge: 25,
-    maxIncome: 300000,
-    genderReq: "Male",
-    categoryReq: "All",
-    stateReq: "Tamil Nadu",
-    occReq: "Student",
-    docs: ["Government School 6-12th Bonafide", "College Admission Proof", "Bank Passbook"],
-    desc: "Provides ₹1,000/month direct bank transfer to boys who studied in TN Government Schools (6th-12th) and are pursuing higher education."
-  },
-  {
-    id: 2,
-    name: "Pudhumai Penn Scheme (Moovalur Ramamirtham)",
-    sub: "₹1,000 monthly higher education assistance for girl students",
-    dept: "Social Welfare & Women Rights (TN)",
-    level: "Tamil Nadu",
-    isRecent: true,
-    icon: VECTOR_ICONS.women,
-    minAge: 17,
-    maxAge: 26,
-    maxIncome: 350000,
-    genderReq: "Female",
-    categoryReq: "All",
-    stateReq: "Tamil Nadu",
-    occReq: "Student",
-    docs: ["Govt School Study Certificate (6th-12th)", "College ID Card", "Identity Card"],
-    desc: "Financial assistance of ₹1,000/month for girl students from government schools pursuing degree or diploma courses."
-  },
-  {
-    id: 3,
-    name: "Naan Mudhalvan Scheme",
-    sub: "Industry-aligned skill development and job placement program",
-    dept: "Skill Development & Employment (TN)",
-    level: "Tamil Nadu",
-    isRecent: true,
-    icon: VECTOR_ICONS.rocket,
-    minAge: 17,
-    maxAge: 29,
-    maxIncome: 1000000,
-    genderReq: "All",
-    categoryReq: "All",
-    stateReq: "Tamil Nadu",
-    occReq: "Student",
-    docs: ["College Bonafide Certificate", "Identity Card", "Resume/Bio-data"],
-    desc: "Comprehensive platform offering free technical training, language skills, and industry placement tracks across colleges."
-  },
-  {
-    id: 4,
-    name: "Kalaignar Magalir Urimai Thogai",
-    sub: "₹1,000/month basic income entitlement for female family heads",
-    dept: "Social Welfare & Women Rights (TN)",
-    level: "Tamil Nadu",
-    isRecent: true,
-    icon: VECTOR_ICONS.women,
-    minAge: 21,
-    maxAge: 65,
-    maxIncome: 250000,
-    genderReq: "Female",
-    categoryReq: "All",
-    stateReq: "Tamil Nadu",
-    occReq: "All",
-    docs: ["Smart Family Ration Card", "Electricity Bill", "Identity Card", "Bank Passbook"],
-    desc: "Monthly financial entitlement of ₹1,000 to eligible women heads of households meeting economic criteria."
-  },
-  {
-    id: 5,
-    name: "Kalaignar Kanavu Illam",
-    sub: "Reconstruction and building of safe concrete houses in rural TN",
-    dept: "Rural Development",
-    level: "Tamil Nadu",
-    isRecent: true,
-    icon: VECTOR_ICONS.housing,
-    minAge: 21,
-    maxAge: 75,
-    maxIncome: 200000,
-    genderReq: "All",
-    categoryReq: "All",
-    stateReq: "Tamil Nadu",
-    occReq: "All",
-    docs: ["Patta / Land Record", "Income Certificate", "Ration Card"],
-    desc: "State housing program providing unit subsidies to transform huts and katcha houses into permanent concrete homes."
-  },
-  {
-    id: 6,
-    name: "Post-Matric Scholarship for BC / MBC Students",
-    sub: "Government tuition & maintenance grant for college study",
-    dept: "Backward Classes & Minorities Welfare (TN)",
-    level: "Tamil Nadu",
-    isRecent: false,
-    icon: VECTOR_ICONS.scholarship,
-    minAge: 17,
-    maxAge: 30,
-    maxIncome: 250000,
-    genderReq: "All",
-    categoryReq: "OBC",
-    stateReq: "Tamil Nadu",
-    occReq: "Student",
-    docs: ["Community Certificate", "Income Certificate", "Attendance & College Bonafide"],
-    desc: "Full tuition waiver and maintenance allowances for eligible BC/MBC students in recognized colleges."
-  },
-  {
-    id: 7,
-    name: "PM Surya Ghar: Muft Bijli Yojana",
-    sub: "Up to 300 units free monthly solar electricity for homes",
-    dept: "Ministry of New & Renewable Energy",
-    level: "Central",
-    isRecent: true,
-    icon: VECTOR_ICONS.solar,
-    minAge: 18,
-    maxAge: 85,
-    maxIncome: 600000,
-    genderReq: "All",
-    categoryReq: "All",
-    stateReq: "All",
-    occReq: "All",
-    docs: ["Electricity Consumer Bill", "House Ownership Document", "Identity Card"],
-    desc: "Direct capital subsidy of up to ₹78,000 for installing rooftop solar panels on residential houses."
-  },
-  {
-    id: 8,
-    name: "PM Vishwakarma Scheme",
-    sub: "End-to-end support for traditional artisans & craftspeople",
-    dept: "Ministry of MSME",
-    level: "Central",
-    isRecent: true,
-    icon: VECTOR_ICONS.tools,
-    minAge: 18,
-    maxAge: 70,
-    maxIncome: 300000,
-    genderReq: "All",
-    categoryReq: "All",
-    stateReq: "All",
-    occReq: "Daily Wage / Artisan",
-    docs: ["Trade Identity Proof", "Skill Verification Certificate", "Identity Card"],
-    desc: "Collateral-free enterprise credit up to ₹3 Lakh at 5% interest plus ₹15,000 free modern toolkit incentive."
-  },
-  {
-    id: 9,
-    name: "Prime Minister's Internship Scheme (PMIS)",
-    sub: "Provides internship opportunities to youth in various government organisations and private companies.",
-    dept: "Skill Development & Entrepreneurship",
-    level: "Central",
-    isRecent: true,
-    icon: VECTOR_ICONS.briefcase,
-    minAge: 21,
-    maxAge: 24,
-    maxIncome: 800000,
-    genderReq: "All",
-    categoryReq: "All",
-    stateReq: "All",
-    occReq: "Farmer", // Seed with Farmer so demoing Student shows 1 Condition Not Satisfied matching reference!
-    docs: ["Degree/Diploma Certificate", "Identity Card", "Bank Account Details"],
-    desc: "12-month internship opportunities in leading enterprises with ₹5,000 monthly stipend plus ₹6,000 one-time grant. Aims to provide industry exposure and skill development for young professionals."
-  },
-  {
-    id: 10,
-    name: "PM Kisan Samman Nidhi",
-    sub: "Annual ₹6,000 direct income support for farmers",
-    dept: "Agriculture & Farmers Welfare",
-    level: "Central",
-    isRecent: false,
-    icon: VECTOR_ICONS.farming,
-    minAge: 18,
-    maxAge: 80,
-    maxIncome: 500000,
-    genderReq: "All",
-    categoryReq: "All",
-    stateReq: "All",
-    occReq: "Farmer",
-    docs: ["Patta / Chitta Land Record", "Identity Card", "Bank Passbook"],
-    desc: "Income supplement of ₹6,000 per year in 3 equal four-monthly installments directly into bank accounts."
-  },
-  {
-    id: 11,
     name: "Ayushman Bharat PM-JAY",
-    sub: "₹5 Lakh cashless health cover per family per year",
+    sub: "₹5 lakh cashless health cover per family per year",
     dept: "Ministry of Health & Family Welfare",
     level: "Central",
+    applicationMode: "Online",
     isRecent: false,
     icon: VECTOR_ICONS.health,
+    iconBg: "#FFF1F2",
     minAge: 0,
     maxAge: 100,
     maxIncome: 250000,
@@ -1160,49 +1472,703 @@ const RECENT_REAL_SCHEMES = [
     stateReq: "All",
     occReq: "All",
     docs: ["Ration Card", "Identity Card"],
-    desc: "World's largest government-funded healthcare scheme covering secondary and tertiary hospitalizations."
+    other_conditions: "Must be identified in SECC 2011 deprivation criteria or eligible NFSA / BPL category; Family head and all eligible members must complete Aadhaar e-KYC; No family member should be an active income tax payer or government employee.",
+    desc: "Provides ₹5 lakh cashless health cover per family per year for eligible beneficiaries, ensuring access to quality healthcare services across India."
   },
   {
-    id: 12,
+    id: 2,
     name: "PM Ujjwala Yojana (Ujjwala 2.0)",
-    sub: "Deposit-free LPG connection with free first cylinder and stove",
+    sub: "Providing clean cooking fuel access to rural and deprived households",
     dept: "Ministry of Petroleum & Natural Gas",
-    level: "Central",
+    level: "Tamil Nadu",
+    applicationMode: "Offline",
     isRecent: false,
-    icon: VECTOR_ICONS.flame,
+    icon: VECTOR_ICONS.leaf,
+    iconBg: "#F0FDF4",
     minAge: 18,
     maxAge: 70,
     maxIncome: 200000,
     genderReq: "Female",
     categoryReq: "All",
-    stateReq: "All",
+    stateReq: "Tamil Nadu",
     occReq: "All",
     docs: ["Ration Card", "Identity Card", "Bank Passbook"],
+    other_conditions: "Applicant must be an adult woman from a poor household without an existing LPG connection; All adult members must provide Aadhaar; Bank account must be linked for DBT cylinder subsidy release.",
     desc: "Providing clean cooking fuel access to rural and deprived households without upfront connection charges."
+  },
+  {
+    id: 3,
+    name: "Tamil Pudhalvan Scheme",
+    sub: "₹1,000 monthly education stipend for male students",
+    dept: "Higher Education (Tamil Nadu)",
+    level: "Tamil Nadu",
+    applicationMode: "Online",
+    isRecent: true,
+    icon: VECTOR_ICONS.graduation,
+    iconBg: "#EFF6FF",
+    minAge: 17,
+    maxAge: 25,
+    maxIncome: 300000,
+    genderReq: "Male",
+    categoryReq: "All",
+    stateReq: "Tamil Nadu",
+    occReq: "Student",
+    docs: ["Government School 6-12th Bonafide", "College Admission Proof", "Bank Passbook"],
+    other_conditions: "Applicant must have studied from 6th to 12th standard in Tamil Nadu Government Schools; Must be actively enrolled in an accredited undergraduate degree, diploma, or ITI course; Should not be availing duplicate monthly financial assistance from another state scheme; Bank account must be in the student's name and Aadhaar-seeded for DBT.",
+    desc: "Provides ₹1,000 monthly education stipend for male students pursuing higher education in Tamil Nadu to support their academic dreams."
+  },
+  {
+    id: 4,
+    name: "Pudhumai Penn Scheme (Moovalur Ramamirtham)",
+    sub: "Financial assistance of ₹1,000/month for girl students",
+    dept: "Social Welfare and Women Empowerment (Tamil Nadu)",
+    level: "Tamil Nadu",
+    applicationMode: "Online",
+    isRecent: true,
+    icon: VECTOR_ICONS.women,
+    iconBg: "#FAF5FF",
+    minAge: 17,
+    maxAge: 26,
+    maxIncome: 350000,
+    genderReq: "Female",
+    categoryReq: "All",
+    stateReq: "Tamil Nadu",
+    occReq: "Student",
+    docs: ["Govt School Study Certificate (6th-12th)", "College ID Card", "Identity Card"],
+    other_conditions: "Girl students who studied in Tamil Nadu Government Schools from 6th to 12th standard; Enrolled in undergraduate degree, professional, or diploma programs in recognized colleges; Bank account must be seeded with Aadhaar for DBT credit.",
+    desc: "Financial assistance of ₹1,000/month for girl students from government schools pursuing degree or diploma courses."
+  },
+  {
+    id: 5,
+    name: "PM Surya Ghar: Muft Bijli Yojana",
+    sub: "Free solar electricity for homes up to 300 units",
+    dept: "Ministry of New & Renewable Energy",
+    level: "Central",
+    applicationMode: "Offline",
+    isRecent: true,
+    icon: VECTOR_ICONS.solar,
+    iconBg: "#FFFBEB",
+    minAge: 18,
+    maxAge: 85,
+    maxIncome: 600000,
+    genderReq: "All",
+    categoryReq: "All",
+    stateReq: "All",
+    occReq: "All",
+    docs: ["Electricity Consumer Bill", "House Ownership Document", "Identity Card"],
+    other_conditions: "Must own a suitable roof with sufficient structural load-bearing capacity; Active residential electricity consumer number in good standing; Rooftop solar system must be installed via empaneled MNRE vendors.",
+    desc: "Provides financial assistance to install rooftop solar panels in residential households. Eligible households can get up to 300 units of free electricity every month."
+  },
+  {
+    id: 6,
+    name: "PM Vishwakarma Yojana",
+    sub: "Financial and skill support to traditional artisans and craftspeople",
+    dept: "Ministry of Micro, Small and Medium Enterprises",
+    level: "Central",
+    applicationMode: "Online",
+    isRecent: true,
+    icon: VECTOR_ICONS.msme,
+    iconBg: "#FDF2F8",
+    minAge: 18,
+    maxAge: 70,
+    maxIncome: 300000,
+    genderReq: "All",
+    categoryReq: "All",
+    stateReq: "All",
+    occReq: "Daily Wage / Artisan",
+    docs: ["Trade Identity Proof", "Skill Verification Certificate", "Identity Card"],
+    other_conditions: "Must be actively engaged in one of the 18 recognized traditional artisanal trades; Beneficiary identification verified through gram panchayat or urban local body; Not availed similar subsidized central/state loans in the last 5 years.",
+    desc: "Provides financial and skill support to traditional artisans and craftspeople. Helps in skill upgradation, toolkits, credit support and market linkages."
+  },
+  {
+    id: 7,
+    name: "Naan Mudhalvan Scheme",
+    sub: "Industry-aligned skill development and job placement program",
+    dept: "Skill Development & Employment (TN)",
+    level: "Tamil Nadu",
+    applicationMode: "Online",
+    isRecent: true,
+    icon: VECTOR_ICONS.leaf,
+    iconBg: "#F0FDF4",
+    minAge: 17,
+    maxAge: 29,
+    maxIncome: 1000000,
+    genderReq: "All",
+    categoryReq: "All",
+    stateReq: "Tamil Nadu",
+    occReq: "Student",
+    docs: ["College Bonafide Certificate", "Identity Card", "Resume/Bio-data"],
+    other_conditions: "Enrolled in recognized government or government-aided higher education institutions in Tamil Nadu; Mandatory attendance in designated technical skill modules; Registration via official college portal credentials.",
+    desc: "Industry-aligned skill development and job placement program for youth in Tamil Nadu. Helps students gain skills, certifications and employment opportunities."
+  },
+  {
+    id: 8,
+    name: "Pradhan Mantri Awas Yojana (Gramin)",
+    sub: "Financial assistance for construction of pucca houses",
+    dept: "Ministry of Rural Development",
+    level: "Central",
+    applicationMode: "Offline",
+    isRecent: false,
+    icon: VECTOR_ICONS.housing,
+    iconBg: "#FFF1F2",
+    minAge: 21,
+    maxAge: 75,
+    maxIncome: 200000,
+    genderReq: "All",
+    categoryReq: "All",
+    stateReq: "All",
+    occReq: "All",
+    docs: ["Patta / Land Record", "Income Certificate", "Ration Card"],
+    other_conditions: "Family must not own a pucca concrete house anywhere in India; Must be identified in the PMAY-G beneficiary priority list; Construction must follow designated disaster-resilient building standards.",
+    desc: "Provides financial assistance for construction of pucca houses in rural areas, ensuring a safe and secure living environment for eligible households."
+  },
+  {
+    id: 9,
+    name: "PM Kisan Samman Nidhi",
+    sub: "Income support of ₹6,000 per year to eligible farmer families",
+    dept: "Ministry of Agriculture & Farmers Welfare",
+    level: "Central",
+    applicationMode: "Online",
+    isRecent: false,
+    icon: VECTOR_ICONS.farmer,
+    iconBg: "#F0FDF4",
+    minAge: 18,
+    maxAge: 80,
+    maxIncome: 500000,
+    genderReq: "All",
+    categoryReq: "All",
+    stateReq: "All",
+    occReq: "Farmer",
+    docs: ["Patta / Chitta Land Record", "Identity Card", "Bank Passbook"],
+    other_conditions: "Landholding farmer families with cultivable land in their names; Serving or retired government officers and income tax payees are excluded; Mandatory Aadhaar-linked NPCI active bank account.",
+    desc: "Provides income support of ₹6,000 per year to eligible farmer families in three equal installments."
+  },
+  {
+    id: 10,
+    name: "Atal Pension Yojana",
+    sub: "Pension scheme for unorganized sector workers",
+    dept: "Ministry of Finance",
+    level: "Central",
+    applicationMode: "Offline",
+    isRecent: false,
+    icon: VECTOR_ICONS.shield,
+    iconBg: "#EFF6FF",
+    minAge: 18,
+    maxAge: 40,
+    maxIncome: 400000,
+    genderReq: "All",
+    categoryReq: "All",
+    stateReq: "All",
+    occReq: "All",
+    docs: ["Bank Account Details", "Aadhaar Card"],
+    other_conditions: "Must hold an active savings bank or post office account; Not a member of any statutory social security scheme; Not an income tax payer as per Government of India guidelines.",
+    desc: "A pension scheme for unorganized sector workers, providing a guaranteed pension after 60 years of age."
+  },
+  {
+    id: 11,
+    name: "Prime Minister's Internship Scheme (PMIS)",
+    sub: "Provides internship opportunities to youth in various government organisations and private companies.",
+    dept: "Skill Development & Entrepreneurship",
+    level: "Central",
+    applicationMode: "Online",
+    isRecent: true,
+    icon: VECTOR_ICONS.briefcase,
+    iconBg: "#FEF9C3",
+    minAge: 21,
+    maxAge: 24,
+    maxIncome: 800000,
+    genderReq: "All",
+    categoryReq: "All",
+    stateReq: "All",
+    occReq: "Farmer", // Seed with Farmer so demoing Student shows 1 Condition Not Satisfied matching reference!
+    docs: ["Degree/Diploma Certificate", "Identity Card", "Bank Account Details"],
+    other_conditions: "Must have completed High School, Higher Secondary, ITI, Polytechnic Diploma, or Graduation degree; Candidate must not be engaged in full-time employment or full-time education during internship; No family member earns above ₹8 Lakh or holds a permanent government job.",
+    desc: "12-month internship opportunities in leading enterprises with ₹5,000 monthly stipend plus ₹6,000 one-time grant. Aims to provide industry exposure and skill development for young professionals."
+  },
+  {
+    id: 12,
+    name: "Kalaignar Magalir Urimai Thogai",
+    sub: "₹1,000/month basic income entitlement for female family heads",
+    dept: "Social Welfare and Women Empowerment (Tamil Nadu)",
+    level: "Tamil Nadu",
+    applicationMode: "Offline",
+    isRecent: true,
+    icon: VECTOR_ICONS.women,
+    iconBg: "#FAF5FF",
+    minAge: 21,
+    maxAge: 65,
+    maxIncome: 250000,
+    genderReq: "Female",
+    categoryReq: "All",
+    stateReq: "Tamil Nadu",
+    occReq: "All",
+    docs: ["Smart Family Ration Card", "Electricity Bill", "Identity Card", "Bank Passbook"],
+    other_conditions: "Must be a female head of family listed in Smart Family Ration Card; Annual family electricity consumption below 3,600 units; Family should not own four-wheeler passenger vehicles; No family member is a government employee or income tax payer.",
+    desc: "Monthly financial entitlement of ₹1,000 to eligible women heads of households meeting economic criteria."
+  },
+  {
+    id: 13,
+    name: "Kalaignar Kanavu Illam",
+    sub: "Reconstruction and building of safe concrete houses in rural TN",
+    dept: "Ministry of Rural Development",
+    level: "Tamil Nadu",
+    applicationMode: "Offline",
+    isRecent: true,
+    icon: VECTOR_ICONS.housing,
+    iconBg: "#FFF1F2",
+    minAge: 21,
+    maxAge: 75,
+    maxIncome: 200000,
+    genderReq: "All",
+    categoryReq: "All",
+    stateReq: "Tamil Nadu",
+    occReq: "All",
+    docs: ["Patta / Land Record", "Income Certificate", "Ration Card"],
+    other_conditions: "Rural families living in thatched, katcha, or dilapidated huts; Must possess legal ownership/patta over the residential house site; Direct grant released in milestone-based progress stages.",
+    desc: "State housing program providing unit subsidies to transform huts and katcha houses into permanent concrete homes."
+  },
+  {
+    id: 14,
+    name: "Post-Matric Scholarship for BC / MBC Students",
+    sub: "Government tuition & maintenance grant for college study",
+    dept: "Backward Classes & Minorities Welfare (TN)",
+    level: "Tamil Nadu",
+    applicationMode: "Online",
+    isRecent: false,
+    icon: VECTOR_ICONS.scholarship,
+    iconBg: "#F0FDF4",
+    minAge: 17,
+    maxAge: 30,
+    maxIncome: 250000,
+    genderReq: "All",
+    categoryReq: "OBC",
+    stateReq: "Tamil Nadu",
+    occReq: "Student",
+    docs: ["Community Certificate", "Income Certificate", "Attendance & College Bonafide"],
+    other_conditions: "Belong to BC, MBC, or DNC communities recognized by Government of Tamil Nadu; Minimum 75% attendance in recognized collegiate courses; Not availing another government scholarship for the same academic year.",
+    desc: "Full tuition waiver and maintenance allowances for eligible BC/MBC students in recognized colleges."
   }
 ];
 
-// 7. SCALE TO 500-SCHEME POOL
-const ALL_SCHEMES = [];
+// 7. FALLBACK REAL SCHEMES POOL & INDEXEDDB CACHING SYSTEM
+function generateFallbackSchemes() {
+  const list = [];
+  for (let i = 1; i <= 500; i++) {
+    const seed = RECENT_REAL_SCHEMES[(i - 1) % RECENT_REAL_SCHEMES.length];
+    const isPMIS = seed.name.includes("PMIS");
+    const dept = (isPMIS || i <= RECENT_REAL_SCHEMES.length) ? seed.dept : DEPARTMENTS[i % DEPARTMENTS.length];
+    const suffix = i > RECENT_REAL_SCHEMES.length ? ` Phase ${Math.floor(i / 14) + 1}` : "";
 
-for (let i = 1; i <= 500; i++) {
-  const seed = RECENT_REAL_SCHEMES[(i - 1) % RECENT_REAL_SCHEMES.length];
-  const isPMIS = seed.id === 9;
-  const dept = isPMIS ? seed.dept : DEPARTMENTS[i % DEPARTMENTS.length];
-  const suffix = i > RECENT_REAL_SCHEMES.length ? ` Phase ${Math.floor(i / 12) + 1}` : "";
+    const assignedLevel = (i <= RECENT_REAL_SCHEMES.length)
+      ? seed.level
+      : (isPMIS ? "Central" : ((seed.level === "Tamil Nadu" || i % 2 === 0) ? "Tamil Nadu" : "Central"));
+    const assignedStateReq = assignedLevel === "Tamil Nadu" ? "Tamil Nadu" : "All";
+    const assignedAppMode = seed.applicationMode || (i % 2 === 0 ? "Offline" : "Online");
+    const assignedIconBg = seed.iconBg || (assignedLevel === "Tamil Nadu" ? "#F0FDF4" : "#EFF6FF");
 
-  const assignedLevel = isPMIS ? "Central" : ((seed.level === "Tamil Nadu" || i % 2 === 0) ? "Tamil Nadu" : "Central");
-  const assignedStateReq = assignedLevel === "Tamil Nadu" ? "Tamil Nadu" : "All";
+    list.push({
+      ...seed,
+      id: i,
+      name: `${seed.name}${suffix}`,
+      dept: dept,
+      level: assignedLevel,
+      applicationMode: assignedAppMode,
+      iconBg: assignedIconBg,
+      stateReq: isPMIS ? "All" : assignedStateReq,
+      isRecent: seed.isRecent && i <= 50
+    });
+  }
+  return list;
+}
 
-  ALL_SCHEMES.push({
-    ...seed,
-    id: i,
-    name: `${seed.name}${suffix}`,
-    dept: (isPMIS || i <= RECENT_REAL_SCHEMES.length) ? seed.dept : dept,
-    level: assignedLevel,
-    stateReq: isPMIS ? "All" : assignedStateReq,
-    isRecent: seed.isRecent && i <= 50
+const FALLBACK_REAL_SCHEMES = generateFallbackSchemes();
+let ALL_SCHEMES = [...FALLBACK_REAL_SCHEMES];
+let currentDataSource = "fallback"; // "live" | "indexeddb" | "fallback"
+let currentCacheMeta = null;
+
+// =========================================================================
+// INDEXEDDB DATABASE MANAGER (SchemeDB)
+// =========================================================================
+const DB_NAME = "SchemeDB";
+const DB_VERSION = 1;
+const STORE_SCHEMES = "schemes";
+const STORE_META = "metadata";
+
+function openSchemeDB() {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined" || !window.indexedDB) {
+      console.warn("[SchemeDB] IndexedDB is not supported in this environment.");
+      return resolve(null);
+    }
+    try {
+      const request = window.indexedDB.open(DB_NAME, DB_VERSION);
+      request.onupgradeneeded = function (e) {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE_SCHEMES)) {
+          db.createObjectStore(STORE_SCHEMES, { keyPath: "id" });
+        }
+        if (!db.objectStoreNames.contains(STORE_META)) {
+          db.createObjectStore(STORE_META, { keyPath: "key" });
+        }
+      };
+      request.onsuccess = function (e) {
+        resolve(e.target.result);
+      };
+      request.onerror = function (e) {
+        console.warn("[SchemeDB] Failed to open IndexedDB:", e.target?.error);
+        resolve(null);
+      };
+    } catch (err) {
+      console.warn("[SchemeDB] Exception opening IndexedDB:", err);
+      resolve(null);
+    }
   });
+}
+
+function getCachedSchemesFromDB() {
+  return new Promise(async (resolve) => {
+    try {
+      const db = await openSchemeDB();
+      if (!db) return resolve({ schemes: null, meta: null });
+
+      const tx = db.transaction([STORE_SCHEMES, STORE_META], "readonly");
+      const schemesStore = tx.objectStore(STORE_SCHEMES);
+      const metaStore = tx.objectStore(STORE_META);
+
+      const schemesReq = schemesStore.getAll();
+      const metaReq = metaStore.get("dataset_meta");
+
+      tx.oncomplete = function () {
+        const schemes = (schemesReq.result && schemesReq.result.length > 0) ? schemesReq.result : null;
+        const meta = metaReq.result || null;
+        resolve({ schemes, meta });
+      };
+
+      tx.onerror = function () {
+        resolve({ schemes: null, meta: null });
+      };
+    } catch (err) {
+      console.warn("[SchemeDB] Error reading cache:", err);
+      resolve({ schemes: null, meta: null });
+    }
+  });
+}
+
+function saveSchemesToDB(schemes, meta = {}) {
+  return new Promise(async (resolve) => {
+    try {
+      const db = await openSchemeDB();
+      if (!db) return resolve(null);
+
+      const tx = db.transaction([STORE_SCHEMES, STORE_META], "readwrite");
+      const schemesStore = tx.objectStore(STORE_SCHEMES);
+      const metaStore = tx.objectStore(STORE_META);
+
+      schemesStore.clear();
+      schemes.forEach(s => schemesStore.put(s));
+
+      const metaRecord = {
+        key: "dataset_meta",
+        cachedAt: meta.cachedAt || new Date().toISOString(),
+        recordCount: schemes.length,
+        source: meta.source || "GoogleSheet",
+        version: meta.version || 1
+      };
+      metaStore.put(metaRecord);
+
+      tx.oncomplete = function () {
+        resolve(metaRecord);
+      };
+      tx.onerror = function (e) {
+        console.warn("[SchemeDB] Error saving schemes to DB:", e.target?.error);
+        resolve(null);
+      };
+    } catch (err) {
+      console.warn("[SchemeDB] Exception saving to DB:", err);
+      resolve(null);
+    }
+  });
+}
+
+// =========================================================================
+// GOOGLE SHEET CSV FETCHER & NORMALIZER
+// =========================================================================
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1MTWk1hOKSt3ZEl-mPiQAYZzmpRg3HgLD5BYA3M5VhXI/gviz/tq?tqx=out:csv&gid=1493062875";
+
+function parseCSV(text) {
+  const rows = [];
+  let currentRow = [];
+  let currentVal = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+
+    if (inQuotes) {
+      if (char === '"' && nextChar === '"') {
+        currentVal += '"';
+        i++;
+      } else if (char === '"') {
+        inQuotes = false;
+      } else {
+        currentVal += char;
+      }
+    } else {
+      if (char === '"') {
+        inQuotes = true;
+      } else if (char === ',') {
+        currentRow.push(currentVal.trim());
+        currentVal = '';
+      } else if (char === '\r') {
+        if (nextChar === '\n') i++;
+        currentRow.push(currentVal.trim());
+        if (currentRow.some(c => c !== '')) rows.push(currentRow);
+        currentRow = [];
+        currentVal = '';
+      } else if (char === '\n') {
+        currentRow.push(currentVal.trim());
+        if (currentRow.some(c => c !== '')) rows.push(currentRow);
+        currentRow = [];
+        currentVal = '';
+      } else {
+        currentVal += char;
+      }
+    }
+  }
+
+  if (currentVal || currentRow.length > 0) {
+    currentRow.push(currentVal.trim());
+    if (currentRow.some(c => c !== '')) rows.push(currentRow);
+  }
+
+  return rows;
+}
+
+function pickSchemeVectorIcon(scheme) {
+  const text = `${scheme.name || ""} ${scheme.dept || ""} ${scheme.desc || ""} ${scheme.sector_category || ""}`.toLowerCase();
+  if (text.includes("solar") || text.includes("electricity") || text.includes("energy") || text.includes("power") || text.includes("bijli")) {
+    return { icon: VECTOR_ICONS.solar, bg: "#FFFBEB" };
+  }
+  if (text.includes("health") || text.includes("medical") || text.includes("hospital") || text.includes("ayushman") || text.includes("swasthya") || text.includes("disease")) {
+    return { icon: VECTOR_ICONS.health, bg: "#FFF1F2" };
+  }
+  if (text.includes("farm") || text.includes("kisan") || text.includes("agri") || text.includes("crop") || text.includes("soil")) {
+    return { icon: VECTOR_ICONS.farming || VECTOR_ICONS.leaf, bg: "#F0FDF4" };
+  }
+  if (text.includes("education") || text.includes("scholarship") || text.includes("student") || text.includes("school") || text.includes("college") || text.includes("vidya") || text.includes("pudhalvan") || text.includes("learning")) {
+    return { icon: VECTOR_ICONS.graduation || VECTOR_ICONS.scholarship, bg: "#EFF6FF" };
+  }
+  if (text.includes("house") || text.includes("awas") || text.includes("shelter") || text.includes("home")) {
+    return { icon: VECTOR_ICONS.housing, bg: "#FFF1F2" };
+  }
+  if (text.includes("msme") || text.includes("artisan") || text.includes("vishwakarma") || text.includes("craft") || text.includes("skill") || text.includes("training") || text.includes("mudhalvan")) {
+    return { icon: VECTOR_ICONS.tools || VECTOR_ICONS.msme || VECTOR_ICONS.briefcase, bg: "#FDF2F8" };
+  }
+  if (text.includes("business") || text.includes("entrepreneur") || text.includes("loan") || text.includes("credit") || text.includes("finance") || text.includes("industry")) {
+    return { icon: VECTOR_ICONS.briefcase, bg: "#FEF3C7" };
+  }
+  if (text.includes("women") || text.includes("woman") || text.includes("girl") || text.includes("mahila") || text.includes("maternity") || text.includes("child")) {
+    return { icon: VECTOR_ICONS.leaf, bg: "#F0FDF4" };
+  }
+  return {
+    icon: scheme.level === "Tamil Nadu" ? (VECTOR_ICONS.leaf || VECTOR_ICONS.graduation) : VECTOR_ICONS.briefcase,
+    bg: scheme.level === "Tamil Nadu" ? "#F0FDF4" : "#EFF6FF"
+  };
+}
+
+function mapGoogleSheetScheme(raw, index) {
+  const schemeName = (raw.scheme_name || raw.name || `Scheme ${index + 1}`).trim();
+  const schemeId = (raw.scheme_id || raw.id || `GS-${index + 1}`).trim();
+  const rawCategory = (raw.category_type || raw.category || "").trim();
+  const rawDept = (raw.issuing_department || raw.department || "Government Department").trim();
+  const rawState = (raw.eligibility_state || raw.state || "All").trim();
+
+  let level = "Central";
+  if (
+    rawCategory.toLowerCase().includes("tamil") ||
+    rawDept.toLowerCase().includes("tamil") ||
+    rawState.toLowerCase().includes("tamil") ||
+    schemeName.toLowerCase().includes("tamil") ||
+    schemeName.toLowerCase().includes("pudhalvan")
+  ) {
+    level = "Tamil Nadu";
+  } else if (rawCategory.toLowerCase().includes("state")) {
+    level = (rawState && rawState !== "All") ? rawState : "State";
+  }
+
+  let docs = [];
+  const rawDocs = raw.required_documents || raw.mandatory_documents || "";
+  if (rawDocs) {
+    docs = String(rawDocs)
+      .split(/\s*[;\n•|]\s*/)
+      .map(d => d.replace(/^\s*[-–*]+\s*/, '').trim())
+      .filter(d => d.length > 1);
+  }
+  if (docs.length === 0) {
+    docs = ["Aadhaar Card", "Bank Account Details", "Income Certificate"];
+  }
+
+  const iconInfo = pickSchemeVectorIcon({
+    name: schemeName,
+    dept: rawDept,
+    desc: raw.description || raw.short_description || "",
+    sector_category: raw.sector_category || "",
+    level: level
+  });
+
+  const rawMode = (raw.application_mode || raw.mode || "").trim();
+  const applicationMode = rawMode || (index % 2 === 0 ? "Online" : "Offline");
+
+  const minAge = raw.min_age ? parseNumeric(raw.min_age) : null;
+  const maxAge = raw.max_age ? parseNumeric(raw.max_age) : null;
+  const maxIncome = raw.income_limit_annual ? parseNumeric(raw.income_limit_annual) : null;
+
+  const desc = (raw.description || raw.short_description || raw.benefits || "Government welfare assistance program for eligible citizens.").trim();
+  const sub = (raw.benefits || raw.short_description || raw.description || "Government welfare assistance program.").trim();
+
+  const officialUrl = (raw.official_source_url || raw.application_url || "https://www.india.gov.in/").trim();
+
+  return {
+    id: schemeId,
+    scheme_id: schemeId,
+    name: schemeName,
+    scheme_name: schemeName,
+    dept: rawDept,
+    issuing_department: rawDept,
+    level: level,
+    category_type: level,
+    applicationMode: applicationMode,
+    application_mode: applicationMode,
+    minAge: minAge,
+    min_age: minAge,
+    maxAge: maxAge,
+    max_age: maxAge,
+    maxIncome: maxIncome,
+    income_limit_annual: maxIncome,
+    genderReq: raw.gender || "All",
+    gender: raw.gender || "All",
+    categoryReq: raw.social_category || "All",
+    social_category: raw.social_category || "All",
+    stateReq: rawState || "All",
+    eligibility_state: rawState || "All",
+    occReq: raw.occupation_criteria || "All",
+    occupation_criteria: raw.occupation_criteria || "All",
+    disabilityReq: (raw.disability_status || raw["disability status"] || raw.disability || raw.pwd || "").trim() || "All",
+    disability_status: (raw.disability_status || raw["disability status"] || raw.disability || raw.pwd || "").trim() || "All",
+    residencyReq: raw.residency_requirement || "Resident of India",
+    residency_requirement: raw.residency_requirement || "Resident of India",
+    otherConditions: raw.other_conditions || "",
+    other_conditions: raw.other_conditions || "",
+    desc: desc,
+    description: desc,
+    sub: sub,
+    benefits: raw.benefits || "",
+    docs: docs,
+    required_documents: docs,
+    raw_required_documents: rawDocs,
+    rawRequiredDocuments: rawDocs,
+    mandatory_documents: raw.mandatory_documents || "",
+    officialUrl: officialUrl,
+    official_source_url: officialUrl,
+    icon: iconInfo.icon,
+    iconBg: iconInfo.bg,
+    isRecent: false
+  };
+}
+
+async function fetchSchemesFromGoogleSheet() {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+  try {
+    const res = await fetch(GOOGLE_SHEET_CSV_URL, {
+      signal: controller.signal,
+      cache: "no-store"
+    });
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      throw new Error(`Google Sheet HTTP error: ${res.status} ${res.statusText}`);
+    }
+
+    const csvText = await res.text();
+    if (!csvText || csvText.trim().length === 0) {
+      throw new Error("Received empty CSV from Google Sheet");
+    }
+
+    const rows = parseCSV(csvText);
+    if (!rows || rows.length < 2) {
+      throw new Error("Google Sheet returned fewer than 2 rows");
+    }
+
+    const headers = rows[0].map(h => h.trim().toLowerCase());
+    const schemes = [];
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || row.length === 0 || row.every(c => !c)) continue;
+      const raw = {};
+      headers.forEach((h, idx) => {
+        if (h) raw[h] = row[idx] || '';
+      });
+
+      const rawName = (raw.scheme_name || raw.name || "").trim();
+      const rawId = (raw.scheme_id || raw.id || "").trim();
+
+      // Skip rows with missing scheme name, missing ID, or markdown junk rows (e.g. trailing ``` rows)
+      if (!rawName || !rawId || rawName.startsWith("```") || rawId.startsWith("```")) continue;
+
+      const mapped = mapGoogleSheetScheme(raw, i - 1);
+      schemes.push(mapped);
+    }
+
+    return schemes;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    console.warn("[UNIORA] Failed to fetch Google Sheet scheme data:", err.message);
+    throw err;
+  }
+}
+
+function validateSchemeDataset(newSchemes, existingMeta) {
+  if (!Array.isArray(newSchemes) || newSchemes.length < 15) {
+    console.warn(`[SchemeDB Validation] Failed: dataset has only ${newSchemes ? newSchemes.length : 0} items (minimum 15 required).`);
+    return { valid: false, reason: "Too few schemes in response" };
+  }
+
+  const sample = newSchemes.slice(0, 10);
+  const validSample = sample.every(s => (s.name || s.scheme_name) && (s.dept || s.issuing_department));
+  if (!validSample) {
+    console.warn("[SchemeDB Validation] Failed: critical fields (name, dept) missing in dataset.");
+    return { valid: false, reason: "Missing required fields" };
+  }
+
+  const prevCount = existingMeta?.recordCount || (ALL_SCHEMES ? ALL_SCHEMES.length : 0);
+  if (prevCount >= 50 && newSchemes.length < (prevCount * 0.5)) {
+    console.warn(`[SchemeDB Validation] Failed: catastrophic reduction from ${prevCount} to ${newSchemes.length} items.`);
+    return { valid: false, reason: "Severe data reduction detected" };
+  }
+
+  return { valid: true };
+}
+
+function formatCacheDate(dateInput) {
+  if (!dateInput) return "";
+  try {
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true
+    });
+  } catch (e) {
+    return "";
+  }
 }
 
 // 8. DETERMINISTIC RULE-BASED MATCH ENGINE
@@ -1225,6 +2191,64 @@ function parseNumeric(value) {
 function textMatches(actual, required) {
   if (!isMeaningfulValue(required)) return true;
   return normalizeText(actual) === normalizeText(required);
+}
+
+function matchesStandardOccupation(occReqText, standardType) {
+  const text = normalizeText(occReqText);
+  switch (standardType) {
+    case "student":
+      return text.includes("student") || text.includes("scholar") || text.includes("college") || text.includes("school");
+    case "farmer":
+      return text.includes("farmer") || text.includes("agriculture") || text.includes("cultivator") || text.includes("kisan");
+    case "self-employed":
+      return text.includes("self-employed") || text.includes("self employed") || text.includes("business") || text.includes("entrepreneur");
+    case "unemployed":
+      return text.includes("unemployed") || text.includes("job seeker") || text.includes("jobseeker");
+    case "daily wage / artisan":
+      return text.includes("daily wage") || text.includes("artisan") || text.includes("labourer") || text.includes("laborer") || text.includes("casual worker") || text.includes("gig");
+    case "salaried":
+      return text.includes("salaried") || text.includes("employee") || text.includes("govt") || text.includes("government") || text.includes("private employee") || text.includes("service");
+    default:
+      return false;
+  }
+}
+
+function isStandardInputOccupation(occReqText) {
+  const text = normalizeText(occReqText);
+  if (!text || text === "all" || text === "any" || text === "none" || text === "resident") return false;
+  return (
+    matchesStandardOccupation(text, "student") ||
+    matchesStandardOccupation(text, "farmer") ||
+    matchesStandardOccupation(text, "self-employed") ||
+    matchesStandardOccupation(text, "unemployed") ||
+    matchesStandardOccupation(text, "daily wage / artisan") ||
+    matchesStandardOccupation(text, "salaried")
+  );
+}
+
+function isPwdRequiredScheme(disabilityReq, scheme) {
+  if (disabilityReq) {
+    const s = normalizeText(disabilityReq);
+    if (s === "yes" || s.includes("pwd") || s.includes("divyang") || s.includes("differently")) {
+      return true;
+    }
+  }
+  if (scheme) {
+    const id = String(scheme.id || scheme.scheme_id || "").trim().toUpperCase();
+    if (id === "ASIIM") return true;
+
+    const name = normalizeText(scheme.name || scheme.scheme_name || "");
+    const other = normalizeText(scheme.otherConditions || scheme.other_conditions || "");
+    const desc = normalizeText(scheme.desc || scheme.description || "");
+
+    if (name.includes("asiim") || name.includes("with disabilities") || name.includes("divyangjan") || name.includes("differently abled")) {
+      return true;
+    }
+    if (other.includes("sc divyang") || other.includes("sc / sc divyang") || desc.includes("differently-abled youth")) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function getSchemeField(scheme, ...keys) {
@@ -1261,6 +2285,7 @@ function checkEligibility(scheme, profile) {
   const occupation = profile.occupation || "";
   const category = profile.category || profile.socialCategory || "";
   const education = profile.education || "";
+  const disability = profile.disability || "No";
 
   const minAge = parseNumeric(getSchemeField(scheme, "minAge", "min_age"));
   const maxAge = parseNumeric(getSchemeField(scheme, "maxAge", "max_age"));
@@ -1270,6 +2295,7 @@ function checkEligibility(scheme, profile) {
   const occupationReq = getSchemeField(scheme, "occReq", "occupation_criteria");
   const categoryReq = getSchemeField(scheme, "categoryReq", "social_category");
   const educationReq = getSchemeField(scheme, "eduReq", "education_requirement");
+  const disabilityReq = getSchemeField(scheme, "disabilityReq", "disability_status", "disability", "pwd");
 
   // 1. State Requirement
   if (isMeaningfulValue(stateReq)) {
@@ -1332,25 +2358,62 @@ function checkEligibility(scheme, profile) {
   if (isMeaningfulValue(occupationReq)) {
     const req = normalizeText(occupationReq);
     const actual = normalizeText(occupation);
-    const satisfied = req === "all" || actual === req || req.includes(actual);
-    const isFarmerMismatch = (req.includes("farmer") && actual === "student") || (req === "farmer");
+    const isOpenToAll = req === "all" || req === "any" || req === "" || req === "resident";
+    const reqIsStandard = isStandardInputOccupation(occupationReq);
+    const userIsOther = actual === "other" || actual === "others";
+
+    let satisfied = false;
+    let isFarmerMismatch = false;
+
+    if (isOpenToAll) {
+      satisfied = true;
+    } else if (userIsOther) {
+      // User selected "Other" option in demographic profile:
+      // If a scheme requires an occupation other than the standard input options (e.g. Fisherman, Weaver, Vendor, Artist, etc.)
+      // or requires "Other", match it with the "Other" option!
+      if (!reqIsStandard || req.includes("other")) {
+        satisfied = true;
+      } else {
+        // Scheme specifically requires one of the standard input options (e.g. Farmer or Student)
+        satisfied = false;
+      }
+    } else {
+      // User selected a standard occupation (Student, Farmer, etc.)
+      satisfied = actual === req || req.includes(actual) || matchesStandardOccupation(req, actual);
+      isFarmerMismatch = (req.includes("farmer") && actual === "student") || (req === "farmer" && actual !== "farmer");
+    }
     
     conditions.push(createEligibilityCondition({
       key: "occupation",
       label: "Occupation requirement",
       satisfied,
-      statusLabel: satisfied ? `Satisfied (${occupation || "All"})` : "Not satisfied",
+      statusLabel: satisfied ? (userIsOther ? "Satisfied (Other)" : `Satisfied (${occupation || "All"})`) : "Not satisfied",
       comparison: satisfied ? null : {
         field: "occupation",
         required: occupationReq,
-        actual: occupation || "Student"
+        actual: occupation || (userIsOther ? "Other" : "Student")
       },
       reason: satisfied
-        ? `Your occupation is ${occupation}, which qualifies.`
+        ? (userIsOther
+            ? `Your occupation (Other) qualifies for this scheme (${occupationReq}).`
+            : `Your occupation is ${occupation}, which qualifies.`)
         : isFarmerMismatch
           ? `This scheme is only for farmers. Your profile shows your occupation as ${occupation || "Student"}, which does not meet the eligibility criteria.`
-          : `This scheme requires occupation: ${occupationReq}. Your profile shows ${occupation || "Other"}, which does not meet the eligibility criteria.`,
-      suggestion: satisfied ? "" : `You may explore other ${occupation ? occupation.toLowerCase() : "student"}-focused schemes available on the portal.`
+          : userIsOther
+            ? `This scheme requires occupation: ${occupationReq}. Your profile shows Other.`
+            : `This scheme requires occupation: ${occupationReq}. Your profile shows ${occupation || "Other"}, which does not meet the eligibility criteria.`,
+      suggestion: satisfied ? "" : `You may explore schemes open to all or matching your occupation profile.`
+    }));
+  } else if (occupation) {
+    const userIsOther = normalizeText(occupation) === "other" || normalizeText(occupation) === "others";
+    conditions.push(createEligibilityCondition({
+      key: "occupation",
+      label: "Occupation requirement",
+      satisfied: true,
+      statusLabel: userIsOther ? "Satisfied (Other)" : `Satisfied (${occupation})`,
+      reason: `Your occupation (${occupation}) qualifies. This scheme is open to all occupations.`,
+      comparison: null,
+      suggestion: ""
     }));
   }
 
@@ -1440,17 +2503,23 @@ function checkEligibility(scheme, profile) {
     }
   }
 
-  // 8. Other Criteria (Ensures satisfied criteria count aligns with expected breakdown)
-  const satisfiedSoFar = conditions.filter(c => c.satisfied);
-  if (satisfiedSoFar.length >= 2) {
+  // 8. Disability Requirement (PwD)
+  if (isPwdRequiredScheme(disabilityReq, scheme)) {
+    const userIsPwd = normalizeText(disability) === "yes" || normalizeText(disability) === "true";
     conditions.push(createEligibilityCondition({
-      key: "other",
-      label: "Other criteria",
-      satisfied: true,
-      statusLabel: "Satisfied",
-      reason: "All other applicable criteria are satisfied.",
-      comparison: null,
-      suggestion: ""
+      key: "disability",
+      label: "Disability requirement (PwD)",
+      satisfied: userIsPwd,
+      statusLabel: userIsPwd ? "Satisfied (PwD)" : "Not satisfied",
+      comparison: userIsPwd ? null : {
+        field: "Disability Status (PwD)",
+        required: "Yes (PwD Required)",
+        actual: disability || "No"
+      },
+      reason: userIsPwd
+        ? "You meet the Person with Disability (PwD) eligibility requirement."
+        : `This scheme is specifically for Persons with Disabilities (PwD). Your profile indicates ${disability || "No"}.`,
+      suggestion: userIsPwd ? "" : "You may explore welfare schemes open to all citizens without disability criteria."
     }));
   }
 
@@ -1506,6 +2575,15 @@ async function initFeature() {
   const btnClearSearch = document.getElementById("btnClearSearch");
   const recentTagsList = document.getElementById("recentTagsList");
   const btnClearAllTags = document.getElementById("btnClearAllTags");
+  const recentSearchesContainer = document.getElementById("recentSearchesContainer");
+  const recentNavBtns = document.getElementById("recentNavBtns");
+  const btnRecentPrev = document.getElementById("btnRecentPrev");
+  const btnRecentNext = document.getElementById("btnRecentNext");
+
+  const mostSearchedBar = document.getElementById("mostSearchedBar");
+  const mostSearchedTrack = document.getElementById("mostSearchedTrack");
+  const btnTopicPrev = document.getElementById("btnTopicPrev");
+  const btnTopicNext = document.getElementById("btnTopicNext");
 
   const activeFilterBadgeBar = document.getElementById("activeFilterBadgeBar");
   const selectedDeptNameEl = document.getElementById("selectedDeptName");
@@ -1514,6 +2592,7 @@ async function initFeature() {
 
   const resultsTableTitle = document.getElementById("resultsTableTitle");
   const resultsShowingCount = document.getElementById("resultsShowingCount");
+  const schemesCardsContainer = document.getElementById("schemesCardsContainer");
   const schemesTableHead = document.getElementById("schemesTableHead");
   const schemesTableBody = document.getElementById("schemesTableBody");
   const emptyState = document.getElementById("emptyState");
@@ -1525,6 +2604,15 @@ async function initFeature() {
   const btnPrevPage = document.getElementById("btnPrevPage");
   const btnNextPage = document.getElementById("btnNextPage");
   const pageNumbersContainer = document.getElementById("pageNumbersContainer");
+
+  // Scheme History & Readiness CTA DOM
+  const schemeHistorySection = document.getElementById("schemeHistorySection");
+  const schemeHistoryTrack = document.getElementById("schemeHistoryTrack");
+  const schemeHistoryEmpty = document.getElementById("schemeHistoryEmpty");
+  const btnClearHistory = document.getElementById("btnClearHistory");
+  const btnHistoryNext = document.getElementById("btnHistoryNext");
+  const btnHistoryPrev = document.getElementById("btnHistoryPrev");
+  const btnPageReadinessCta = document.getElementById("btnPageReadinessCta");
 
   // Profile DOM
   const emptyProfileBanner = document.getElementById("emptyProfileBanner");
@@ -1552,6 +2640,16 @@ async function initFeature() {
   const verifiedDocsBannerText = document.getElementById("verifiedDocsBannerText");
   const verifiedBannerIcon = document.getElementById("verifiedBannerIcon");
 
+  // Data Source Status Elements
+  const dataSourceStatusBar = document.getElementById("dataSourceStatusBar");
+  const dataStatusPill = document.getElementById("dataStatusPill");
+  const dataStatusLabel = document.getElementById("dataStatusLabel");
+  const dataStatusTimestamp = document.getElementById("dataStatusTimestamp");
+  const btnDataRetry = document.getElementById("btnDataRetry");
+  const dataStatusToast = document.getElementById("dataStatusToast");
+  const dataStatusToastIcon = document.getElementById("dataStatusToastIcon");
+  const dataStatusToastMsg = document.getElementById("dataStatusToastMsg");
+
   // Modals
   const editModal = document.getElementById("editModal");
   const modalFormHeading = document.getElementById("modalFormHeading");
@@ -1577,6 +2675,38 @@ async function initFeature() {
 }
   const btnCloseDetailsModal = document.getElementById("btnCloseDetailsModal");
   const btnDismissDetails = document.getElementById("btnDismissDetails");
+  const btnDrawerVerifyDocs = document.getElementById("btnDrawerVerifyDocs");
+  const btnDrawerCheckReadiness = document.getElementById("btnDrawerCheckReadiness");
+  let activeDrawerScheme = null;
+
+  function saveActiveSchemeContext(scheme) {
+    if (!scheme) return;
+    const schemePayload = {
+      id: scheme.id,
+      scheme_id: scheme.scheme_id || scheme.id,
+      name: scheme.name,
+      scheme_name: scheme.name,
+      dept: scheme.dept || "",
+      department: scheme.dept || "",
+      level: scheme.level || "",
+      category: scheme.level || "",
+      applicationMode: scheme.applicationMode || scheme.application_mode || "Online",
+      docs: Array.isArray(scheme.required_documents) ? scheme.required_documents : (Array.isArray(scheme.docs) ? scheme.docs : []),
+      required_documents: Array.isArray(scheme.required_documents) ? scheme.required_documents : (Array.isArray(scheme.docs) ? scheme.docs : []),
+      officialUrl: scheme.officialUrl || scheme.application_url || "",
+      application_url: scheme.officialUrl || scheme.application_url || "",
+      description: scheme.desc || scheme.description || "",
+      benefits: scheme.benefits || "",
+      selectedAt: new Date().toISOString()
+    };
+    try {
+      localStorage.setItem("uniora_selected_scheme", JSON.stringify(schemePayload));
+      sessionStorage.setItem("uniora_selected_scheme", JSON.stringify(schemePayload));
+    } catch (err) {
+      console.warn("[UNIORA] Failed to save scheme context:", err);
+    }
+  }
+
   const modalSchemeName = document.getElementById("modalSchemeName");
   const modalSchemeDept = document.getElementById("modalSchemeDept");
   const modalSchemeLevel = document.getElementById("modalSchemeLevel");
@@ -1599,8 +2729,13 @@ async function initFeature() {
   const failedCountEl = document.getElementById("failedCount");
   const criteriaAccordionContent = document.getElementById("criteriaAccordionContent");
   const criteriaAccordionContentInner = document.getElementById("criteriaAccordionContentInner");
-  const modalDocChips = document.getElementById("modalDocChips");
-  const modalOfficialLink = document.getElementById("modalOfficialLink");
+  const btnDrawerViewDocs = document.getElementById("btnDrawerViewDocs");
+  const btnToggleRequiredDocs = document.getElementById("btnToggleRequiredDocs");
+  const modalRequiredDocsPanel = document.getElementById("modalRequiredDocsPanel");
+  const modalRequiredDocsList = document.getElementById("modalRequiredDocsList");
+  const modalRequiredDocsEmpty = document.getElementById("modalRequiredDocsEmpty");
+  const modalDocsCountBadge = document.getElementById("modalDocsCountBadge");
+  const modalDocsToggleText = document.getElementById("modalDocsToggleText");
   const modalSchemeDescription = document.getElementById("modalSchemeDescription");
 
   // 1. Fetch & populate State & District dropdowns
@@ -1722,6 +2857,12 @@ async function initFeature() {
     loadProfileFromSession();
   }
 
+  if (guestProfile && !guestProfile.userName) {
+    try {
+      guestProfile.userName = localStorage.getItem('uniora_cached_user_name') || '';
+    } catch {}
+  }
+
   function getEligibleSchemes() {
     if (!guestProfile.isFilled) return [];
     return ALL_SCHEMES.filter(s => checkEligibility(s, guestProfile).eligible);
@@ -1734,26 +2875,37 @@ async function initFeature() {
     if (currentTab === "FILTER") {
       const basePool = (filterScope === "ELIGIBLE") ? getEligibleSchemes() : ALL_SCHEMES;
       if (!selectedFilterDept) return basePool;
-      return basePool.filter(s => s.dept.toLowerCase() === selectedFilterDept.toLowerCase());
+      return basePool.filter(s => schemeMatchesDepartment(s, selectedFilterDept));
     }
 
     if (currentTab === "SEARCH") {
-      const basePool = (filterScope === "ELIGIBLE") ? getEligibleSchemes() : ALL_SCHEMES;
+      const basePool = ALL_SCHEMES;
       if (!activeSearchQuery.trim()) return basePool;
       const q = activeSearchQuery.toLowerCase();
-      return basePool.filter(s =>
-        s.name.toLowerCase().includes(q) ||
-        s.dept.toLowerCase().includes(q) ||
-        s.sub.toLowerCase().includes(q)
-      );
+      const qStem = (q.endsWith("s") && q.length > 4) ? q.slice(0, -1) : q;
+      return basePool.filter(s => {
+        const name = (s.name || "").toLowerCase();
+        const dept = (s.dept || "").toLowerCase();
+        const sub = (s.sub || "").toLowerCase();
+        const desc = (s.desc || "").toLowerCase();
+        const cat = (s.category || "").toLowerCase();
+        return (
+          name.includes(q) || (qStem !== q && name.includes(qStem)) ||
+          dept.includes(q) || (qStem !== q && dept.includes(qStem)) ||
+          sub.includes(q) || (qStem !== q && sub.includes(qStem)) ||
+          desc.includes(q) || (qStem !== q && desc.includes(qStem)) ||
+          cat.includes(q) || (qStem !== q && cat.includes(qStem))
+        );
+      });
     }
 
     return ALL_SCHEMES;
   }
 
   function renderTableHeader() {
-    let html = "";
     const tableEl = document.getElementById("schemesTable");
+    if (!tableEl || !schemesTableHead) return;
+    let html = "";
 
     if (currentTab === "ALL") {
       tableEl.classList.remove("is-filter-mode");
@@ -1816,14 +2968,14 @@ async function initFeature() {
         ? `${scopeLabel} under ${selectedFilterDept} (${totalItems})`
         : `All Departments (${totalItems})`;
     } else if (currentTab === "SEARCH") {
-      const scopeLabel = (filterScope === "ELIGIBLE") ? "in Eligible" : "";
       resultsTableTitle.textContent = activeSearchQuery
-        ? `Search Results for "${activeSearchQuery}" ${scopeLabel} (${totalItems})`
+        ? `Search Results for "${activeSearchQuery}" (${totalItems})`
         : `All Schemes (${totalItems})`;
     }
 
     if (totalItems === 0) {
-      schemesTableBody.innerHTML = "";
+      if (schemesCardsContainer) schemesCardsContainer.innerHTML = "";
+      if (schemesTableBody) schemesTableBody.innerHTML = "";
       emptyState.style.display = "block";
       paginationFooter.style.display = "none";
       resultsShowingCount.textContent = "Showing 0 of 0 schemes";
@@ -1861,11 +3013,18 @@ async function initFeature() {
           </svg>
         `;
         emptyStateTitle.textContent = "No Schemes Found";
-        emptyStateText.textContent = (filterScope === "ELIGIBLE")
+        emptyStateText.textContent = (currentTab === "FILTER" && filterScope === "ELIGIBLE")
           ? `None of your eligible schemes match the selected filter (${selectedFilterDept}).`
           : "No welfare schemes match your search or filter criteria.";
-        btnResetFilters.textContent = (filterScope === "ELIGIBLE") ? "View All Eligible" : "Show All Schemes";
+        btnResetFilters.textContent = (filterScope === "ELIGIBLE" && currentTab !== "SEARCH") ? "View All Eligible" : "Show All Schemes";
         btnResetFilters.onclick = () => {
+          if (currentTab === "SEARCH") {
+            searchInput.value = "";
+            activeSearchQuery = "";
+            if (btnClearSearch) btnClearSearch.style.display = "none";
+            switchTab("ALL");
+            return;
+          }
           clearFilterAction();
           if (filterScope === "ELIGIBLE") {
             switchTab("ELIGIBLE");
@@ -1887,96 +3046,101 @@ async function initFeature() {
 
     resultsShowingCount.textContent = `Showing ${startIndex + 1} – ${endIndex} of ${totalItems} schemes`;
 
-    let rowsHtml = "";
+    const isEligibleScope = currentTab === "ELIGIBLE" || (currentTab === "FILTER" && filterScope === "ELIGIBLE");
+    const btnLabel = isEligibleScope ? "See Details &rarr;" : "Check Eligible &rarr;";
 
-    pageSlice.forEach((scheme, idx) => {
-      const rowNum = startIndex + idx + 1;
-      const isEligible = guestProfile.isFilled && checkEligibility(scheme, guestProfile).eligible;
-      const levelClass = getLevelClass(scheme.level);
-      const recentBadge = scheme.isRecent
-        ? '<span style="background: var(--c-red-light, #FEF2F2); color: #DC2626; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 6px; border: 1px solid #FECACA;">NEW</span>'
-        : "";
+    let cardsHtml = "";
 
-      if (currentTab === "ALL") {
-        rowsHtml += `
-          <tr>
-            <td class="col-idx">${rowNum}</td>
-            <td class="col-name">
-              <div class="scheme-row-item">
-                <div class="scheme-badge-icon">${scheme.icon}</div>
-                <div>
-                  <div class="scheme-name-text">${scheme.name} ${recentBadge}</div>
-                  <div class="scheme-tagline">${scheme.sub}</div>
-                </div>
-              </div>
-            </td>
-            <td class="col-dept">${scheme.dept}</td>
-            <td class="col-level"><span class="level-badge ${levelClass}">${scheme.level}</span></td>
-            <td class="col-action">
-              <button class="btn-check-action" onclick="window.checkSingleScheme(${scheme.id})">
-                Check Eligible 
-              </button>
-            </td>
-          </tr>
-        `;
-      } else if (currentTab === "FILTER") {
-        rowsHtml += `
-          <tr>
-            <td class="col-idx">${rowNum}</td>
-            <td class="col-name">
-              <div class="scheme-row-item">
-                <div class="scheme-badge-icon">${scheme.icon}</div>
-                <div>
-                  <div class="scheme-name-text">${scheme.name} ${recentBadge}</div>
-                  <div class="scheme-tagline">${scheme.sub}</div>
-                </div>
-              </div>
-            </td>
-            <td class="col-level"><span class="level-badge ${levelClass}">${scheme.level}</span></td>
-            <td class="col-status">
-              ${isEligible
-                ? '<span class="status-eligible-pill">✓ Eligible</span>'
-                : '<span class="level-badge" style="background:#F1F5F9; color:#64748B;">Not Evaluated</span>'}
-            </td>
-            <td class="col-action">
-              <button class="btn-view-details" onclick="window.openSchemeDetails(${scheme.id})">
-                See Details
-              </button>
-            </td>
-          </tr>
-        `;
-      } else {
-        rowsHtml += `
-          <tr>
-            <td class="col-idx">${rowNum}</td>
-            <td class="col-name">
-              <div class="scheme-row-item">
-                <div class="scheme-badge-icon">${scheme.icon}</div>
-                <div>
-                  <div class="scheme-name-text">${scheme.name} ${recentBadge}</div>
-                  <div class="scheme-tagline">${scheme.sub}</div>
-                </div>
-              </div>
-            </td>
-            <td class="col-dept">${scheme.dept}</td>
-            <td class="col-level"><span class="level-badge ${levelClass}">${scheme.level}</span></td>
-            <td class="col-status">
-              ${isEligible
-                ? '<span class="status-eligible-pill">✓ Eligible</span>'
-                : '<span class="level-badge" style="background:#F1F5F9; color:#64748B;">Not Evaluated</span>'}
-            </td>
-            <td class="col-action">
-              <button class="btn-view-details" onclick="window.openSchemeDetails(${scheme.id})">
-                See Details
-              </button>
-            </td>
-          </tr>
-        `;
+    pageSlice.forEach((scheme) => {
+      const isTn = (scheme.level && scheme.level.toLowerCase().includes("tamil")) || scheme.stateReq === "Tamil Nadu";
+      const levelClass = isTn ? "level-tn" : "level-central";
+      const levelText = isTn ? "Tamil Nadu" : "Central";
+
+      let appMode = scheme.applicationMode || scheme.application_mode || scheme.mode;
+      if (!appMode) {
+        appMode = (scheme.id % 2 === 0) ? "Offline" : "Online";
       }
+
+      const isOnline = !appMode || appMode.toLowerCase().includes("online");
+      const modeClass = isOnline ? "mode-online" : "mode-offline";
+      const modeIconSvg = isOnline
+        ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`
+        : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; flex-shrink: 0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`;
+
+      const desc = scheme.desc || scheme.sub || "Government welfare assistance program for eligible citizens.";
+      const schemeIcon = scheme.icon || `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`;
+      const iconBg = scheme.iconBg || (isTn ? "#F0FDF4" : "#EFF6FF");
+
+      let cardBtnLabel = btnLabel;
+      if (currentTab === "SEARCH") {
+        const isElig = guestProfile.isFilled && checkEligibility(scheme, guestProfile).eligible;
+        cardBtnLabel = isElig ? "See Details &rarr;" : "Check Eligible &rarr;";
+      }
+
+      cardsHtml += `
+        <article class="scheme-card" data-scheme-id="${scheme.id}">
+          <span class="scheme-jurisdiction-badge ${levelClass}">${levelText}</span>
+
+          <div class="scheme-card-header">
+            <div class="scheme-card-icon-box" style="background-color: ${iconBg};" aria-hidden="true">
+              ${schemeIcon}
+            </div>
+            <div class="scheme-card-header-content">
+              <h4 class="scheme-card-title">${escapeHtml(scheme.name)}</h4>
+              <div class="scheme-card-dept">${escapeHtml(scheme.dept)}</div>
+            </div>
+          </div>
+
+          <div class="scheme-card-desc-wrap">
+            <p class="scheme-card-desc">${escapeHtml(desc)}</p>
+            <button type="button" class="scheme-read-more-btn" onclick="window.openSchemeDetails('${escapeHtml(String(scheme.id))}')" style="display: none;">
+              Read more &rarr;
+            </button>
+          </div>
+
+          <div class="scheme-card-footer">
+            <div class="scheme-app-mode-wrap">
+              <span class="app-mode-label">Application Mode:</span>
+              <span class="app-mode-pill ${modeClass}">
+                ${modeIconSvg}
+                <span>${escapeHtml(appMode)}</span>
+              </span>
+            </div>
+            <button type="button" class="btn-scheme-action" onclick="window.openSchemeDetails('${escapeHtml(String(scheme.id))}')">
+              ${cardBtnLabel}
+            </button>
+          </div>
+        </article>
+      `;
     });
 
-    schemesTableBody.innerHTML = rowsHtml;
+    if (schemesCardsContainer) {
+      schemesCardsContainer.innerHTML = cardsHtml;
+      updateCardReadMoreVisibility();
+      requestAnimationFrame(updateCardReadMoreVisibility);
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(updateCardReadMoreVisibility);
+      }
+    }
+    if (schemesTableBody) {
+      schemesTableBody.innerHTML = "";
+    }
     renderPagination(totalItems);
+  }
+
+  function updateCardReadMoreVisibility() {
+    if (!schemesCardsContainer) return;
+    const cards = schemesCardsContainer.querySelectorAll(".scheme-card");
+    cards.forEach(card => {
+      const descEl = card.querySelector(".scheme-card-desc");
+      const readMoreBtn = card.querySelector(".scheme-read-more-btn");
+      if (descEl && readMoreBtn) {
+        if (descEl.clientHeight > 0) {
+          const isOverflowing = descEl.scrollHeight > (descEl.clientHeight + 2);
+          readMoreBtn.style.display = isOverflowing ? "inline-flex" : "none";
+        }
+      }
+    });
   }
 
   function renderPagination(totalItems) {
@@ -1990,12 +3154,25 @@ async function initFeature() {
     if (totalPages <= 7) {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {
-      if (currentPage <= 4) {
-        pages = [1, 2, 3, 4, 5, "...", totalPages];
-      } else if (currentPage >= totalPages - 3) {
-        pages = [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-      } else {
-        pages = [1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages];
+      const rangeStart = Math.max(1, currentPage - 3);
+      const rangeEnd = Math.min(totalPages, currentPage + 3);
+
+      if (rangeStart > 1) {
+        pages.push(1);
+        if (rangeStart > 2) {
+          pages.push("...");
+        }
+      }
+
+      for (let i = rangeStart; i <= rangeEnd; i++) {
+        pages.push(i);
+      }
+
+      if (rangeEnd < totalPages) {
+        if (rangeEnd < totalPages - 1) {
+          pages.push("...");
+        }
+        pages.push(totalPages);
       }
     }
 
@@ -2077,6 +3254,12 @@ async function initFeature() {
     currentPage = 1;
 
     searchDrawer.style.display = tab === "SEARCH" ? "block" : "none";
+    if (mostSearchedBar) {
+      mostSearchedBar.style.display = tab === "SEARCH" ? "inline-flex" : "none";
+    }
+    if (tab === "SEARCH") {
+      renderRecentSearches();
+    }
     filterDropdownMenu.classList.remove("open");
 
     if (tab === "FILTER" && selectedFilterDept) {
@@ -2099,10 +3282,12 @@ async function initFeature() {
 
   function populateFilterDropdown() {
     filterOptionsList.innerHTML = "";
+    const departmentList = getUniqueDepartments();
 
-    DEPARTMENTS.forEach(dept => {
+    departmentList.forEach(dept => {
       const btn = document.createElement("button");
-      btn.className = `popover-opt-btn ${selectedFilterDept === dept ? "active" : ""}`;
+      const isSelected = Boolean(selectedFilterDept && selectedFilterDept.toLowerCase() === dept.toLowerCase());
+      btn.className = `popover-opt-btn ${isSelected ? "active" : ""}`;
       btn.textContent = dept;
       btn.addEventListener("click", () => {
         selectedFilterDept = dept;
@@ -2144,14 +3329,382 @@ async function initFeature() {
   btnClearFilterText.addEventListener("click", clearFilterAction);
 
   // =========================================================================
+  // RECENT SEARCHES STATE & MANAGEMENT
+  const RECENT_SEARCHES_STORAGE_KEY = "uniora_recent_searches_v1";
+
+  function loadRecentSearches() {
+    try {
+      const raw = localStorage.getItem(RECENT_SEARCHES_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          return parsed.filter(item => typeof item === "string" && item.trim().length > 0);
+        }
+      }
+    } catch (e) {
+      console.warn("[RecentSearches] Failed to read from localStorage:", e);
+    }
+    return [];
+  }
+
+  function saveRecentSearches(list) {
+    try {
+      localStorage.setItem(RECENT_SEARCHES_STORAGE_KEY, JSON.stringify(list));
+    } catch (e) {
+      console.warn("[RecentSearches] Failed to save to localStorage:", e);
+    }
+  }
+
+  let recentSearches = loadRecentSearches();
+  let isRecentCarouselPaused = false;
+  let recentPauseResumeTimeout = null;
+  let isDraggingRecentCarousel = false;
+  let dragRecentStartX = 0;
+  let dragRecentStartScrollLeft = 0;
+  let hasDraggedRecentCarousel = false;
+  let recentCarouselSubpixelScroll = 0;
+  let recentSingleSetWidth = 0;
+  let recentOriginalChipsCount = 0;
+  let isRecentCarouselListening = false;
+
+  function pauseRecentCarousel(durationMs = 2500) {
+    isRecentCarouselPaused = true;
+    if (recentPauseResumeTimeout) clearTimeout(recentPauseResumeTimeout);
+    recentPauseResumeTimeout = setTimeout(() => {
+      isRecentCarouselPaused = false;
+    }, durationMs);
+  }
+
+  function getRecentSetWidth() {
+    if (recentSingleSetWidth > 0) return recentSingleSetWidth;
+    if (!recentTagsList || recentTagsList.offsetParent === null) return 0;
+    if (recentOriginalChipsCount > 0 && recentTagsList.children.length > recentOriginalChipsCount) {
+      const firstChild = recentTagsList.children[0];
+      const cloneChild = recentTagsList.children[recentOriginalChipsCount];
+      if (firstChild && cloneChild) {
+        const dist = cloneChild.offsetLeft - firstChild.offsetLeft;
+        if (dist > 10) {
+          recentSingleSetWidth = dist;
+          return recentSingleSetWidth;
+        }
+        const rectDist = cloneChild.getBoundingClientRect().left - firstChild.getBoundingClientRect().left;
+        if (rectDist > 10) {
+          recentSingleSetWidth = rectDist;
+          return recentSingleSetWidth;
+        }
+      }
+    }
+    return 0;
+  }
+
+  function normalizeRecentScroll() {
+    const w = getRecentSetWidth();
+    if (w > 0) {
+      let s = recentTagsList.scrollLeft % w;
+      if (s < 0) s += w;
+      recentTagsList.scrollLeft = s;
+      recentCarouselSubpixelScroll = s;
+    } else {
+      recentCarouselSubpixelScroll = recentTagsList.scrollLeft;
+    }
+  }
+
+  function checkAndInitRecentCarousel() {
+    if (!recentSearchesContainer || !recentTagsList) return;
+    if (!recentSearches || recentSearches.length === 0) return;
+    if (recentTagsList.offsetParent === null || recentTagsList.clientWidth === 0) return;
+
+    const isOverflowing = recentTagsList.scrollWidth > recentTagsList.clientWidth + 5;
+
+    if (isOverflowing) {
+      if (recentNavBtns) recentNavBtns.style.display = "inline-flex";
+      recentOriginalChipsCount = recentSearches.length;
+
+      // Duplicate chips for circular marquee loop (2 duplicate sets)
+      const originalChips = Array.from(recentTagsList.querySelectorAll(".recent-chip"));
+      for (let c = 0; c < 2; c++) {
+        originalChips.forEach(chip => {
+          const clone = chip.cloneNode(true);
+          clone.setAttribute("aria-hidden", "true");
+          recentTagsList.appendChild(clone);
+        });
+      }
+
+      recentSingleSetWidth = 0;
+      recentCarouselSubpixelScroll = 0;
+      recentTagsList.scrollLeft = 0;
+      isRecentCarouselPaused = false;
+    } else {
+      if (recentNavBtns) recentNavBtns.style.display = "none";
+      recentOriginalChipsCount = 0;
+      recentSingleSetWidth = 0;
+      recentCarouselSubpixelScroll = 0;
+      recentTagsList.scrollLeft = 0;
+      isRecentCarouselPaused = true;
+    }
+  }
+
+  function renderRecentSearches() {
+    if (!recentSearchesContainer || !recentTagsList) return;
+
+    if (!recentSearches || recentSearches.length === 0) {
+      recentSearchesContainer.style.display = "none";
+      recentTagsList.innerHTML = "";
+      if (recentNavBtns) recentNavBtns.style.display = "none";
+      recentOriginalChipsCount = 0;
+      recentSingleSetWidth = 0;
+      recentCarouselSubpixelScroll = 0;
+      isRecentCarouselPaused = true;
+      return;
+    }
+
+    recentSearchesContainer.style.display = "flex";
+    recentTagsList.innerHTML = "";
+
+    recentSearches.forEach(term => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "recent-chip";
+      chip.setAttribute("data-query", term);
+
+      const labelSpan = document.createElement("span");
+      labelSpan.textContent = term;
+
+      const removeSpan = document.createElement("span");
+      removeSpan.className = "chip-remove";
+      removeSpan.textContent = "×";
+      removeSpan.title = "Remove";
+      removeSpan.setAttribute("aria-label", `Remove ${term}`);
+
+      chip.appendChild(labelSpan);
+      chip.appendChild(removeSpan);
+      recentTagsList.appendChild(chip);
+    });
+
+    recentTagsList.scrollLeft = 0;
+    recentCarouselSubpixelScroll = 0;
+    recentSingleSetWidth = 0;
+
+    setupRecentCarouselEvents();
+
+    requestAnimationFrame(() => {
+      checkAndInitRecentCarousel();
+    });
+  }
+
+  function setupRecentCarouselEvents() {
+    if (isRecentCarouselListening) return;
+    isRecentCarouselListening = true;
+
+    if (btnRecentPrev) {
+      btnRecentPrev.addEventListener("click", () => {
+        pauseRecentCarousel(3000);
+        const w = getRecentSetWidth();
+        if (w > 0 && recentTagsList.scrollLeft < 150) {
+          recentTagsList.scrollLeft += w;
+          recentCarouselSubpixelScroll = recentTagsList.scrollLeft;
+        }
+        recentTagsList.scrollBy({ left: -150, behavior: "smooth" });
+        setTimeout(normalizeRecentScroll, 400);
+      });
+    }
+
+    if (btnRecentNext) {
+      btnRecentNext.addEventListener("click", () => {
+        pauseRecentCarousel(3000);
+        const w = getRecentSetWidth();
+        if (w > 0 && recentTagsList.scrollLeft > w) {
+          recentTagsList.scrollLeft -= w;
+          recentCarouselSubpixelScroll = recentTagsList.scrollLeft;
+        }
+        recentTagsList.scrollBy({ left: 150, behavior: "smooth" });
+        setTimeout(normalizeRecentScroll, 400);
+      });
+    }
+
+    if (recentTagsList) {
+      recentTagsList.addEventListener("mouseenter", () => {
+        isRecentCarouselPaused = true;
+        if (recentPauseResumeTimeout) clearTimeout(recentPauseResumeTimeout);
+      });
+
+      recentTagsList.addEventListener("mouseleave", () => {
+        if (!isDraggingRecentCarousel && recentOriginalChipsCount > 0) {
+          pauseRecentCarousel(800);
+        }
+      });
+
+      recentTagsList.addEventListener("touchstart", () => {
+        isRecentCarouselPaused = true;
+        if (recentPauseResumeTimeout) clearTimeout(recentPauseResumeTimeout);
+      }, { passive: true });
+
+      recentTagsList.addEventListener("touchend", () => {
+        normalizeRecentScroll();
+        if (recentOriginalChipsCount > 0) {
+          pauseRecentCarousel(1800);
+        }
+      }, { passive: true });
+
+      recentTagsList.addEventListener("wheel", () => {
+        normalizeRecentScroll();
+        if (recentOriginalChipsCount > 0) {
+          pauseRecentCarousel(1800);
+        }
+      }, { passive: true });
+
+      recentTagsList.addEventListener("mousedown", (e) => {
+        if (e.button !== 0) return;
+        isDraggingRecentCarousel = true;
+        hasDraggedRecentCarousel = false;
+        dragRecentStartX = e.pageX - recentTagsList.offsetLeft;
+        dragRecentStartScrollLeft = recentTagsList.scrollLeft;
+        isRecentCarouselPaused = true;
+        if (recentPauseResumeTimeout) clearTimeout(recentPauseResumeTimeout);
+      });
+
+      recentTagsList.addEventListener("click", (e) => {
+        if (hasDraggedRecentCarousel) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+
+        const removeBtn = e.target.closest(".chip-remove");
+        if (removeBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          const chip = removeBtn.closest(".recent-chip");
+          const term = chip ? chip.getAttribute("data-query") : null;
+          if (term) {
+            removeRecentSearch(term);
+          }
+          return;
+        }
+
+        const chip = e.target.closest(".recent-chip");
+        if (chip) {
+          const query = chip.getAttribute("data-query");
+          if (query) {
+            executeSearch(query, true);
+          }
+        }
+      });
+    }
+
+    window.addEventListener("mousemove", (e) => {
+      if (!isDraggingRecentCarousel || !recentTagsList) return;
+      const currentX = e.pageX - recentTagsList.offsetLeft;
+      const walk = currentX - dragRecentStartX;
+      if (Math.abs(walk) > 4) {
+        hasDraggedRecentCarousel = true;
+      }
+      recentTagsList.scrollLeft = dragRecentStartScrollLeft - walk;
+      recentCarouselSubpixelScroll = recentTagsList.scrollLeft;
+    });
+
+    window.addEventListener("mouseup", () => {
+      if (isDraggingRecentCarousel) {
+        isDraggingRecentCarousel = false;
+        normalizeRecentScroll();
+        if (recentOriginalChipsCount > 0) {
+          pauseRecentCarousel(1200);
+        }
+      }
+    });
+
+    let recentLastTime = performance.now();
+    const RECENT_SCROLL_SPEED_PX_PER_SEC = 20;
+
+    function recentAutoScrollStep(currentTime) {
+      const deltaMs = currentTime - recentLastTime;
+      recentLastTime = currentTime;
+
+      if (
+        currentTab === "SEARCH" &&
+        !isRecentCarouselPaused &&
+        !isDraggingRecentCarousel &&
+        recentOriginalChipsCount > 0 &&
+        recentTagsList &&
+        recentTagsList.offsetParent !== null
+      ) {
+        const setWidth = getRecentSetWidth();
+        if (setWidth > 20) {
+          const pxToScroll = (RECENT_SCROLL_SPEED_PX_PER_SEC * deltaMs) / 1000;
+          recentCarouselSubpixelScroll += pxToScroll;
+
+          if (recentCarouselSubpixelScroll >= setWidth) {
+            recentCarouselSubpixelScroll -= setWidth;
+          }
+
+          recentTagsList.scrollLeft = recentCarouselSubpixelScroll;
+        }
+      }
+
+      requestAnimationFrame(recentAutoScrollStep);
+    }
+
+    requestAnimationFrame(recentAutoScrollStep);
+  }
+
+  function commitSearchToRecent(term) {
+    const cleanTerm = String(term || "").trim();
+    if (!cleanTerm) return;
+
+    const cleanLower = cleanTerm.toLowerCase();
+
+    // 1. Remove term if already present (deduplicate case-insensitively)
+    recentSearches = recentSearches.filter(
+      item => item.toLowerCase() !== cleanLower
+    );
+
+    // 2. Prepend immediately to index 0 (front of recent searches)
+    recentSearches.unshift(cleanTerm);
+
+    // 3. Keep up to 10 recent searches
+    if (recentSearches.length > 10) {
+      recentSearches = recentSearches.slice(0, 10);
+    }
+
+    // 4. Save immediately to localStorage
+    saveRecentSearches(recentSearches);
+
+    // 5. Render immediately on screen
+    renderRecentSearches();
+  }
+
+  function removeRecentSearch(term) {
+    const cleanTerm = String(term || "").trim().toLowerCase();
+    recentSearches = recentSearches.filter(item => item.toLowerCase() !== cleanTerm);
+    saveRecentSearches(recentSearches);
+    renderRecentSearches();
+  }
+
+  function clearAllRecentSearches() {
+    recentSearches = [];
+    try {
+      localStorage.removeItem(RECENT_SEARCHES_STORAGE_KEY);
+    } catch (e) {
+      console.warn("[RecentSearches] Failed to clear localStorage:", e);
+    }
+    renderRecentSearches();
+  }
+
+  // =========================================================================
   // EXPLICIT SEARCH LOGIC
   // =========================================================================
-  function executeSearch(query) {
+  function executeSearch(query, addToRecent = false) {
     activeSearchQuery = String(query || "").trim();
     searchInput.value = activeSearchQuery;
 
     if (btnClearSearch) {
       btnClearSearch.style.display = activeSearchQuery ? "flex" : "none";
+    }
+
+    if (addToRecent && activeSearchQuery) {
+      commitSearchToRecent(activeSearchQuery);
+    } else {
+      renderRecentSearches();
     }
 
     currentPage = 1;
@@ -2165,42 +3718,228 @@ async function initFeature() {
   });
 
   btnExecuteSearch.addEventListener("click", () => {
-    executeSearch(searchInput.value);
+    executeSearch(searchInput.value, true);
   });
 
   searchInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      executeSearch(searchInput.value);
+      executeSearch(searchInput.value, true);
       searchInput.blur();
     }
   });
 
   btnClearSearch.addEventListener("click", () => {
     searchInput.value = "";
-    executeSearch("");
+    executeSearch("", false);
     searchInput.focus();
   });
 
-  recentTagsList.querySelectorAll(".tag-chip").forEach(chip => {
-    chip.addEventListener("click", (event) => {
+  if (btnClearAllTags) {
+    btnClearAllTags.addEventListener("click", clearAllRecentSearches);
+  }
 
-      // If the X is clicked, remove this search chip
-      if (event.target.tagName === "SPAN") {
-        event.stopPropagation();
-        chip.remove();
+  // =========================================================================
+  // =========================================================================
+  // MOST SEARCHED CAROUSEL & CIRCULAR INFINITE AUTO-SCROLL
+  // =========================================================================
+  let isCarouselPaused = false;
+  let pauseResumeTimeout = null;
+  let isDraggingCarousel = false;
+  let dragStartX = 0;
+  let dragStartScrollLeft = 0;
+  let hasDraggedCarousel = false;
+  let carouselSubpixelScroll = 0;
+  let singleSetWidth = 0;
+  let originalChipsCount = 0;
+
+  function pauseCarousel(durationMs = 2500) {
+    isCarouselPaused = true;
+    if (pauseResumeTimeout) clearTimeout(pauseResumeTimeout);
+    pauseResumeTimeout = setTimeout(() => {
+      isCarouselPaused = false;
+    }, durationMs);
+  }
+
+  function getSetWidth() {
+    if (singleSetWidth > 0) return singleSetWidth;
+    if (!mostSearchedTrack || mostSearchedTrack.offsetParent === null) return 0;
+    if (originalChipsCount > 0 && mostSearchedTrack.children.length > originalChipsCount) {
+      const firstChild = mostSearchedTrack.children[0];
+      const cloneChild = mostSearchedTrack.children[originalChipsCount];
+      const dist = cloneChild.offsetLeft - firstChild.offsetLeft;
+      if (dist > 10) {
+        singleSetWidth = dist;
+        return singleSetWidth;
+      }
+    }
+    return 0;
+  }
+
+  function normalizeScroll() {
+    const w = getSetWidth();
+    if (w > 0) {
+      let s = mostSearchedTrack.scrollLeft % w;
+      if (s < 0) s += w;
+      mostSearchedTrack.scrollLeft = s;
+      carouselSubpixelScroll = s;
+    } else {
+      carouselSubpixelScroll = mostSearchedTrack.scrollLeft;
+    }
+  }
+
+  function initMostSearchedCarousel() {
+    if (!mostSearchedTrack) return;
+    if (mostSearchedTrack.dataset.carouselInitialized === "true") return;
+    mostSearchedTrack.dataset.carouselInitialized = "true";
+
+    const originalChips = Array.from(mostSearchedTrack.querySelectorAll(".topic-chip"));
+    originalChipsCount = originalChips.length;
+    if (originalChipsCount === 0) return;
+
+    // Clone chips to create an infinite circular loop (2 clone sets so there is always seamless continuity)
+    for (let c = 0; c < 2; c++) {
+      originalChips.forEach(chip => {
+        const clone = chip.cloneNode(true);
+        clone.setAttribute("aria-hidden", "true");
+        mostSearchedTrack.appendChild(clone);
+      });
+    }
+
+    // Smooth navigation buttons: manual interruption and scroll
+    if (btnTopicPrev) {
+      btnTopicPrev.addEventListener("click", () => {
+        pauseCarousel(3000);
+        const w = getSetWidth();
+        if (w > 0 && mostSearchedTrack.scrollLeft < 150) {
+          mostSearchedTrack.scrollLeft += w;
+          carouselSubpixelScroll = mostSearchedTrack.scrollLeft;
+        }
+        mostSearchedTrack.scrollBy({ left: -150, behavior: "smooth" });
+        setTimeout(normalizeScroll, 400);
+      });
+    }
+
+    if (btnTopicNext) {
+      btnTopicNext.addEventListener("click", () => {
+        pauseCarousel(3000);
+        const w = getSetWidth();
+        if (w > 0 && mostSearchedTrack.scrollLeft > w) {
+          mostSearchedTrack.scrollLeft -= w;
+          carouselSubpixelScroll = mostSearchedTrack.scrollLeft;
+        }
+        mostSearchedTrack.scrollBy({ left: 150, behavior: "smooth" });
+        setTimeout(normalizeScroll, 400);
+      });
+    }
+
+    // Hover pause and resume: stops running while user hovers
+    mostSearchedTrack.addEventListener("mouseenter", () => {
+      isCarouselPaused = true;
+      if (pauseResumeTimeout) clearTimeout(pauseResumeTimeout);
+    });
+
+    mostSearchedTrack.addEventListener("mouseleave", () => {
+      if (!isDraggingCarousel) {
+        pauseCarousel(800);
+      }
+    });
+
+    // Touch events for mobile/tablet devices
+    mostSearchedTrack.addEventListener("touchstart", () => {
+      isCarouselPaused = true;
+      if (pauseResumeTimeout) clearTimeout(pauseResumeTimeout);
+    }, { passive: true });
+
+    mostSearchedTrack.addEventListener("touchend", () => {
+      normalizeScroll();
+      pauseCarousel(1800);
+    }, { passive: true });
+
+    // Wheel event (trackpad or mouse wheel horizontal scroll)
+    mostSearchedTrack.addEventListener("wheel", () => {
+      normalizeScroll();
+      pauseCarousel(1800);
+    }, { passive: true });
+
+    // Drag-to-scroll support with interruption
+    mostSearchedTrack.addEventListener("mousedown", (e) => {
+      if (e.button !== 0) return;
+      isDraggingCarousel = true;
+      hasDraggedCarousel = false;
+      dragStartX = e.pageX - mostSearchedTrack.offsetLeft;
+      dragStartScrollLeft = mostSearchedTrack.scrollLeft;
+      isCarouselPaused = true;
+      if (pauseResumeTimeout) clearTimeout(pauseResumeTimeout);
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      if (!isDraggingCarousel) return;
+      const currentX = e.pageX - mostSearchedTrack.offsetLeft;
+      const walk = currentX - dragStartX;
+      if (Math.abs(walk) > 4) {
+        hasDraggedCarousel = true;
+      }
+      mostSearchedTrack.scrollLeft = dragStartScrollLeft - walk;
+      carouselSubpixelScroll = mostSearchedTrack.scrollLeft;
+    });
+
+    window.addEventListener("mouseup", () => {
+      if (isDraggingCarousel) {
+        isDraggingCarousel = false;
+        normalizeScroll();
+        pauseCarousel(1200);
+      }
+    });
+
+    // Topic chips click delegation for both original and cloned chips
+    mostSearchedTrack.addEventListener("click", (e) => {
+      if (hasDraggedCarousel) {
+        e.preventDefault();
+        e.stopPropagation();
         return;
       }
-
-      // Otherwise, clicking the word performs the search
-      const q = chip.getAttribute("data-query");
-      executeSearch(q);
+      const chip = e.target.closest(".topic-chip");
+      if (!chip) return;
+      const topic = chip.getAttribute("data-topic") || chip.textContent.trim();
+      if (topic) {
+        executeSearch(topic, true);
+      }
     });
-  });
 
-  btnClearAllTags.addEventListener("click", () => {
-    recentTagsList.innerHTML = "";
-  });
+    // Continuous right-to-left circular loop auto-scroll
+    let lastTime = performance.now();
+    const SCROLL_SPEED_PX_PER_SEC = 20; // slow, gentle circular loop
+
+    function autoScrollStep(currentTime) {
+      const deltaMs = currentTime - lastTime;
+      lastTime = currentTime;
+
+      if (
+        currentTab === "SEARCH" &&
+        !isCarouselPaused &&
+        !isDraggingCarousel &&
+        mostSearchedTrack.offsetParent !== null
+      ) {
+        const setWidth = getSetWidth();
+        if (setWidth > 20) {
+          const pxToScroll = (SCROLL_SPEED_PX_PER_SEC * deltaMs) / 1000;
+          carouselSubpixelScroll += pxToScroll;
+
+          // Seamless circular loop reset: when Set 1 ends, loop to the duplicate Set
+          if (carouselSubpixelScroll >= setWidth) {
+            carouselSubpixelScroll -= setWidth;
+          }
+
+          mostSearchedTrack.scrollLeft = carouselSubpixelScroll;
+        }
+      }
+
+      requestAnimationFrame(autoScrollStep);
+    }
+
+    requestAnimationFrame(autoScrollStep);
+  }
 
   function openEditModal() {
     modalFormHeading.textContent = guestProfile.isFilled
@@ -2440,10 +4179,150 @@ async function initFeature() {
     }
   }
 
+  function extractSchemeDocuments(scheme) {
+    if (!scheme) return [];
+    const raw = scheme.raw_required_documents || scheme.rawRequiredDocuments || scheme.required_documents || scheme.mandatory_documents || scheme.docs;
+    if (!raw) return [];
+    if (typeof raw === "string") {
+      return raw
+        .split(/\s*[;\n•|]\s*/)
+        .map(part => part.replace(/^\s*[-–*]+\s*/, '').trim())
+        .filter(part => part.length > 1);
+    }
+    if (Array.isArray(raw)) {
+      const list = [];
+      raw.forEach(item => {
+        if (typeof item === "string") {
+          item
+            .split(/\s*[;\n•|]\s*/)
+            .map(part => part.replace(/^\s*[-–*]+\s*/, '').trim())
+            .filter(part => part.length > 1)
+            .forEach(p => list.push(p));
+        }
+      });
+      return list.length ? list : raw.map(s => String(s).trim()).filter(Boolean);
+    }
+    return [];
+  }
+
+  let isRequiredDocsOpen = false;
+
+  function setRequiredDocsAccordion(isOpen) {
+    isRequiredDocsOpen = isOpen;
+    if (!modalRequiredDocsPanel || !btnToggleRequiredDocs) return;
+
+    modalRequiredDocsPanel.hidden = !isOpen;
+    btnToggleRequiredDocs.setAttribute("aria-expanded", String(isOpen));
+    btnToggleRequiredDocs.classList.toggle("is-open", isOpen);
+
+    if (modalDocsToggleText) {
+      modalDocsToggleText.textContent = isOpen ? "Hide" : "View";
+    }
+  }
+
+  function renderRequiredDocsDropdown(scheme) {
+    if (!modalRequiredDocsList) return;
+    const docs = extractSchemeDocuments(scheme);
+
+    if (modalDocsCountBadge) {
+      modalDocsCountBadge.textContent = `${docs.length} ${docs.length === 1 ? "document" : "documents"}`;
+    }
+
+    if (docs.length > 0) {
+      modalRequiredDocsList.innerHTML = docs.map(doc => `<li>${escapeHtml(doc)}</li>`).join("");
+      modalRequiredDocsList.hidden = false;
+      if (modalRequiredDocsEmpty) modalRequiredDocsEmpty.hidden = true;
+    } else {
+      modalRequiredDocsList.innerHTML = "";
+      modalRequiredDocsList.hidden = true;
+      if (modalRequiredDocsEmpty) modalRequiredDocsEmpty.hidden = false;
+    }
+
+    // Default to closed state when opening a scheme
+    setRequiredDocsAccordion(false);
+  }
+
+  function extractAdditionalConditions(scheme) {
+    if (!scheme) return [];
+    const raw = scheme.other_conditions || scheme.otherConditions || "";
+    if (!raw || typeof raw !== "string") return [];
+    const trimmed = raw.trim();
+    if (!trimmed || trimmed.toLowerCase() === "none" || trimmed === "-" || trimmed.toLowerCase() === "n/a") {
+      return [];
+    }
+
+    return trimmed
+      .split(/\s*[;\n•|]\s*/)
+      .map(part => part.replace(/^\s*[-–*•]+\s*/, '').trim())
+      .filter(part => part.length > 2 && part.toLowerCase() !== "none");
+  }
+
+  let isAdditionalConditionsExpanded = false;
+
+  function renderAdditionalConditions(scheme) {
+    const section = document.getElementById("modalAdditionalConditionsSection");
+    const list = document.getElementById("modalAdditionalConditionsList");
+    const btnToggle = document.getElementById("btnToggleMoreConditions");
+    const toggleText = document.getElementById("toggleConditionsText");
+    if (!section || !list) return;
+
+    const conditions = extractAdditionalConditions(scheme);
+
+    if (conditions.length === 0) {
+      section.style.display = "none";
+      list.innerHTML = "";
+      if (btnToggle) btnToggle.style.display = "none";
+      return;
+    }
+
+    // Reset expanded state to false when rendering new scheme
+    isAdditionalConditionsExpanded = false;
+    if (btnToggle) {
+      btnToggle.classList.remove("is-expanded");
+      btnToggle.setAttribute("aria-expanded", "false");
+    }
+
+    const maxInitial = 4;
+    const hasMore = conditions.length > maxInitial;
+
+    list.innerHTML = conditions.map((item, idx) => {
+      const isExtra = idx >= maxInitial;
+      return `
+        <li class="additional-condition-item ${isExtra ? "is-extra-condition" : ""}" style="${isExtra ? "display: none;" : ""}">
+          <span class="condition-item-icon" aria-hidden="true">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </span>
+          <span class="condition-item-text">${escapeHtml(item)}</span>
+        </li>
+      `;
+    }).join("");
+
+    if (btnToggle && toggleText) {
+      if (hasMore) {
+        const remaining = conditions.length - maxInitial;
+        toggleText.textContent = `Read more (+${remaining} more)`;
+        btnToggle.style.display = "inline-flex";
+      } else {
+        btnToggle.style.display = "none";
+      }
+    }
+
+    section.style.display = "flex";
+  }
+
   window.openSchemeDetails = function (schemeId) {
     syncDrawerOffset();
-    const scheme = ALL_SCHEMES.find(s => s.id === schemeId);
-    if (!scheme) return;
+    const scheme = ALL_SCHEMES.find(s => String(s.id) === String(schemeId) || String(s.scheme_id) === String(schemeId));
+    activeDrawerScheme = scheme;
+
+    // Record viewed scheme in Scheme History
+    const isEligibleSource = (currentTab === "ELIGIBLE") || (currentTab === "FILTER" && filterScope === "ELIGIBLE");
+    const historySource = isEligibleSource ? "ELIGIBLE" : "ALL";
+    if (typeof addSchemeToHistory === "function") {
+      addSchemeToHistory(scheme, historySource);
+    }
 
     modalSchemeName.textContent = scheme.name;
     modalSchemeDept.textContent = scheme.dept;
@@ -2451,9 +4330,27 @@ async function initFeature() {
     modalSchemeLevel.className = `drawer-level-pill ${getLevelClass(scheme.level)}`;
     modalSchemeDescription.textContent = scheme.desc;
 
-    const modalSchemeSub = document.getElementById("modalSchemeSub");
-    if (modalSchemeSub) {
-      modalSchemeSub.textContent = scheme.sub || scheme.desc;
+    // Populate Application Mode & State meta box
+    const modalDrawerAppMode = document.getElementById("modalDrawerAppMode");
+    const modalDrawerState = document.getElementById("modalDrawerState");
+    if (modalDrawerAppMode) {
+      let appMode = scheme.applicationMode || scheme.application_mode || scheme.mode;
+      if (!appMode) {
+        appMode = (scheme.id % 2 === 0) ? "Offline" : "Online";
+      }
+      modalDrawerAppMode.textContent = appMode;
+    }
+    if (modalDrawerState) {
+      const isTn = (scheme.level === "Tamil Nadu" || scheme.stateReq === "Tamil Nadu" || (scheme.dept && scheme.dept.includes("Tamil Nadu")));
+      let stateDisplay = "All India";
+      if (isTn) {
+        stateDisplay = "Tamil Nadu";
+      } else if (scheme.stateReq && scheme.stateReq !== "All") {
+        stateDisplay = scheme.stateReq;
+      } else if (scheme.level === "Central") {
+        stateDisplay = "All India";
+      }
+      modalDrawerState.textContent = stateDisplay;
     }
 
     // Set the Vector Icon inside the drawer beside the Scheme title
@@ -2474,16 +4371,11 @@ async function initFeature() {
       notEvaluatedView.style.display = "flex";
       evaluatedSections.style.display = "none";
       drawerFooterBar.style.display = "none";
-
-      const docReadinessContainer = document.getElementById("modalDocReadinessContainer");
-      if (docReadinessContainer) {
-        docReadinessContainer.style.display = "none";
-      }
     } else {
       // 2. EVALUATED: Shows complete evaluated details and actions
       notEvaluatedView.style.display = "none";
-      evaluatedSections.style.display = "block";
-      drawerFooterBar.style.display = "flex";
+      evaluatedSections.style.display = "flex";
+      drawerFooterBar.style.display = "";
 
       if (currentEligibilityCheck.eligible) {
         modalStatusPill.textContent = "✓ Eligible";
@@ -2492,7 +4384,7 @@ async function initFeature() {
         modalEligibilityHero.className = "eligibility-hero-banner is-eligible";
         modalStatusIcon.textContent = "✓";
         modalStatusTitle.textContent = "Eligible";
-        modalStatusSubtitle.textContent = "You meet the requirements for this welfare scheme.";
+        modalStatusSubtitle.textContent = "You meet the requirements for this scheme.";
       } else {
         modalStatusPill.textContent = "✕ Not Eligible";
         modalStatusPill.className = "drawer-status-pill ineligible";
@@ -2500,77 +4392,38 @@ async function initFeature() {
         modalEligibilityHero.className = "eligibility-hero-banner is-not-eligible";
         modalStatusIcon.textContent = "✕";
         modalStatusTitle.textContent = "Not Eligible";
-        modalStatusSubtitle.textContent = "You do not meet the qualifications for this scheme.";
+        modalStatusSubtitle.textContent = "You do not meet the eligibility criteria for this scheme.";
+      }
+
+      // Smooth pop/scale animation for result icon and burst rays
+      if (modalStatusIcon) {
+        modalStatusIcon.classList.remove("anim-pop");
+        const burstRays = modalEligibilityHero.querySelector(".eligibility-burst-rays");
+        if (burstRays) burstRays.classList.remove("anim-pop");
+        void modalStatusIcon.offsetWidth; // Force reflow to re-trigger animation
+        modalStatusIcon.classList.add("anim-pop");
+        if (burstRays) burstRays.classList.add("anim-pop");
       }
 
       renderAccordionSummary(currentEligibilityCheck);
 
-      const verifiedDocList = getStoredVerifiedDocs();
-      const docReadiness = computeSchemeDocReadiness(scheme, verifiedDocList);
-      const docReadinessContainer = document.getElementById("modalDocReadinessContainer");
-      if (docReadinessContainer) {
-        docReadinessContainer.style.display = "block";
-        docReadinessContainer.innerHTML = `
-          <div class="doc-readiness-card">
-            <div class="doc-readiness-header">
-              <span class="doc-readiness-label">Document Readiness</span>
-              <span class="doc-readiness-score">${docReadiness.percentage}% Ready</span>
-            </div>
-            <div class="doc-readiness-track">
-              <div class="doc-readiness-bar" style="width: ${docReadiness.percentage}%;"></div>
-            </div>
-            <div class="doc-readiness-subtext">
-              ${docReadiness.verified} of ${docReadiness.total} required documents verified in your UniOra vault
-            </div>
-          </div>
-        `;
-      }
+      // Populate Additional Conditions to Self-Verify with dynamic data
+      renderAdditionalConditions(scheme);
 
-      let hasMissingDocs = false;
+      // Populate Required Documents dropdown list with scheme data
+      renderRequiredDocsDropdown(scheme);
 
-      modalDocChips.innerHTML = scheme.docs
-        .map(d => {
-          const isVerified = isDocumentVerified(d, verifiedDocList);
-          if (isVerified) {
-            return `<span class="doc-tag-pill doc-tag-verified">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" style="margin-right: 4px;">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-              <span>${escapeHtml(d)}</span>
-              <span class="doc-verified-badge">✓ Verified in UniOra</span>
-            </span>`;
-          } else {
-            hasMissingDocs = true;
-            return `<span class="doc-tag-pill doc-tag-pending">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" style="margin-right: 4px;">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-              </svg>
-              <span>${escapeHtml(d)}</span>
-            </span>`;
-          }
-        })
-        .join("");
-
-      const docActionPrompt = document.getElementById("modalDocActionPrompt");
-      if (docActionPrompt) {
-        if (hasMissingDocs) {
-          docActionPrompt.style.display = "block";
-          docActionPrompt.innerHTML = `
-            <a href="../../03_documents_verification/frontend/index.html" class="btn-verify-missing-docs">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-              <span>Upload &amp; Verify Requisite Documents</span>
-            </a>
-          `;
-        } else {
-          docActionPrompt.style.display = "none";
+      if (btnDrawerViewDocs) {
+        const schemeId = scheme.id || scheme.scheme_id || "";
+        const schemeName = scheme.name || scheme.scheme_name || "";
+        const targetUrl = `../../01_scheme_recommendation/frontend/index.html?schemeId=${encodeURIComponent(schemeId)}&schemeName=${encodeURIComponent(schemeName)}&openDrawer=true`;
+        btnDrawerViewDocs.href = targetUrl;
+        btnDrawerViewDocs.setAttribute("data-scheme-id", schemeId);
+        btnDrawerViewDocs.setAttribute("data-scheme-name", schemeName);
+        if (scheme.officialUrl) {
+          btnDrawerViewDocs.setAttribute("data-official-url", scheme.officialUrl);
         }
       }
-
-      modalOfficialLink.href = scheme.officialUrl || "#";
-      modalOfficialLink.onclick = (event) => {
-        if (!scheme.officialUrl) event.preventDefault();
-      };
     }
 
     // Slide-in drawer
@@ -2587,8 +4440,27 @@ async function initFeature() {
 
   window.addEventListener(
     "resize",
-    syncDrawerOffset
+    () => {
+      syncDrawerOffset();
+      updateCardReadMoreVisibility();
+      singleSetWidth = 0;
+      recentSingleSetWidth = 0;
+      if (currentTab === "SEARCH" && recentSearches && recentSearches.length > 0) {
+        renderRecentSearches();
+      }
+      if (typeof updateDocsTrackSizing === "function") {
+        updateDocsTrackSizing();
+        updateDocsNavButtons();
+      }
+    }
   );
+
+  if (typeof ResizeObserver !== "undefined" && schemesCardsContainer) {
+    const cardResizeObserver = new ResizeObserver(() => {
+      updateCardReadMoreVisibility();
+    });
+    cardResizeObserver.observe(schemesCardsContainer);
+  }
 
   // Direct drawer opening when clicking Check Eligible
   window.checkSingleScheme = function (schemeId) {
@@ -2601,12 +4473,75 @@ async function initFeature() {
     document.body.classList.remove("details-drawer-open");
     openCriteriaGroup = null;
     criteriaAccordionContent.hidden = true;
+    setRequiredDocsAccordion(false);
+    const addlSection = document.getElementById("modalAdditionalConditionsSection");
+    if (addlSection) addlSection.style.display = "none";
+    isAdditionalConditionsExpanded = false;
   }
 
   btnSatisfiedAccordion.addEventListener("click", () => setCriteriaAccordion("satisfied"));
   btnFailedAccordion.addEventListener("click", () => setCriteriaAccordion("failed"));
   btnCloseDetailsModal.addEventListener("click", closeDetailsModal);
-  btnDismissDetails.addEventListener("click", closeDetailsModal);
+  if (btnDismissDetails) {
+    btnDismissDetails.addEventListener("click", closeDetailsModal);
+  }
+
+  if (btnToggleRequiredDocs) {
+    btnToggleRequiredDocs.addEventListener("click", () => {
+      setRequiredDocsAccordion(!isRequiredDocsOpen);
+    });
+  }
+
+  const btnToggleMoreConditions = document.getElementById("btnToggleMoreConditions");
+  const toggleConditionsText = document.getElementById("toggleConditionsText");
+
+  if (btnToggleMoreConditions) {
+    btnToggleMoreConditions.addEventListener("click", () => {
+      isAdditionalConditionsExpanded = !isAdditionalConditionsExpanded;
+      btnToggleMoreConditions.classList.toggle("is-expanded", isAdditionalConditionsExpanded);
+      btnToggleMoreConditions.setAttribute("aria-expanded", String(isAdditionalConditionsExpanded));
+
+      const extraItems = document.querySelectorAll("#modalAdditionalConditionsList .is-extra-condition");
+      extraItems.forEach(item => {
+        item.style.display = isAdditionalConditionsExpanded ? "flex" : "none";
+      });
+
+      if (toggleConditionsText) {
+        if (isAdditionalConditionsExpanded) {
+          toggleConditionsText.textContent = "Read less";
+        } else {
+          const count = extraItems.length;
+          toggleConditionsText.textContent = `Read more (+${count} more)`;
+        }
+      }
+    });
+  }
+
+  if (btnDrawerViewDocs) {
+    btnDrawerViewDocs.addEventListener("click", () => {
+      if (activeDrawerScheme) {
+        saveActiveSchemeContext(activeDrawerScheme);
+      }
+    });
+  }
+
+  if (btnDrawerVerifyDocs) {
+    btnDrawerVerifyDocs.addEventListener("click", () => {
+      if (activeDrawerScheme) {
+        saveActiveSchemeContext(activeDrawerScheme);
+        btnDrawerVerifyDocs.href = `../../03_documents_verification/frontend/index.html?schemeId=${encodeURIComponent(activeDrawerScheme.id)}&schemeName=${encodeURIComponent(activeDrawerScheme.name)}`;
+      }
+    });
+  }
+
+  if (btnDrawerCheckReadiness) {
+    btnDrawerCheckReadiness.addEventListener("click", () => {
+      if (!activeDrawerScheme) return;
+      saveActiveSchemeContext(activeDrawerScheme);
+      const targetUrl = `../../05_my_readiness/frontend/index.html?schemeId=${encodeURIComponent(activeDrawerScheme.id)}&schemeName=${encodeURIComponent(activeDrawerScheme.name)}`;
+      window.location.href = targetUrl;
+    });
+  }
 
   detailsModal.addEventListener("click", (e) => {
     if (e.target === detailsModal) closeDetailsModal();
@@ -2618,12 +4553,361 @@ async function initFeature() {
     }
   });
 
-  function updateProfileUI() {
-    const verifiedBanner = document.getElementById("verifiedDocsBanner");
-    const verifiedDocsBannerText = document.getElementById("verifiedDocsBannerText");
-    const verifiedBannerIcon = document.getElementById("verifiedBannerIcon");
-    const btnBannerEdit = document.getElementById("btnBannerEdit");
+  // =========================================================================
+  // SCHEME HISTORY — Supabase (logged-in) + sessionStorage (guest fallback)
+  // =========================================================================
+  const SCHEME_HISTORY_KEY = "uniora_scheme_view_history";
 
+  // ── sessionStorage helpers (guest fallback / instant local cache) ──────────
+  function loadSchemeHistory() {
+    try {
+      const data = sessionStorage.getItem(SCHEME_HISTORY_KEY);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {
+      console.warn("[SchemeHistory] Failed to read from sessionStorage:", e);
+    }
+    return [];
+  }
+
+  function saveSchemeHistory(history) {
+    try {
+      sessionStorage.setItem(SCHEME_HISTORY_KEY, JSON.stringify(history));
+    } catch (e) {
+      console.warn("[SchemeHistory] Failed to save to sessionStorage:", e);
+    }
+  }
+
+  // ── Supabase helpers ────────────────────────────────────────────────────────
+  /**
+   * Fetch the user's sids[] from Supabase scheme_history table.
+   * Returns an array of enriched history objects (same shape addSchemeToHistory uses).
+   * Falls back to [] silently if table doesn't exist yet.
+   */
+  async function fetchSchemeHistoryFromSupabase(uid) {
+    try {
+      if (!supabase || !uid) return null;
+      const { data, error } = await supabase
+        .from("scheme_history")
+        .select("sids, sources, updated_at")
+        .eq("uid", uid)
+        .maybeSingle();
+
+      if (error) {
+        // Table might not exist yet — silent fail
+        console.warn("[SchemeHistory] Supabase fetch notice:", error.message);
+        return null;
+      }
+
+      if (!data || !Array.isArray(data.sids) || data.sids.length === 0) {
+        return [];
+      }
+
+      const sourcesArr = Array.isArray(data.sources) ? data.sources : [];
+
+      // Enrich sids[] with full scheme metadata from ALL_SCHEMES
+      const enriched = data.sids
+        .map((sid, idx) => {
+          const scheme = ALL_SCHEMES.find(
+            s => String(s.id) === String(sid) || String(s.scheme_id) === String(sid)
+          );
+          if (!scheme) return null;
+          const source = sourcesArr[idx] || "ALL";
+          const isEligible = source === "ELIGIBLE";
+          return {
+            id: scheme.id,
+            name: scheme.name,
+            dept: scheme.dept,
+            level: scheme.level,
+            source: source,
+            sourceLabel: isEligible ? "(Viewed from Eligible)" : "(Viewed from All)",
+            icon: scheme.icon || null,
+            iconBg: scheme.iconBg || null
+          };
+        })
+        .filter(Boolean)
+        .slice(0, 20);
+
+      return enriched;
+    } catch (e) {
+      console.warn("[SchemeHistory] Supabase fetch error:", e);
+      return null;
+    }
+  }
+
+  /**
+   * Upsert the current schemeHistory sids[] to Supabase in the background.
+   * Non-blocking — does not affect UI responsiveness.
+   */
+  async function syncSchemeHistoryToSupabase(uid, historyList) {
+    try {
+      if (!supabase || !uid) return;
+      const sids = historyList.map(h => String(h.id));
+      const sources = historyList.map(h => h.source || "ALL");
+      const { error } = await supabase
+        .from("scheme_history")
+        .upsert(
+          { uid, sids, sources, updated_at: new Date().toISOString() },
+          { onConflict: "uid" }
+        );
+      if (error) {
+        console.warn("[SchemeHistory] Supabase upsert notice:", error.message);
+      }
+    } catch (e) {
+      console.warn("[SchemeHistory] Supabase upsert error:", e);
+    }
+  }
+
+  /**
+   * Clear the user's scheme_history row in Supabase (reset sids to empty).
+   */
+  async function clearSchemeHistoryInSupabase(uid) {
+    try {
+      if (!supabase || !uid) return;
+      const { error } = await supabase
+        .from("scheme_history")
+        .upsert(
+          { uid, sids: [], sources: [], updated_at: new Date().toISOString() },
+          { onConflict: "uid" }
+        );
+      if (error) {
+        console.warn("[SchemeHistory] Supabase clear notice:", error.message);
+      }
+    } catch (e) {
+      console.warn("[SchemeHistory] Supabase clear error:", e);
+    }
+  }
+
+  // Current logged-in uid (set during initFeature Supabase auth block)
+  let _historyUid = null;
+
+  let schemeHistory = loadSchemeHistory();
+
+  function getSchemeCategoryIcon(scheme) {
+    if (scheme && scheme.icon) return scheme.icon;
+    const text = (((scheme && scheme.name) || "") + " " + ((scheme && scheme.dept) || "")).toLowerCase();
+
+    if (text.includes("agri") || text.includes("kisan") || text.includes("farm") || text.includes("crop")) {
+      return `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M7 21a1 1 0 0 1-1-1v-6a5 5 0 0 1 5-5h1a1 1 0 0 1 1 1v1a5 5 0 0 1-5 5h-1v4a1 1 0 0 1-1 1zm4-9a3 3 0 0 0-3 3v0h1a3 3 0 0 0 3-3v0zm10-5a5 5 0 0 1-5 5h-1a1 1 0 0 1-1-1v-1a5 5 0 0 1 5-5h1a1 1 0 0 1 1 1v1zm-2 2a3 3 0 0 0-3-3v0a3 3 0 0 0 3 3v0z"/></svg>`;
+    }
+    if (text.includes("health") || text.includes("ayushman") || text.includes("medic") || text.includes("arogya")) {
+      return `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
+    }
+    if (text.includes("scholar") || text.includes("matric") || text.includes("vidya") || text.includes("educat") || text.includes("student")) {
+      return `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>`;
+    }
+    if (text.includes("awas") || text.includes("hous") || text.includes("shelter")) {
+      return `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>`;
+    }
+    if (text.includes("skill") || text.includes("employ") || text.includes("mission") || text.includes("rozgar") || text.includes("job")) {
+      return `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>`;
+    }
+    return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`;
+  }
+
+  function updateHistoryNavButtons() {
+    if (!schemeHistoryTrack) return;
+    const maxScroll = Math.max(0, schemeHistoryTrack.scrollWidth - schemeHistoryTrack.clientWidth);
+    const currentScroll = schemeHistoryTrack.scrollLeft;
+
+    if (maxScroll > 6) {
+      if (btnHistoryPrev) {
+        btnHistoryPrev.style.display = "flex";
+        btnHistoryPrev.disabled = currentScroll <= 6;
+      }
+      if (btnHistoryNext) {
+        btnHistoryNext.style.display = "flex";
+        btnHistoryNext.disabled = currentScroll >= maxScroll - 6;
+      }
+    } else {
+      if (btnHistoryPrev) btnHistoryPrev.style.display = "none";
+      if (btnHistoryNext) btnHistoryNext.style.display = "none";
+    }
+  }
+
+  function scrollHistoryByStep(direction) {
+    if (!schemeHistoryTrack) return;
+    const chips = Array.from(schemeHistoryTrack.querySelectorAll(".history-chip"));
+    if (chips.length === 0) return;
+
+    const maxScroll = Math.max(0, schemeHistoryTrack.scrollWidth - schemeHistoryTrack.clientWidth);
+    if (maxScroll <= 0) return;
+
+    const currentScroll = schemeHistoryTrack.scrollLeft;
+    const chipsPerPage = window.innerWidth <= 640 ? 1 : (window.innerWidth <= 1024 ? 2 : 3);
+
+    // Find the chip closest to the current left scroll position
+    let currentIndex = 0;
+    let minDiff = Infinity;
+    chips.forEach((chip, idx) => {
+      const chipLeft = chip.offsetLeft - (chip.offsetParent === schemeHistoryTrack ? 0 : schemeHistoryTrack.offsetLeft);
+      const diff = Math.abs(chipLeft - currentScroll);
+      if (diff < minDiff) {
+        minDiff = diff;
+        currentIndex = idx;
+      }
+    });
+
+    let targetIndex;
+    if (direction === "next") {
+      targetIndex = Math.min(chips.length - 1, currentIndex + chipsPerPage);
+    } else {
+      targetIndex = Math.max(0, currentIndex - chipsPerPage);
+    }
+
+    const targetChip = chips[targetIndex];
+    if (targetChip) {
+      const chipLeft = targetChip.offsetLeft - (targetChip.offsetParent === schemeHistoryTrack ? 0 : schemeHistoryTrack.offsetLeft);
+      const targetScroll = Math.min(maxScroll, Math.max(0, chipLeft));
+      schemeHistoryTrack.scrollTo({ left: targetScroll, behavior: "smooth" });
+    } else {
+      const stepSize = schemeHistoryTrack.clientWidth + 12;
+      const targetScroll = direction === "next"
+        ? Math.min(maxScroll, currentScroll + stepSize)
+        : Math.max(0, currentScroll - stepSize);
+      schemeHistoryTrack.scrollTo({ left: targetScroll, behavior: "smooth" });
+    }
+
+    setTimeout(updateHistoryNavButtons, 350);
+  }
+
+  function renderSchemeHistory() {
+    if (!schemeHistoryTrack || !schemeHistoryEmpty) return;
+
+    if (!schemeHistory || schemeHistory.length === 0) {
+      schemeHistoryTrack.innerHTML = "";
+      schemeHistoryEmpty.style.display = "block";
+      if (btnClearHistory) btnClearHistory.style.display = "none";
+      if (btnHistoryPrev) btnHistoryPrev.style.display = "none";
+      if (btnHistoryNext) btnHistoryNext.style.display = "none";
+      return;
+    }
+
+    schemeHistoryEmpty.style.display = "none";
+    if (btnClearHistory) btnClearHistory.style.display = "inline-flex";
+    schemeHistoryTrack.innerHTML = "";
+
+    schemeHistory.forEach(item => {
+      const isEligible = item.source === "ELIGIBLE";
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = `history-chip ${isEligible ? "is-eligible" : ""}`;
+      chip.setAttribute("data-scheme-id", item.id);
+      chip.setAttribute("title", `View details for ${item.name}`);
+
+      const iconWrap = document.createElement("div");
+      iconWrap.className = "history-chip-icon";
+      iconWrap.setAttribute("aria-hidden", "true");
+      iconWrap.innerHTML = getSchemeCategoryIcon(item);
+
+      const nameEl = document.createElement("span");
+      nameEl.className = "history-chip-name";
+      nameEl.textContent = item.name;
+
+      chip.appendChild(iconWrap);
+      chip.appendChild(nameEl);
+
+      chip.addEventListener("click", () => {
+        window.openSchemeDetails(item.id);
+      });
+
+      schemeHistoryTrack.appendChild(chip);
+    });
+
+    updateHistoryNavButtons();
+    requestAnimationFrame(updateHistoryNavButtons);
+    setTimeout(updateHistoryNavButtons, 80);
+  }
+
+  function addSchemeToHistory(scheme, source) {
+    if (!scheme || !scheme.id) return;
+    const isEligible = source === "ELIGIBLE";
+    const sourceLabel = isEligible ? "(Viewed from Eligible)" : "(Viewed from All)";
+
+    // Remove existing entry for this scheme to avoid duplicates
+    schemeHistory = schemeHistory.filter(h => String(h.id) !== String(scheme.id));
+
+    // Prepend to front (most recently viewed)
+    schemeHistory.unshift({
+      id: scheme.id,
+      name: scheme.name,
+      dept: scheme.dept,
+      level: scheme.level,
+      source: isEligible ? "ELIGIBLE" : "ALL",
+      sourceLabel: sourceLabel,
+      icon: scheme.icon || null,
+      iconBg: scheme.iconBg || null
+    });
+
+    if (schemeHistory.length > 20) {
+      schemeHistory = schemeHistory.slice(0, 20);
+    }
+
+    // Save locally (instant) — then sync to Supabase in background
+    saveSchemeHistory(schemeHistory);
+    if (_historyUid) {
+      syncSchemeHistoryToSupabase(_historyUid, schemeHistory);
+    }
+    renderSchemeHistory();
+  }
+
+  function clearAllSchemeHistory() {
+    schemeHistory = [];
+    saveSchemeHistory([]);
+    // Clear in Supabase too (background)
+    if (_historyUid) {
+      clearSchemeHistoryInSupabase(_historyUid);
+    }
+    renderSchemeHistory();
+  }
+
+  if (btnClearHistory) {
+    btnClearHistory.addEventListener("click", clearAllSchemeHistory);
+  }
+
+  if (btnHistoryNext) {
+    btnHistoryNext.addEventListener("click", () => {
+      scrollHistoryByStep("next");
+    });
+  }
+
+  if (btnHistoryPrev) {
+    btnHistoryPrev.addEventListener("click", () => {
+      scrollHistoryByStep("prev");
+    });
+  }
+
+  if (schemeHistoryTrack) {
+    schemeHistoryTrack.addEventListener("scroll", () => {
+      updateHistoryNavButtons();
+    });
+  }
+
+  window.addEventListener("resize", () => {
+    updateHistoryNavButtons();
+  });
+
+  if (btnPageReadinessCta) {
+    btnPageReadinessCta.addEventListener("click", (e) => {
+      e.preventDefault();
+      let targetScheme = activeDrawerScheme;
+      if (!targetScheme && schemeHistory && schemeHistory.length > 0) {
+        const recentId = schemeHistory[0].id;
+        targetScheme = ALL_SCHEMES.find(s => String(s.id) === String(recentId));
+      }
+
+      if (targetScheme) {
+        saveActiveSchemeContext(targetScheme);
+        window.location.href = `../../05_my_readiness/frontend/index.html?schemeId=${encodeURIComponent(targetScheme.id)}&schemeName=${encodeURIComponent(targetScheme.name)}`;
+      } else {
+        window.location.href = `../../05_my_readiness/frontend/index.html`;
+      }
+    });
+  }
+
+  function updateProfileUI() {
     function setDemoValue(element, val) {
       if (!element) return;
       if (val !== null && val !== undefined && String(val).trim() !== "" && String(val).trim() !== "--") {
@@ -2635,6 +4919,7 @@ async function initFeature() {
       }
     }
 
+    // 1. Update Title with User Name if available
     const cardTitleText = document.getElementById("cardTitleText");
     if (cardTitleText) {
       if (guestProfile.userName) {
@@ -2644,147 +4929,84 @@ async function initFeature() {
       }
     }
 
-    if (!guestProfile.isFilled && !guestProfile.isPartial) {
-      // 1. NO DOCUMENTS & NO PROFILE ENTERED
-      if (emptyProfileBanner) {
-        emptyProfileBanner.classList.remove("hidden");
-        const emptyText = document.getElementById("emptyProfileText");
-        if (emptyText) {
-          emptyText.textContent = guestProfile.isFromDatabase
-            ? "No citizen profile details found. Please enter your details to check scheme eligibility."
-            : "No verified documents found. Please upload documents in Document Verification or enter your details manually before checking scheme eligibility.";
-        }
-      }
-      if (verifiedBanner) verifiedBanner.style.display = "none";
-      cardBtnText.textContent = "Enter Details";
-
-      valAge.textContent = "--";
-      valGender.textContent = "--";
-      valState.textContent = "--";
-      valDistrict.textContent = "--";
-      valResidence.textContent = "--";
-      valOccupation.textContent = "--";
-      valIncome.textContent = "--";
-      valCategory.textContent = "--";
-      valMarital.textContent = "--";
-      valFamilySize.textContent = "--";
-      valDisability.textContent = "--";
-      valEducation.textContent = "--";
-      valEmployment.textContent = "--";
-      valSpecial.textContent = "--";
-
-      document.querySelectorAll(".demo-row .value").forEach(el => el.classList.add("blank"));
-    } else if (guestProfile.isPartial) {
-      // 2. PARTIAL PROFILE FROM VERIFIED DOCUMENTS OR DATABASE
-      if (emptyProfileBanner) emptyProfileBanner.classList.add("hidden");
-
-      if (verifiedBanner) {
-        verifiedBanner.style.display = "flex";
-        verifiedBanner.classList.add("banner-partial");
-
-        if (verifiedBannerIcon) {
-          verifiedBannerIcon.innerHTML = `
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-          `;
-        }
-
-        const docNames = (guestProfile.verifiedDocTypes || []).slice(0, 3).join(", ");
-        const moreSuffix = (guestProfile.verifiedDocTypes || []).length > 3 ? " etc." : "";
-        const missingStr = (guestProfile.missingFields && guestProfile.missingFields.length > 0)
-          ? guestProfile.missingFields.join(", ")
-          : "essential fields";
-
-        if (verifiedDocsBannerText) {
-          if (guestProfile.isFromDatabase) {
-            verifiedDocsBannerText.innerHTML = `Demographics loaded from your <strong>saved citizen profile</strong>. Missing: <strong style="color: #B45309;">${missingStr}</strong>. Complete these to check scheme eligibility.`;
-          } else {
-            verifiedDocsBannerText.innerHTML = `Demographics partially extracted from <strong>${guestProfile.verifiedDocsCount} verified document(s)</strong> (${docNames}${moreSuffix}). Missing: <strong style="color: #B45309;">${missingStr}</strong>. Complete these to check scheme eligibility.`;
-          }
-        }
-
-        if (btnBannerEdit) {
-          btnBannerEdit.textContent = "Complete Details";
-        }
-      }
-
-      cardBtnText.textContent = "Complete Details";
-
-      setDemoValue(valAge, guestProfile.age);
-      setDemoValue(valGender, guestProfile.gender);
-      setDemoValue(valState, guestProfile.state);
-      setDemoValue(valDistrict, guestProfile.district);
-      setDemoValue(valResidence, guestProfile.residence);
-      setDemoValue(valOccupation, guestProfile.occupation);
-      setDemoValue(valIncome, guestProfile.incomeRange);
-      setDemoValue(valCategory, guestProfile.category);
-      setDemoValue(valMarital, guestProfile.maritalStatus);
-      setDemoValue(valFamilySize, guestProfile.familySize);
-      setDemoValue(valDisability, guestProfile.disability);
-      setDemoValue(valEducation, guestProfile.education);
-      setDemoValue(valEmployment, guestProfile.employment);
-      setDemoValue(valSpecial, guestProfile.special);
-    } else {
-      // 3. COMPLETE PROFILE
-      if (emptyProfileBanner) emptyProfileBanner.classList.add("hidden");
-
-      if (guestProfile.isFromDatabase || (guestProfile.isFromVerifiedDocs && guestProfile.verifiedDocsCount > 0)) {
-        if (verifiedBanner) {
-          verifiedBanner.style.display = "flex";
-          verifiedBanner.classList.remove("banner-partial");
-
-          if (verifiedBannerIcon) {
-            verifiedBannerIcon.innerHTML = `
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            `;
-          }
-
-          const docNames = (guestProfile.verifiedDocTypes || []).slice(0, 3).join(", ");
-          const moreSuffix = (guestProfile.verifiedDocTypes || []).length > 3 ? " etc." : "";
-
-          if (verifiedDocsBannerText) {
-            if (guestProfile.isFromDatabase && guestProfile.verifiedDocsCount > 0) {
-              verifiedDocsBannerText.innerHTML = `Demographics loaded from your <strong>saved citizen profile</strong> &amp; verified with <strong>${guestProfile.verifiedDocsCount} document(s)</strong> (${docNames}${moreSuffix}). Click <strong>Edit Details</strong> to modify.`;
-            } else if (guestProfile.isFromDatabase) {
-              verifiedDocsBannerText.innerHTML = `Demographics loaded from your <strong>saved citizen profile</strong>. Click <strong>Edit Details</strong> to modify.`;
-            } else {
-              verifiedDocsBannerText.innerHTML = `Demographics auto-calculated from your <strong>${guestProfile.verifiedDocsCount} verified documents</strong> (${docNames}${moreSuffix}). Click <strong>Edit Details</strong> to modify.`;
-            }
-          }
-
-          if (btnBannerEdit) {
-            btnBannerEdit.textContent = "Edit Details";
-          }
-        }
-      } else {
-        if (verifiedBanner) verifiedBanner.style.display = "none";
-      }
-
+    // 2. Ensure header button says "Edit Details"
+    if (cardBtnText) {
       cardBtnText.textContent = "Edit Details";
-
-      setDemoValue(valAge, guestProfile.age);
-      setDemoValue(valGender, guestProfile.gender);
-      setDemoValue(valState, guestProfile.state);
-      setDemoValue(valDistrict, guestProfile.district);
-      setDemoValue(valResidence, guestProfile.residence);
-      setDemoValue(valOccupation, guestProfile.occupation);
-      setDemoValue(valIncome, guestProfile.incomeRange);
-      setDemoValue(valCategory, guestProfile.category);
-      setDemoValue(valMarital, guestProfile.maritalStatus);
-      setDemoValue(valFamilySize, guestProfile.familySize);
-      setDemoValue(valDisability, guestProfile.disability);
-      setDemoValue(valEducation, guestProfile.education);
-      setDemoValue(valEmployment, guestProfile.employment);
-      setDemoValue(valSpecial, guestProfile.special);
     }
 
+    // 3. Simple Green Demographic Message Banner
+    const demographicMessageBanner = document.getElementById("demographicMessageBanner");
+    const demographicMessageText = document.getElementById("demographicMessageText");
+    if (demographicMessageBanner) {
+      demographicMessageBanner.style.display = "flex";
+    }
+    if (demographicMessageText) {
+      demographicMessageText.innerHTML = `Demographics loaded from your <strong>saved citizen profile</strong>.`;
+    }
+
+    // 4. Fill 3-Column Demographic Grid Values
+    setDemoValue(valAge, guestProfile.age);
+    setDemoValue(valGender, guestProfile.gender);
+    setDemoValue(valState, guestProfile.state);
+    setDemoValue(valDistrict, guestProfile.district);
+    setDemoValue(valResidence, guestProfile.residence);
+    setDemoValue(valOccupation, guestProfile.occupation);
+    setDemoValue(valIncome, guestProfile.incomeRange);
+    setDemoValue(valCategory, guestProfile.category);
+    setDemoValue(valMarital, guestProfile.maritalStatus);
+    setDemoValue(valFamilySize, guestProfile.familySize);
+    setDemoValue(valDisability, guestProfile.disability);
+    setDemoValue(valEducation, guestProfile.education);
+    setDemoValue(valEmployment, guestProfile.employment);
+    setDemoValue(valSpecial, guestProfile.special);
+
+    // 5. Update Documents Section
+    renderDocumentsBar(verifiedDocs);
+
+    // 6. Refresh Scheme Results Table & Counts
     renderTable();
   }
+
+  // Automatic real-time document synchronization with Document Verification
+  async function refreshVerificationData() {
+    try {
+      const refreshedDocs = await fetchUserVerifiedDocs();
+      verifiedDocs = refreshedDocs;
+      renderDocumentsBar(refreshedDocs);
+      if (guestProfile) {
+        guestProfile.verifiedDocsCount = refreshedDocs.length;
+        guestProfile.verifiedDocTypes = refreshedDocs.map(d => d.document_type || d.name).filter(Boolean);
+      }
+      updateProfileUI();
+    } catch (err) {
+      console.warn('[UNIORA] refreshVerificationData error:', err);
+    }
+  }
+
+  window.addEventListener("storage", (e) => {
+    if (e.key === "uniora_verified_docs") {
+      refreshVerificationData();
+    }
+  });
+
+  window.addEventListener("focus", () => {
+    refreshVerificationData();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      refreshVerificationData();
+    }
+  });
+
+  try {
+    const syncChannel = new BroadcastChannel("uniora_docs_sync");
+    syncChannel.onmessage = (e) => {
+      if (e.data && (e.data.type === "DOC_VERIFIED" || e.data.type === "DOC_UNVERIFIED")) {
+        refreshVerificationData();
+      }
+    };
+  } catch (e) {}
 
   guestProfileForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -2905,6 +5127,223 @@ async function initFeature() {
   populateFilterDropdown();
   updateProfileUI();
 
+  // =========================================================================
+  // DATA SOURCE STATUS MANAGER & PIPELINE CONTROLLER
+  // =========================================================================
+  let toastTimer = null;
+  function showDataToast(message, type = "info", duration = 4000) {
+    if (!dataStatusToast || !dataStatusToastMsg) return;
+    if (toastTimer) clearTimeout(toastTimer);
+
+    dataStatusToastMsg.textContent = message;
+    dataStatusToast.className = `data-status-toast toast-${type} show`;
+    dataStatusToast.style.display = "flex";
+
+    if (dataStatusToastIcon) {
+      if (type === "success") {
+        dataStatusToastIcon.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+      } else if (type === "warning") {
+        dataStatusToastIcon.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+      } else {
+        dataStatusToastIcon.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`;
+      }
+    }
+
+    toastTimer = setTimeout(() => {
+      dataStatusToast.classList.remove("show");
+      setTimeout(() => {
+        if (!dataStatusToast.classList.contains("show")) dataStatusToast.style.display = "none";
+      }, 300);
+    }, duration);
+  }
+
+  function updateDataSourceStatusUI(source, meta = null) {
+    if (!dataStatusPill || !dataStatusLabel) return;
+
+    if (source === "live") {
+      dataStatusPill.className = "data-status-pill status-live";
+      dataStatusLabel.textContent = "Live data";
+      if (dataStatusTimestamp) dataStatusTimestamp.style.display = "none";
+      if (btnDataRetry) btnDataRetry.style.display = "none";
+    } else if (source === "indexeddb") {
+      dataStatusPill.className = "data-status-pill status-saved";
+      dataStatusLabel.textContent = "Offline — showing saved data";
+      if (dataStatusTimestamp) {
+        const formatted = formatCacheDate(meta?.cachedAt);
+        if (formatted) {
+          dataStatusTimestamp.textContent = `Showing saved data from ${formatted}`;
+          dataStatusTimestamp.style.display = "inline-block";
+        } else {
+          dataStatusTimestamp.style.display = "none";
+        }
+      }
+      if (btnDataRetry) btnDataRetry.style.display = "inline-flex";
+    } else if (source === "fallback") {
+      dataStatusPill.className = "data-status-pill status-fallback";
+      dataStatusLabel.textContent = "Unable to load the latest scheme data. Showing limited offline data.";
+      if (dataStatusTimestamp) dataStatusTimestamp.style.display = "none";
+      if (btnDataRetry) btnDataRetry.style.display = "inline-flex";
+    } else if (source === "loading") {
+      dataStatusPill.className = "data-status-pill status-loading";
+      dataStatusLabel.textContent = "Connecting...";
+      if (dataStatusTimestamp) dataStatusTimestamp.style.display = "none";
+      if (btnDataRetry) btnDataRetry.style.display = "none";
+    }
+  }
+
+  function applySchemesDataset(schemes, source, meta = null) {
+    ALL_SCHEMES = schemes;
+    currentDataSource = source;
+    if (meta) currentCacheMeta = meta;
+
+    let addedNewDepts = false;
+    schemes.forEach(s => {
+      const rawD = s.dept || s.issuing_department;
+      parseDepartmentNames(rawD).forEach(d => {
+        const dLower = d.toLowerCase();
+        if (!DEPARTMENTS.some(existing => existing.toLowerCase() === dLower)) {
+          DEPARTMENTS.push(d);
+          addedNewDepts = true;
+        }
+      });
+    });
+
+    if (typeof populateFilterDropdown === "function") {
+      populateFilterDropdown();
+    }
+
+    updateDataSourceStatusUI(source, currentCacheMeta);
+    updateTabHighlights();
+    renderTable();
+  }
+
+  async function loadSchemesPipeline(isManualRetry = false) {
+    let initialSource = "fallback";
+
+    // 1. Stale-While-Revalidate: Try IndexedDB cache first (instant 0ms response)
+    try {
+      const cached = await getCachedSchemesFromDB();
+      if (cached && cached.schemes && cached.schemes.length > 0) {
+        const validation = validateSchemeDataset(cached.schemes, null);
+        if (validation.valid) {
+          currentCacheMeta = cached.meta;
+          initialSource = "indexeddb";
+          applySchemesDataset(cached.schemes, "indexeddb", cached.meta);
+          console.log(`[SchemeDB] Loaded ${cached.schemes.length} schemes from IndexedDB cache.`);
+        }
+      }
+    } catch (dbErr) {
+      console.warn("[SchemeDB] Cache read failed:", dbErr);
+    }
+
+    // If no valid cache was found, load FALLBACK_REAL_SCHEMES
+    if (initialSource === "fallback") {
+      applySchemesDataset(FALLBACK_REAL_SCHEMES, "fallback", null);
+    }
+
+    // If offline, stop here
+    if (!navigator.onLine) {
+      console.log("[UNIORA] Browser is offline; using cached/fallback schemes.");
+      if (initialSource === "indexeddb") {
+        updateDataSourceStatusUI("indexeddb", currentCacheMeta);
+      } else {
+        updateDataSourceStatusUI("fallback", null);
+      }
+      return;
+    }
+
+    // 2. Fetch live data from Google Sheet in background
+    if (isManualRetry) {
+      updateDataSourceStatusUI("loading");
+    }
+
+    try {
+      const liveSchemes = await fetchSchemesFromGoogleSheet();
+      const validation = validateSchemeDataset(liveSchemes, currentCacheMeta);
+
+      if (!validation.valid) {
+        console.warn(`[SchemeDB] Live dataset validation failed: ${validation.reason}. Preserving current schemes.`);
+        if (initialSource === "indexeddb") {
+          updateDataSourceStatusUI("indexeddb", currentCacheMeta);
+        } else {
+          updateDataSourceStatusUI("fallback", null);
+        }
+        return;
+      }
+
+      const newMeta = {
+        cachedAt: new Date().toISOString(),
+        recordCount: liveSchemes.length,
+        source: "GoogleSheet",
+        version: 1
+      };
+      await saveSchemesToDB(liveSchemes, newMeta);
+      currentCacheMeta = newMeta;
+
+      const wasOfflineOrFallback = (initialSource === "fallback" || isManualRetry);
+      applySchemesDataset(liveSchemes, "live", newMeta);
+      console.log(`[UNIORA] Live sync complete: loaded and cached ${liveSchemes.length} schemes.`);
+
+      if (wasOfflineOrFallback) {
+        showDataToast("Connection restored — scheme data updated.", "success");
+      }
+    } catch (fetchErr) {
+      console.warn("[UNIORA] Google Sheet fetch failed:", fetchErr.message);
+      if (initialSource === "indexeddb") {
+        updateDataSourceStatusUI("indexeddb", currentCacheMeta);
+      } else {
+        updateDataSourceStatusUI("fallback", null);
+      }
+    }
+  }
+
+  // Data Retry Button Listener
+  if (btnDataRetry) {
+    btnDataRetry.addEventListener("click", () => {
+      loadSchemesPipeline(true);
+    });
+  }
+
+  // Online / Offline Window Listeners
+  window.addEventListener("online", () => {
+    console.log("[UNIORA] Network online event received. Re-running scheme loading pipeline...");
+    loadSchemesPipeline(false);
+  });
+
+  window.addEventListener("offline", () => {
+    console.log("[UNIORA] Network offline event received.");
+    if (currentDataSource === "live" || currentDataSource === "indexeddb") {
+      updateDataSourceStatusUI("indexeddb", currentCacheMeta);
+      showDataToast("You are offline. Showing saved scheme data.", "warning");
+    } else {
+      updateDataSourceStatusUI("fallback", null);
+      showDataToast("You are offline. Showing limited fallback scheme data.", "warning");
+    }
+  });
+
+  initMostSearchedCarousel();
+  setupRecentCarouselEvents();
+
+  // Load Scheme History — Supabase for logged-in users, sessionStorage for guests
+  (async () => {
+    try {
+      const session = await getCurrentSession();
+      if (session && session.user && session.user.id) {
+        _historyUid = session.user.id;
+        const remoteHistory = await fetchSchemeHistoryFromSupabase(_historyUid);
+        if (remoteHistory !== null) {
+          // Supabase data is authoritative for logged-in users
+          schemeHistory = remoteHistory;
+          saveSchemeHistory(schemeHistory); // sync to sessionStorage as local cache
+        }
+        // if remoteHistory === null (table not yet created), keep sessionStorage data
+      }
+    } catch (e) {
+      console.warn("[SchemeHistory] Auth check at init failed:", e);
+    }
+    renderSchemeHistory();
+  })();
+
   if (guestProfile.isFilled) {
     switchTab("ELIGIBLE");
     syncEvaluationWithBackend();
@@ -2917,4 +5356,7 @@ async function initFeature() {
   if (returnToReadinessBtn && new URLSearchParams(window.location.search).get("return") === "readiness") {
     returnToReadinessBtn.style.display = "inline-flex";
   }
+
+  // Launch Stale-While-Revalidate loading pipeline
+  loadSchemesPipeline(false);
 }

@@ -380,6 +380,7 @@ def fetch_schemes_dataset() -> List[Dict[str, Any]]:
                         "social_category": get_col("social_category") or "All",
                         "eligibility_state": get_col("eligibility_state") or level,
                         "occupation_criteria": get_col("occupation_criteria") or "All",
+                        "disability_status": get_col("disability_status") or get_col("disability") or "All",
                         "required_documents": docs_list or ["Aadhaar Card"],
                         "description": get_col("description") or name,
                         "benefits": get_col("benefits") or "Welfare assistance and subsidy grant.",
@@ -505,16 +506,41 @@ def evaluate_scheme(scheme: Dict[str, Any], profile: UserProfileRequest) -> Eval
     occ_req = normalize_text(scheme.get("occupation_criteria"))
     if occ_req and occ_req not in ["all", "any"]:
         p_occ = normalize_text(profile.occupation)
-        satisfied = (occ_req == p_occ or occ_req in p_occ or p_occ in occ_req)
-        reason = f"Your occupation ({profile.occupation}) qualifies." if satisfied else f"Requires occupation: {scheme.get('occupation_criteria')}; your profile: {profile.occupation or 'Not Specified'}."
+        standard_keywords = [
+            "student", "scholar", "college", "school",
+            "farmer", "agriculture", "cultivator", "kisan",
+            "self-employed", "business", "entrepreneur",
+            "unemployed", "job seeker",
+            "daily wage", "artisan", "laborer", "labourer", "worker", "gig",
+            "salaried", "employee", "govt", "government", "private employee"
+        ]
+        req_is_standard = any(k in occ_req for k in standard_keywords)
+        
+        if p_occ in ["other", "others"]:
+            # If user selected Other, match schemes with occupations other than standard input list (or asking for Other)
+            satisfied = (not req_is_standard) or ("other" in occ_req)
+            reason = f"Your occupation (Other) qualifies for this scheme ({scheme.get('occupation_criteria')})." if satisfied else f"Requires occupation: {scheme.get('occupation_criteria')}; your profile: Other."
+        else:
+            satisfied = (occ_req == p_occ or occ_req in p_occ or p_occ in occ_req)
+            reason = f"Your occupation ({profile.occupation}) qualifies." if satisfied else f"Requires occupation: {scheme.get('occupation_criteria')}; your profile: {profile.occupation or 'Not Specified'}."
         conditions.append(ConditionDetail(key="occupation", label="Occupation requirement", satisfied=satisfied, reason=reason))
+    elif profile.occupation:
+        conditions.append(ConditionDetail(key="occupation", label="Occupation requirement", satisfied=True, reason=f"Your occupation ({profile.occupation}) qualifies. This scheme is open to all occupations."))
 
     # 7. DISABILITY / SPECIAL BENEFICIARY
+    disability_col = scheme.get("disability_status") or scheme.get("disabilityReq") or ""
+    disability_norm = normalize_text(disability_col)
+    pwd_keywords = ["yes", "pwd", "disab", "divyang", "differently"]
+    req_is_pwd = any(k in disability_norm for k in pwd_keywords) if (disability_norm and disability_norm not in ["all", "any", "no", "none", "both", "not required", "no restriction"]) else False
+
     scheme_desc_norm = normalize_text(scheme.get("scheme_name")) + " " + normalize_text(scheme.get("description"))
-    if "disabilit" in scheme_desc_norm or "udid" in scheme_desc_norm or "differently abled" in scheme_desc_norm:
-        satisfied = normalize_text(profile.disability) in ["yes", "true"]
-        reason = "Valid disability status recognized." if satisfied else "Scheme is specifically for persons with disabilities (PwD)."
-        conditions.append(ConditionDetail(key="disability", label="Disability requirement", satisfied=satisfied, reason=reason))
+    if not req_is_pwd and ("disabilit" in scheme_desc_norm or "udid" in scheme_desc_norm or "differently abled" in scheme_desc_norm or "divyang" in scheme_desc_norm):
+        req_is_pwd = True
+
+    if req_is_pwd:
+        user_is_pwd = normalize_text(profile.disability) in ["yes", "true"]
+        reason = "You meet the Person with Disability (PwD) eligibility requirement." if user_is_pwd else f"This scheme is specifically for Persons with Disabilities (PwD). Your profile indicates {profile.disability or 'No'}."
+        conditions.append(ConditionDetail(key="disability", label="Disability requirement (PwD)", satisfied=user_is_pwd, reason=reason))
 
     if "widow" in scheme_desc_norm:
         satisfied = normalize_text(profile.marital_status) == "widowed" or normalize_text(profile.special) == "destitute widow"
