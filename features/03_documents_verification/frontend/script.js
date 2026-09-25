@@ -221,6 +221,35 @@ async function initApp() {
 
     renderPending();
     renderVerified();
+
+    // Check URL search parameters for navigation from Readiness
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetDoc = urlParams.get('doc');
+    const returnSrc = urlParams.get('return');
+    const returnScheme = urlParams.get('scheme');
+
+    if (targetDoc && DOCUMENT_TYPES[targetDoc]) {
+        setTimeout(() => openWizard(targetDoc), 300);
+    }
+
+    if (returnSrc === 'readiness') {
+        const headerContainer = document.querySelector('.hero-copy') || document.querySelector('.page-header') || document.querySelector('.page-heading');
+        if (headerContainer && !document.getElementById('returnToReadinessBanner')) {
+            const banner = document.createElement('div');
+            banner.id = 'returnToReadinessBanner';
+            banner.className = 'return-banner';
+            banner.style.cssText = 'background:#eff6ff; border:1px solid #bfdbfe; border-radius:14px; padding:14px 18px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;';
+            const schemeQuery = returnScheme ? `?scheme=${encodeURIComponent(returnScheme)}` : '';
+            banner.innerHTML = `
+                <div>
+                    <strong style="color:#1e40af; font-size:15px;">Verifying Document for My Readiness</strong>
+                    <p style="margin:2px 0 0; color:#3b82f6; font-size:13px;">Verify or upload your document below to update your scheme readiness score.</p>
+                </div>
+                <a href="../../../features/05_my_readiness/frontend/index.html${schemeQuery}" style="background:#2563eb; color:white; padding:10px 16px; border-radius:10px; font-weight:700; text-decoration:none; font-size:13px; display:inline-flex; align-items:center; gap:6px;">← Return to Readiness</a>
+            `;
+            headerContainer.insertAdjacentElement('afterend', banner);
+        }
+    }
 }
 
 // ============================================================

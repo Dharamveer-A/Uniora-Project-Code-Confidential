@@ -2912,4 +2912,9 @@ async function initFeature() {
     updateTabHighlights();
     renderTable();
   }
+
+  const returnToReadinessBtn = document.getElementById("returnToReadinessBtn");
+  if (returnToReadinessBtn && new URLSearchParams(window.location.search).get("return") === "readiness") {
+    returnToReadinessBtn.style.display = "inline-flex";
+  }
 }
