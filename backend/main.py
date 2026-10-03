@@ -46,6 +46,19 @@ try:
 except Exception as e:
     print(f"[UNIORA Backend] Notice: Feature 04 Eligible Schemes router not loaded: {e}")
 
+# Feature 05: My Readiness Router
+try:
+    spec_readiness = importlib.util.spec_from_file_location(
+        "readiness",
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "features", "05_my_readiness", "backend", "readiness.py")
+    )
+    readiness_module = importlib.util.module_from_spec(spec_readiness)
+    spec_readiness.loader.exec_module(readiness_module)
+    app.include_router(readiness_module.router, prefix="/api")
+    loaded_features.append("05_my_readiness")
+except Exception as e:
+    print(f"[UNIORA Backend] Notice: Feature 05 My Readiness router not loaded: {e}")
+
 @app.get("/")
 def read_root():
     return {"message": "UNIORA Backend is running", "features": loaded_features}

@@ -205,6 +205,8 @@ const state = {
   selectedTaluk: '',
   taluksData: {},
   evaluatedSchemes: [],
+  backendEvaluations: {},
+  backendEvaluationRequestId: 0,
   showEligibleOnlyMode: false
 };
 
@@ -232,6 +234,35 @@ function getCachedSessionUser() {
     console.warn('[UNIORA Readiness] Cached session read warning:', error);
   }
   return null;
+}
+
+let lastReadinessAccessTokenStatus = null;
+
+async function getReadinessAccessToken() {
+  let accessToken = null;
+  try {
+    const session = await getCurrentSession();
+    accessToken = session?.access_token || null;
+  } catch (error) {
+    console.warn('[UNIORA Readiness] getCurrentSession notice:', error);
+  }
+
+  if (!accessToken && supabase?.auth?.getSession) {
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      accessToken = data?.session?.access_token || null;
+    } catch (error) {
+      console.warn('[UNIORA Readiness] Supabase session fallback notice:', error);
+    }
+  }
+
+  const tokenFound = Boolean(accessToken);
+  if (lastReadinessAccessTokenStatus !== tokenFound) {
+    console.info(`[UNIORA Readiness] Active Supabase access token ${tokenFound ? 'found' : 'not found'}`);
+    lastReadinessAccessTokenStatus = tokenFound;
+  }
+  return accessToken;
 }
 
 function decryptData(b64) {
@@ -375,20 +406,22 @@ function isDocVerified(requiredName, verifiedDocsList) {
 
 async function fetchSchemeCatalog() {
   try {
-    const response = await fetch('http://localhost:8000/api/schemes?limit=100');
+    const response = await fetch('http://localhost:8000/api/readiness/schemes');
     if (!response.ok) throw new Error('API request failed');
     const data = await response.json();
-    const rawList = toArray(data?.schemes);
-    if (!rawList.length || rawList.length < 5) throw new Error('Short scheme list');
+    if (!Array.isArray(data?.schemes) || data.schemes.length === 0) {
+      throw new Error('Invalid or empty schemes response');
+    }
+    const rawList = data.schemes;
 
     state.schemeCatalog = rawList.map(s => ({
       id: s.scheme_id || s.id || s.scheme_name,
-      name: s.scheme_name || s.name,
-      department: s.issuing_department || 'Government Department',
+      name: s.scheme_name || s.name || 'Unnamed Scheme',
+      department: s.issuing_department || s.department || 'Government Department',
       level: s.level || s.eligibility_state || 'Central',
-      summary: s.sub_title || s.description,
+      summary: s.sub_title || s.description || s.summary || '',
       benefits: s.benefits || 'Government welfare support and financial assistance.',
-      application_url: s.application_url || 'https://www.tn.gov.in',
+      application_url: s.application_url || '#',
       requiredFields: ['age', 'gender', 'state', 'annual_income', 'social_category', 'occupation', 'education'].filter(f => {
         if (f === 'age' && (s.min_age || s.max_age)) return true;
         if (f === 'gender' && s.gender && s.gender !== 'All') return true;
@@ -396,9 +429,10 @@ async function fetchSchemeCatalog() {
         if (f === 'annual_income' && s.income_limit_annual) return true;
         if (f === 'social_category' && s.social_category && s.social_category !== 'All') return true;
         if (f === 'occupation' && s.occupation_criteria && s.occupation_criteria !== 'All') return true;
+        if (f === 'education' && (s.education_criteria || s.education)) return true;
         return false;
       }),
-      requiredDocs: toArray(s.required_documents),
+      requiredDocs: toArray(s.required_documents || s.mandatory_documents || s.requiredDocs),
       rules: {
         minAge: s.min_age,
         maxAge: s.max_age,
@@ -406,12 +440,14 @@ async function fetchSchemeCatalog() {
         state: s.eligibility_state,
         maxIncome: s.income_limit_annual,
         occupation: s.occupation_criteria,
-        social_category: s.social_category
+        social_category: s.social_category,
+        education: s.education_criteria || s.education
       }
     }));
+    console.log(`[UNIORA Readiness] Loaded ${state.schemeCatalog.length} schemes from backend`);
   } catch (error) {
-    console.warn('[UNIORA Readiness] Using comprehensive fallback scheme catalog (15+ schemes):', error);
-    state.schemeCatalog = FALLBACK_SCHEMES;
+    console.error('[UNIORA Readiness] Failed to load schemes from backend:', error);
+    state.schemeCatalog = [];
   }
 }
 
@@ -488,6 +524,74 @@ function evaluateSchemeReadiness(scheme) {
   };
 }
 
+function applyBackendEvaluation(scheme) {
+  const result = state.backendEvaluations[scheme.id];
+  if (!result) return scheme;
+
+  const requiredFields = toArray(result.required_fields);
+  const missingFields = toArray(result.missing_fields);
+  const requiredDocs = toArray(result.required_documents);
+  const missingDocs = toArray(result.missing_documents);
+  const totalItems = requiredFields.length + requiredDocs.length;
+  const completedItems = totalItems - missingFields.length - missingDocs.length;
+
+  return {
+    ...scheme,
+    requiredFields,
+    filledFields: requiredFields.filter(field => !missingFields.includes(field)),
+    requiredDocs,
+    missingFields,
+    missingDocs,
+    verifiedMatchedDocs: requiredDocs.filter(doc => !missingDocs.includes(doc)),
+    readinessScore: result.readiness_score ?? scheme.readinessScore,
+    is100PercentReady: result.is_ready ?? scheme.is100PercentReady,
+    isDemographicEligible: result.is_demographic_eligible ?? scheme.isDemographicEligible,
+    totalItems,
+    completedItems
+  };
+}
+
+async function fetchSelectedSchemeEvaluation() {
+  const hadBackendEvaluations = Object.keys(state.backendEvaluations).length > 0;
+  state.backendEvaluations = {};
+  if (hadBackendEvaluations) renderAllReadinessPanels();
+
+  const schemeId = state.selectedSchemeId;
+  if (!schemeId) {
+    console.info('[UNIORA Readiness] Backend evaluation skipped: no selected scheme');
+    return;
+  }
+
+  const requestId = ++state.backendEvaluationRequestId;
+  try {
+    const accessToken = await getReadinessAccessToken();
+    if (!accessToken) {
+      console.info('[UNIORA Readiness] Backend evaluation skipped: no access token');
+      return;
+    }
+
+    const url = new URL('http://localhost:8000/api/readiness/evaluate');
+    url.searchParams.set('scheme_id', schemeId);
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    if (!response.ok) throw new Error('Backend readiness evaluation failed');
+
+    const data = await response.json();
+    const result = toArray(data?.results).find(item => String(item.scheme_id) === String(schemeId));
+    if (!result) throw new Error('Backend returned no result for selected scheme');
+    if (requestId !== state.backendEvaluationRequestId || state.selectedSchemeId !== schemeId) return;
+
+    state.backendEvaluations[schemeId] = result;
+    console.info(`[UNIORA Readiness] Backend evaluation succeeded for ${schemeId}`);
+    renderAllReadinessPanels();
+  } catch (error) {
+    if (requestId !== state.backendEvaluationRequestId || state.selectedSchemeId !== schemeId) return;
+    console.warn(`[UNIORA Readiness] Backend evaluation failed for ${schemeId}:`, error);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // RENDERERS
 // ---------------------------------------------------------------------------
@@ -525,7 +629,7 @@ function renderSchemeSelector() {
   const selectorLabel = document.getElementById('selectorLabel');
   if (!selector) return;
 
-  const evaluatedList = state.schemeCatalog.map(evaluateSchemeReadiness);
+  const evaluatedList = state.schemeCatalog.map(scheme => applyBackendEvaluation(evaluateSchemeReadiness(scheme)));
   state.evaluatedSchemes = evaluatedList;
 
   // Filter ONLY ELIGIBLE schemes if showEligibleOnlyMode is true
@@ -568,6 +672,7 @@ function renderSchemeSelector() {
   selector.onchange = (e) => {
     state.selectedSchemeId = e.target.value;
     renderAllReadinessPanels();
+    void fetchSelectedSchemeEvaluation();
   };
 }
 
@@ -760,6 +865,7 @@ function renderMissingFieldsForm(selectedScheme) {
 
     // Re-evaluate and re-render all panels
     renderAllReadinessPanels();
+    void fetchSelectedSchemeEvaluation();
   };
 }
 
@@ -979,9 +1085,11 @@ function updateSummaryPills() {
 async function syncUserReadinessToDatabase() {
   if (!state.user || !supabase) return;
   try {
+    const accessToken = await getReadinessAccessToken();
+    if (!accessToken) return;
+
     const selectedScheme = state.evaluatedSchemes.find(s => s.id === state.selectedSchemeId);
     const payload = {
-      uid: state.user.id,
       selected_scheme_id: state.selectedSchemeId || '',
       readiness_score: selectedScheme ? selectedScheme.readinessScore : 0,
       eligible_schemes_count: state.evaluatedSchemes.filter(s => s.isDemographicEligible).length,
@@ -991,10 +1099,17 @@ async function syncUserReadinessToDatabase() {
         missing_docs: selectedScheme ? selectedScheme.missingDocs : [],
         verified_docs_count: state.verifiedDocs.length,
         updated_at: new Date().toISOString()
-      },
-      updated_at: new Date().toISOString()
+      }
     };
-    await supabase.from('user_readiness').upsert(payload, { onConflict: 'uid' });
+    const response = await fetch('http://localhost:8000/api/readiness/saved', {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) throw new Error('Saved readiness request failed');
   } catch (err) {
     console.warn('[UNIORA Readiness] Sync user_readiness notice:', err);
   }
@@ -1002,7 +1117,7 @@ async function syncUserReadinessToDatabase() {
 
 function renderAllReadinessPanels() {
   // Re-evaluate schemes using current state.profile & state.verifiedDocs
-  state.evaluatedSchemes = state.schemeCatalog.map(evaluateSchemeReadiness);
+  state.evaluatedSchemes = state.schemeCatalog.map(scheme => applyBackendEvaluation(evaluateSchemeReadiness(scheme)));
 
   const displayList = state.showEligibleOnlyMode
     ? state.evaluatedSchemes.filter(s => s.isDemographicEligible || s.readinessScore > 0)
@@ -1127,10 +1242,19 @@ async function initReadinessApp() {
         });
       }
 
-      // Load saved user readiness state from Supabase user_readiness table if exists
-      const { data: dbReadiness } = await supabase.from('user_readiness').select('*').eq('uid', currentUser.id).maybeSingle();
-      if (dbReadiness && dbReadiness.selected_scheme_id) {
-        state.selectedSchemeId = dbReadiness.selected_scheme_id;
+      // Restore the saved scheme selection through the authenticated readiness API
+      const accessToken = await getReadinessAccessToken();
+      if (accessToken) {
+        const response = await fetch('http://localhost:8000/api/readiness/saved', {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        if (!response.ok) throw new Error('Saved readiness request failed');
+        const savedData = await response.json();
+        const savedReadiness = savedData?.readiness;
+        if (savedReadiness?.selected_scheme_id) {
+          state.selectedSchemeId = savedReadiness.selected_scheme_id;
+        }
       }
     } catch (e) {
       console.warn('[UNIORA Readiness] DB docs/readiness fetch notice:', e);
@@ -1141,6 +1265,7 @@ async function initReadinessApp() {
   await fetchSchemeCatalog();
 
   renderSchemeSelector();
+  void fetchSelectedSchemeEvaluation();
   renderAllReadinessPanels();
   renderNearbyServicesMap();
 }
@@ -1158,11 +1283,13 @@ if (onAuthStateChange) {
 window.addEventListener('storage', () => {
   state.verifiedDocs = getStoredDocs();
   renderAllReadinessPanels();
+  void fetchSelectedSchemeEvaluation();
 });
 
 window.addEventListener('focus', () => {
   state.verifiedDocs = getStoredDocs();
   renderAllReadinessPanels();
+  void fetchSelectedSchemeEvaluation();
 });
 
 document.addEventListener('DOMContentLoaded', initReadinessApp);
