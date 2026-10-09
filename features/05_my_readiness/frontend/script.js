@@ -200,6 +200,7 @@ const state = {
   profile: null,
   verifiedDocs: [],
   schemeCatalog: [],
+  schemeCatalogError: '',
   selectedSchemeId: null,
   selectedDistrict: '',
   selectedTaluk: '',
@@ -207,7 +208,7 @@ const state = {
   evaluatedSchemes: [],
   backendEvaluations: {},
   backendEvaluationRequestId: 0,
-  showEligibleOnlyMode: false
+  showEligibleOnlyMode: true
 };
 
 // ---------------------------------------------------------------------------
@@ -335,7 +336,50 @@ function parseIncomeValue(val) {
 
 function normalizeProfile(profile) {
   const base = buildInitialProfile();
-  const merged = { ...base, ...(profile || {}) };
+  const source = profile || {};
+  const rawCategory = String(source.social_category || source.category || source.socialCategory || '').trim().toLowerCase();
+  const socialCategory = rawCategory.includes('scheduled caste') || rawCategory === 'sc'
+    ? 'SC'
+    : rawCategory.includes('scheduled tribe') || rawCategory === 'st'
+      ? 'ST'
+      : rawCategory.includes('mbc') || rawCategory.includes('dnc')
+        ? 'MBC/DNC'
+        : rawCategory.includes('obc') || rawCategory.includes('backward class') || rawCategory === 'bc' || rawCategory.includes('bcm')
+          ? 'OBC'
+          : rawCategory.includes('general') || rawCategory === 'oc' || rawCategory === 'fc'
+            ? 'General'
+            : source.social_category || source.category || source.socialCategory || '';
+  const rawOccupation = String(source.occupation || '').trim().toLowerCase();
+  const occupation = rawOccupation.includes('student')
+    ? 'Student'
+    : rawOccupation.includes('farmer') || rawOccupation.includes('agriculture')
+      ? 'Farmer'
+      : rawOccupation.includes('artisan') || rawOccupation.includes('wage') || rawOccupation.includes('gig')
+        ? 'Daily Wage / Artisan'
+        : rawOccupation.includes('self') || rawOccupation.includes('business')
+          ? 'Self-Employed'
+          : rawOccupation.includes('govt') || rawOccupation.includes('government') || rawOccupation.includes('private') || rawOccupation.includes('salaried') || rawOccupation.includes('employee')
+            ? 'Salaried'
+            : rawOccupation.includes('unemployed') || rawOccupation.includes('looking') || rawOccupation.includes('retired') || rawOccupation.includes('homemaker')
+              ? 'Unemployed'
+              : rawOccupation.includes('other')
+                ? 'Other'
+                : source.occupation || '';
+  const annualIncome = source.annual_income || source.annualIncome || source.incomeNumeric || '';
+  const merged = {
+    ...base,
+    ...source,
+    age: source.age || base.age,
+    occupation,
+    annual_income: annualIncome,
+    incomeNumeric: source.incomeNumeric ?? parseIncomeValue(source.annual_income ?? source.annualIncome),
+    social_category: socialCategory,
+    marital_status: source.marital_status || source.maritalStatus || '',
+    disability: source.disability ?? source.disability_status ?? 'No',
+    education: source.education || source.education_level || '',
+    employment: source.employment ?? source.employment_status ?? '',
+    special: source.special ?? source.special_beneficiary_status ?? 'None'
+  };
 
   if (!merged.age && merged.date_of_birth) {
     const dob = new Date(merged.date_of_birth);
@@ -406,49 +450,154 @@ function isDocVerified(requiredName, verifiedDocsList) {
 
 async function fetchSchemeCatalog() {
   try {
-    const response = await fetch('http://localhost:8000/api/readiness/schemes');
-    if (!response.ok) throw new Error('API request failed');
-    const data = await response.json();
-    if (!Array.isArray(data?.schemes) || data.schemes.length === 0) {
-      throw new Error('Invalid or empty schemes response');
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+    let response;
+    try {
+      response = await fetch(
+        'https://docs.google.com/spreadsheets/d/1MTWk1hOKSt3ZEl-mPiQAYZzmpRg3HgLD5BYA3M5VhXI/gviz/tq?tqx=out:csv&gid=1493062875',
+        { cache: 'no-store', signal: controller.signal }
+      );
+    } finally {
+      clearTimeout(timeoutId);
     }
-    const rawList = data.schemes;
+    if (!response.ok) throw new Error(`Live schemes request failed (HTTP ${response.status})`);
 
-    state.schemeCatalog = rawList.map(s => ({
-      id: s.scheme_id || s.id || s.scheme_name,
-      name: s.scheme_name || s.name || 'Unnamed Scheme',
-      department: s.issuing_department || s.department || 'Government Department',
-      level: s.level || s.eligibility_state || 'Central',
-      summary: s.sub_title || s.description || s.summary || '',
-      benefits: s.benefits || 'Government welfare support and financial assistance.',
-      application_url: s.application_url || '#',
-      requiredFields: ['age', 'gender', 'state', 'annual_income', 'social_category', 'occupation', 'education'].filter(f => {
-        if (f === 'age' && (s.min_age || s.max_age)) return true;
-        if (f === 'gender' && s.gender && s.gender !== 'All') return true;
-        if (f === 'state' && s.eligibility_state && s.eligibility_state !== 'All') return true;
-        if (f === 'annual_income' && s.income_limit_annual) return true;
-        if (f === 'social_category' && s.social_category && s.social_category !== 'All') return true;
-        if (f === 'occupation' && s.occupation_criteria && s.occupation_criteria !== 'All') return true;
-        if (f === 'education' && (s.education_criteria || s.education)) return true;
-        return false;
-      }),
-      requiredDocs: toArray(s.required_documents || s.mandatory_documents || s.requiredDocs),
-      rules: {
-        minAge: s.min_age,
-        maxAge: s.max_age,
-        gender: s.gender,
-        state: s.eligibility_state,
-        maxIncome: s.income_limit_annual,
-        occupation: s.occupation_criteria,
-        social_category: s.social_category,
-        education: s.education_criteria || s.education
-      }
-    }));
-    console.log(`[UNIORA Readiness] Loaded ${state.schemeCatalog.length} schemes from backend`);
+    const csv = await response.text();
+    const rows = parseSchemeCsv(csv);
+    if (rows.length < 2) throw new Error('Live schemes source returned no scheme rows');
+
+    const headers = rows[0].map(header => header.trim().toLowerCase());
+    const rawSchemes = rows.slice(1).map(row => {
+      const record = {};
+      headers.forEach((header, index) => {
+        if (header) record[header] = row[index] || '';
+      });
+      return record;
+    }).filter(scheme => {
+      const name = String(scheme.scheme_name || scheme.name || '').trim();
+      const id = String(scheme.scheme_id || scheme.id || '').trim();
+      return name && id && !name.startsWith('```') && !id.startsWith('```');
+    });
+
+    if (rawSchemes.length === 0) throw new Error('Live schemes source contained no valid scheme records');
+
+    state.schemeCatalog = rawSchemes.map((scheme, index) => {
+      const name = String(scheme.scheme_name || scheme.name).trim();
+      const id = String(scheme.scheme_id || scheme.id || `GS-${index + 1}`).trim();
+      const department = String(scheme.issuing_department || scheme.department || 'Government Department').trim();
+      const stateRequirement = String(scheme.eligibility_state || scheme.state || 'All').trim();
+      const categoryType = String(scheme.category_type || scheme.category || '').toLowerCase();
+      const level = categoryType.includes('tamil') || department.toLowerCase().includes('tamil')
+        || stateRequirement.toLowerCase().includes('tamil') || name.toLowerCase().includes('tamil')
+        || name.toLowerCase().includes('pudhalvan')
+        ? 'Tamil Nadu'
+        : categoryType.includes('state') && stateRequirement !== 'All'
+          ? stateRequirement
+          : 'Central';
+      const requiredDocs = String(scheme.required_documents || scheme.mandatory_documents || '')
+        .split(/[;\n•|]+/)
+        .map(doc => doc.replace(/^\s*[-–*]+\s*/, '').trim())
+        .filter(doc => doc.length > 1);
+      const minAge = parseIncomeValue(scheme.min_age);
+      const maxAge = parseIncomeValue(scheme.max_age);
+      const maxIncome = parseIncomeValue(scheme.income_limit_annual);
+      const gender = String(scheme.gender || 'All').trim();
+      const socialCategory = String(scheme.social_category || 'All').trim();
+      const occupation = String(scheme.occupation_criteria || 'All').trim();
+      const education = String(scheme.education_criteria || scheme.education_requirement || '').trim();
+      const requiredFields = [];
+      if (minAge !== null || maxAge !== null) requiredFields.push('age');
+      if (gender.toLowerCase() !== 'all') requiredFields.push('gender');
+      if (stateRequirement.toLowerCase() !== 'all') requiredFields.push('state');
+      if (maxIncome !== null) requiredFields.push('annual_income');
+      if (socialCategory.toLowerCase() !== 'all') requiredFields.push('social_category');
+      if (occupation.toLowerCase() !== 'all') requiredFields.push('occupation');
+      if (education) requiredFields.push('education');
+
+      const description = String(scheme.description || scheme.short_description || scheme.benefits || '').trim();
+      const disabilityRequirement = String(scheme.disability_status || scheme['disability status'] || scheme.disability || scheme.pwd || '').trim();
+      const hasDisabilityRequirement = /^(yes|true)$/i.test(disabilityRequirement)
+        || /pwd|divyang|differently/i.test(disabilityRequirement)
+        || /asiim|with disabilities|divyangjan|differently abled/i.test(`${id} ${name}`)
+        || /sc divyang|differently-abled youth/i.test(`${scheme.other_conditions || ''} ${description}`);
+
+      return {
+        id,
+        name,
+        department,
+        level,
+        summary: description,
+        benefits: String(scheme.benefits || '').trim(),
+        application_url: scheme.official_source_url || scheme.application_url || '#',
+        requiredFields,
+        requiredDocs: requiredDocs.length ? requiredDocs : ['Aadhaar Card', 'Bank Account Details', 'Income Certificate'],
+        rules: {
+          minAge,
+          maxAge,
+          gender,
+          state: stateRequirement,
+          maxIncome,
+          occupation,
+          social_category: socialCategory,
+          disability: hasDisabilityRequirement ? 'Yes' : 'All',
+          marital_status: scheme.marital_status || '',
+          special: scheme.special_beneficiary_status || ''
+        }
+      };
+    });
+    state.schemeCatalogError = '';
+    console.info(`[UNIORA Readiness] Loaded ${state.schemeCatalog.length} live schemes from the Eligible Schemes catalog`);
   } catch (error) {
-    console.error('[UNIORA Readiness] Failed to load schemes from backend:', error);
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      state.schemeCatalogError = 'The live scheme catalog request timed out. Please try again.';
+    } else {
+      state.schemeCatalogError = 'Unable to load the live scheme catalog. Please try again later.';
+    }
+    console.error('[UNIORA Readiness] Failed to load live schemes from the Eligible Schemes catalog:', error);
     state.schemeCatalog = [];
   }
+}
+
+function parseSchemeCsv(text) {
+  const rows = [];
+  let row = [];
+  let value = '';
+  let quoted = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    const next = text[index + 1];
+    if (quoted) {
+      if (char === '"' && next === '"') {
+        value += '"';
+        index += 1;
+      } else if (char === '"') {
+        quoted = false;
+      } else {
+        value += char;
+      }
+    } else if (char === '"') {
+      quoted = true;
+    } else if (char === ',') {
+      row.push(value.trim());
+      value = '';
+    } else if (char === '\n' || char === '\r') {
+      if (char === '\r' && next === '\n') index += 1;
+      row.push(value.trim());
+      if (row.some(cell => cell)) rows.push(row);
+      row = [];
+      value = '';
+    } else {
+      value += char;
+    }
+  }
+
+  if (value || row.length) {
+    row.push(value.trim());
+    if (row.some(cell => cell)) rows.push(row);
+  }
+  return rows;
 }
 
 function evaluateSchemeReadiness(scheme) {
@@ -477,20 +626,49 @@ function evaluateSchemeReadiness(scheme) {
   let isDemographicEligible = true;
   const rules = scheme.rules || {};
   const userAge = Number(getFieldValue(profile, 'age')) || null;
-  const userGender = String(getFieldValue(profile, 'gender') || '').toLowerCase();
-  const userState = String(getFieldValue(profile, 'state') || '').toLowerCase();
+  const userGender = String(getFieldValue(profile, 'gender') || '').trim().toLowerCase();
+  const userState = String(getFieldValue(profile, 'state') || '').trim().toLowerCase();
   const userIncome = parseIncomeValue(getFieldValue(profile, 'annual_income')) ?? profile.incomeNumeric;
-  const userOccupation = String(getFieldValue(profile, 'occupation') || '').toLowerCase();
-  const userCategory = String(getFieldValue(profile, 'social_category') || '').toLowerCase();
+  const userOccupation = String(getFieldValue(profile, 'occupation') || '').trim().toLowerCase();
+  const userCategory = String(getFieldValue(profile, 'social_category') || '').trim().toLowerCase();
 
-  // If user demographic value is filled and breaks rule, set ineligible; if empty, keep as potential match so user can fill it
-  if (rules.minAge && userAge !== null && userAge < rules.minAge) isDemographicEligible = false;
-  if (rules.maxAge && userAge !== null && userAge > rules.maxAge) isDemographicEligible = false;
-  if (rules.gender && rules.gender.toLowerCase() !== 'all' && userGender && rules.gender.toLowerCase() !== userGender) isDemographicEligible = false;
-  if (rules.state && rules.state.toLowerCase() !== 'all' && userState && !userState.includes(rules.state.toLowerCase()) && !rules.state.toLowerCase().includes(userState)) isDemographicEligible = false;
-  if (rules.maxIncome && userIncome !== null && userIncome > rules.maxIncome) isDemographicEligible = false;
-  if (rules.occupation && rules.occupation.toLowerCase() !== 'all' && userOccupation && !userOccupation.includes(rules.occupation.toLowerCase()) && !rules.occupation.toLowerCase().includes(userOccupation)) isDemographicEligible = false;
-  if (rules.social_category && rules.social_category.toLowerCase() !== 'all' && userCategory && rules.social_category.toLowerCase() !== userCategory && !userCategory.includes(rules.social_category.toLowerCase())) isDemographicEligible = false;
+  if ((rules.minAge !== null && rules.minAge !== undefined) || (rules.maxAge !== null && rules.maxAge !== undefined)) {
+    if (userAge === null || (rules.minAge !== null && rules.minAge !== undefined && userAge < rules.minAge)
+        || (rules.maxAge !== null && rules.maxAge !== undefined && userAge > rules.maxAge)) isDemographicEligible = false;
+  }
+  if (rules.gender && rules.gender.toLowerCase() !== 'all' && userGender !== rules.gender.toLowerCase()) isDemographicEligible = false;
+  if (rules.state && rules.state.toLowerCase() !== 'all' && userState !== rules.state.toLowerCase()) isDemographicEligible = false;
+  if (rules.maxIncome !== null && rules.maxIncome !== undefined && (userIncome === null || userIncome > rules.maxIncome)) isDemographicEligible = false;
+
+  const occupationRule = String(rules.occupation || '').trim().toLowerCase();
+  const occupationIsOpen = !occupationRule || ['all', 'any', 'resident'].includes(occupationRule);
+  if (!occupationIsOpen) {
+    const userIsOther = ['other', 'others'].includes(userOccupation);
+    const requirementIsStandard = [
+      'student', 'scholar', 'college', 'school',
+      'farmer', 'agriculture', 'cultivator', 'kisan',
+      'self-employed', 'self employed', 'business', 'entrepreneur',
+      'unemployed', 'job seeker', 'jobseeker',
+      'daily wage', 'artisan', 'labourer', 'laborer', 'casual worker', 'gig',
+      'salaried', 'employee', 'govt', 'government', 'private employee', 'service'
+    ].some(keyword => occupationRule.includes(keyword));
+    if (!userOccupation || (userIsOther
+      ? requirementIsStandard && !occupationRule.includes('other')
+      : !(occupationRule === userOccupation
+        || occupationRule.includes(userOccupation)
+        || (userOccupation === 'student' && /student|scholar|college|school/.test(occupationRule))
+        || (userOccupation === 'farmer' && /farmer|agriculture|cultivator|kisan/.test(occupationRule))
+        || (userOccupation === 'self-employed' && /self.?employed|business|entrepreneur/.test(occupationRule))
+        || (userOccupation === 'unemployed' && /unemployed|job.?seeker/.test(occupationRule))
+        || (userOccupation === 'daily wage / artisan' && /daily wage|artisan|labou?rer|casual worker|gig/.test(occupationRule))
+        || (userOccupation === 'salaried' && /salaried|employee|govt|government|private employee|service/.test(occupationRule))))) {
+      isDemographicEligible = false;
+    }
+  }
+  if (rules.social_category && !['all', 'any', 'general/all'].includes(rules.social_category.trim().toLowerCase())
+      && userCategory !== rules.social_category.trim().toLowerCase()) isDemographicEligible = false;
+  const userDisability = String(getFieldValue(profile, 'disability') || '').toLowerCase();
+  if (rules.disability === 'Yes' && !['yes', 'true'].includes(userDisability)) isDemographicEligible = false;
 
   // Check documents
   const verifiedMatchedDocs = [];
@@ -634,13 +812,14 @@ function renderSchemeSelector() {
 
   // Filter ONLY ELIGIBLE schemes if showEligibleOnlyMode is true
   const displayList = state.showEligibleOnlyMode
-    ? evaluatedList.filter(s => s.isDemographicEligible || s.readinessScore > 0)
+    ? evaluatedList.filter(s => s.isDemographicEligible)
     : evaluatedList;
 
   if (selectorLabel) {
-    selectorLabel.textContent = state.showEligibleOnlyMode
-      ? `Showing Eligible Schemes (${displayList.length} matched out of ${evaluatedList.length} total catalog schemes)`
-      : `Showing All Catalog Schemes (${displayList.length} total schemes)`;
+    selectorLabel.textContent = state.schemeCatalogError
+      || (state.showEligibleOnlyMode
+        ? `Showing Eligible Schemes (${displayList.length} matched out of ${evaluatedList.length} total catalog schemes)`
+        : `Showing All Catalog Schemes (${displayList.length} total schemes)`);
   }
 
   // Preselect from URL parameter if present
@@ -659,7 +838,8 @@ function renderSchemeSelector() {
   }
 
   if (displayList.length === 0) {
-    selector.innerHTML = `<option value="">No eligible schemes match your current demographic profile inputs</option>`;
+    const emptyMessage = state.schemeCatalogError || 'No eligible schemes match your current demographic profile inputs';
+    selector.innerHTML = `<option value="">${emptyMessage}</option>`;
     return;
   }
 
@@ -672,7 +852,6 @@ function renderSchemeSelector() {
   selector.onchange = (e) => {
     state.selectedSchemeId = e.target.value;
     renderAllReadinessPanels();
-    void fetchSelectedSchemeEvaluation();
   };
 }
 
@@ -865,7 +1044,6 @@ function renderMissingFieldsForm(selectedScheme) {
 
     // Re-evaluate and re-render all panels
     renderAllReadinessPanels();
-    void fetchSelectedSchemeEvaluation();
   };
 }
 
@@ -1073,7 +1251,7 @@ function updateSummaryPills() {
   const verifiedDocsEl = document.getElementById('verifiedDocsCount');
 
   const evaluated = state.evaluatedSchemes || [];
-  const eligibleCount = evaluated.filter(s => s.isDemographicEligible || s.readinessScore >= 50).length;
+  const eligibleCount = evaluated.filter(s => s.isDemographicEligible).length;
   const selectedScheme = evaluated.find(s => s.id === state.selectedSchemeId);
   const selectedScore = selectedScheme ? selectedScheme.readinessScore : (evaluated.length > 0 ? evaluated[0].readinessScore : 0);
 
@@ -1120,7 +1298,7 @@ function renderAllReadinessPanels() {
   state.evaluatedSchemes = state.schemeCatalog.map(scheme => applyBackendEvaluation(evaluateSchemeReadiness(scheme)));
 
   const displayList = state.showEligibleOnlyMode
-    ? state.evaluatedSchemes.filter(s => s.isDemographicEligible || s.readinessScore > 0)
+    ? state.evaluatedSchemes.filter(s => s.isDemographicEligible)
     : state.evaluatedSchemes;
 
   const selectedScheme = displayList.find(s => s.id === state.selectedSchemeId) || displayList[0] || state.evaluatedSchemes[0];
@@ -1201,6 +1379,7 @@ async function initReadinessApp() {
           gender: data.gender || '',
           state: data.state || 'Tamil Nadu',
           district: data.district || '',
+          age: data.age || '',
           occupation: data.occupation || '',
           annual_income: data.annual_family_income || data.annual_income || '',
           incomeNumeric: data.annual_family_income || null,
@@ -1265,7 +1444,6 @@ async function initReadinessApp() {
   await fetchSchemeCatalog();
 
   renderSchemeSelector();
-  void fetchSelectedSchemeEvaluation();
   renderAllReadinessPanels();
   renderNearbyServicesMap();
 }
@@ -1283,13 +1461,11 @@ if (onAuthStateChange) {
 window.addEventListener('storage', () => {
   state.verifiedDocs = getStoredDocs();
   renderAllReadinessPanels();
-  void fetchSelectedSchemeEvaluation();
 });
 
 window.addEventListener('focus', () => {
   state.verifiedDocs = getStoredDocs();
   renderAllReadinessPanels();
-  void fetchSelectedSchemeEvaluation();
 });
 
 document.addEventListener('DOMContentLoaded', initReadinessApp);
